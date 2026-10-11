@@ -48,6 +48,10 @@
   --font-mono: var(--font-meta);
 }
 
+html {
+  font-family: var(--font-body);
+}
+
 body {
   background:
     radial-gradient(
@@ -64,6 +68,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-body);
   font-weight: var(--weight-body);
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Display / titles — Helvetica Neue Bold / Black */
