@@ -118,6 +118,7 @@ export function AdminGridApp({
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [source, setSource] = useState<DataSource>(initialSource);
   const [previewKey, setPreviewKey] = useState(0);
+  const [contentOpen, setContentOpen] = useState(false);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -129,6 +130,10 @@ export function AdminGridApp({
     () => items.find((item) => item.id === selectedId) ?? null,
     [items, selectedId],
   );
+
+  useEffect(() => {
+    setContentOpen(false);
+  }, [selectedId]);
 
   const activeDragItem = useMemo(() => {
     if (!activeDragId) return null;
@@ -391,8 +396,8 @@ export function AdminGridApp({
           </aside>
 
           <section className="min-w-0 bg-paper/40">
-            <div className="flex items-center justify-between gap-3 border-b border-ink/10 px-4 py-3">
-              <div>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink/10 px-4 py-3">
+              <div className="min-w-0">
                 <p className="font-mono text-[0.65rem] tracking-[0.18em] text-ink/50 uppercase">
                   Live preview · drag blocks to reorder
                 </p>
@@ -405,6 +410,25 @@ export function AdminGridApp({
                       : ".data/ (fallback)"}
                   </code>
                 </p>
+              </div>
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                <button
+                  type="button"
+                  disabled={!selected}
+                  onClick={() => setContentOpen(true)}
+                  className="bg-rust px-4 py-2 font-mono text-[0.7rem] tracking-[0.16em] text-paper uppercase disabled:cursor-not-allowed disabled:bg-ink/20 disabled:text-paper/70"
+                >
+                  Edit
+                </button>
+                {!selected ? (
+                  <p className="font-mono text-[0.55rem] tracking-[0.12em] text-ink/40 uppercase">
+                    Select a block first
+                  </p>
+                ) : (
+                  <p className="max-w-[14rem] truncate font-mono text-[0.55rem] tracking-[0.1em] text-ink/45 uppercase">
+                    {itemContentPreview(selected)}
+                  </p>
+                )}
               </div>
             </div>
             <div className="admin-preview max-h-[calc(100vh-7rem)] overflow-auto p-3 sm:p-4">
@@ -432,6 +456,17 @@ export function AdminGridApp({
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      {contentOpen && selected ? (
+        <ContentEditModal
+          item={selected}
+          onApply={(patch) => {
+            patchSelected(patch);
+            setContentOpen(false);
+          }}
+          onClose={() => setContentOpen(false)}
+        />
+      ) : null}
     </div>
   );
 }
@@ -517,11 +552,6 @@ function ItemFields({
   onRemove: () => void;
 }) {
   const maxSpan = GRID_COLUMNS - item.colStart + 1;
-  const [contentOpen, setContentOpen] = useState(false);
-
-  useEffect(() => {
-    setContentOpen(false);
-  }, [item.id]);
 
   return (
     <div className="space-y-3 border-t border-ink/15 p-4">
@@ -593,30 +623,16 @@ function ItemFields({
         </label>
       ) : null}
 
-      <div className="space-y-2 border border-ink/12 bg-paper/60 p-3">
+      <div className="space-y-1">
         <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
           Content
         </p>
         <p className="truncate text-sm text-ink">{itemContentPreview(item)}</p>
-        <button
-          type="button"
-          onClick={() => setContentOpen(true)}
-          className="bg-ink px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-paper uppercase"
-        >
-          Edit
-        </button>
+        <p className="text-xs text-ink/45">
+          Use <span className="font-mono uppercase">Edit</span> in the preview
+          bar to change inner content.
+        </p>
       </div>
-
-      {contentOpen ? (
-        <ContentEditModal
-          item={item}
-          onApply={(patch) => {
-            onChange(patch);
-            setContentOpen(false);
-          }}
-          onClose={() => setContentOpen(false)}
-        />
-      ) : null}
     </div>
   );
 }
