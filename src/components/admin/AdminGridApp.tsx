@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   DndContext,
@@ -497,6 +497,14 @@ function SortableRow({
   );
 }
 
+function itemContentPreview(item: GridItem): string {
+  if (item.kind === "titleRow") return item.label;
+  if (item.kind === "colorCell") return item.label || item.fill;
+  if (item.kind === "textCell") return item.headline;
+  if (item.kind === "projectCell") return item.title;
+  return item.title || item.caption || "Media";
+}
+
 function ItemFields({
   item,
   onChange,
@@ -509,10 +517,15 @@ function ItemFields({
   onRemove: () => void;
 }) {
   const maxSpan = GRID_COLUMNS - item.colStart + 1;
+  const [contentOpen, setContentOpen] = useState(false);
+
+  useEffect(() => {
+    setContentOpen(false);
+  }, [item.id]);
 
   return (
     <div className="space-y-3 border-t border-ink/15 p-4">
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <button
           type="button"
           onClick={onDuplicate}
@@ -528,6 +541,10 @@ function ItemFields({
           Remove
         </button>
       </div>
+
+      <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
+        Placement · {item.kind}
+      </p>
 
       <div className="grid grid-cols-3 gap-2">
         <NumberField
@@ -576,147 +593,333 @@ function ItemFields({
         </label>
       ) : null}
 
-      {item.kind === "titleRow" ? (
-        <TextField
-          label="Label"
-          value={item.label}
-          onChange={(label) => onChange({ label } as Partial<GridItem>)}
+      <div className="space-y-2 border border-ink/12 bg-paper/60 p-3">
+        <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
+          Content
+        </p>
+        <p className="truncate text-sm text-ink">{itemContentPreview(item)}</p>
+        <button
+          type="button"
+          onClick={() => setContentOpen(true)}
+          className="bg-ink px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-paper uppercase"
+        >
+          Edit
+        </button>
+      </div>
+
+      {contentOpen ? (
+        <ContentEditModal
+          item={item}
+          onApply={(patch) => {
+            onChange(patch);
+            setContentOpen(false);
+          }}
+          onClose={() => setContentOpen(false)}
         />
       ) : null}
+    </div>
+  );
+}
 
-      {item.kind === "colorCell" ? (
-        <>
-          <SelectField
-            label="Fill"
-            value={item.fill}
-            options={FILLS}
-            onChange={(fill) =>
-              onChange({ fill: fill as CellFill } as Partial<GridItem>)
-            }
-          />
-          <TextField
-            label="Label"
-            value={item.label ?? ""}
-            onChange={(label) => onChange({ label } as Partial<GridItem>)}
-          />
-        </>
-      ) : null}
+function ContentEditModal({
+  item,
+  onApply,
+  onClose,
+}: {
+  item: GridItem;
+  onApply: (patch: Partial<GridItem>) => void;
+  onClose: () => void;
+}) {
+  const [draft, setDraft] = useState<GridItem>(() => structuredClone(item));
+  const panelRef = useRef<HTMLDivElement>(null);
 
-      {item.kind === "mediaCell" ? (
-        <>
-          <TextField
-            label="Meta"
-            value={item.meta ?? ""}
-            onChange={(meta) => onChange({ meta } as Partial<GridItem>)}
-          />
-          <TextField
-            label="Title"
-            value={item.title ?? ""}
-            onChange={(title) => onChange({ title } as Partial<GridItem>)}
-          />
-          <TextField
-            label="Image URL"
-            value={item.imageSrc ?? ""}
-            onChange={(imageSrc) => onChange({ imageSrc } as Partial<GridItem>)}
-          />
-          <SelectField
-            label="Image tone"
-            value={item.placeholderTone ?? "warm"}
-            options={["warm", "cool", "ink"]}
-            onChange={(placeholderTone) =>
-              onChange({ placeholderTone } as Partial<GridItem>)
-            }
-          />
-          <TextAreaField
-            label="Description"
-            value={item.description ?? ""}
-            onChange={(description) =>
-              onChange({ description } as Partial<GridItem>)
-            }
-          />
-        </>
-      ) : null}
+  useEffect(() => {
+    setDraft(structuredClone(item));
+  }, [item]);
 
-      {item.kind === "textCell" ? (
-        <>
-          <TextField
-            label="Meta"
-            value={item.meta ?? ""}
-            onChange={(meta) => onChange({ meta } as Partial<GridItem>)}
-          />
-          <TextField
-            label="Title"
-            value={item.headline}
-            onChange={(headline) => onChange({ headline } as Partial<GridItem>)}
-          />
-          <TextField
-            label="Subtitle"
-            value={item.subtitle ?? ""}
-            onChange={(subtitle) => onChange({ subtitle } as Partial<GridItem>)}
-          />
-          <TextField
-            label="Image URL"
-            value={item.imageSrc ?? ""}
-            onChange={(imageSrc) => onChange({ imageSrc } as Partial<GridItem>)}
-          />
-          <SelectField
-            label="Image tone"
-            value={item.placeholderTone ?? "warm"}
-            options={["warm", "cool", "ink"]}
-            onChange={(placeholderTone) =>
-              onChange({ placeholderTone } as Partial<GridItem>)
-            }
-          />
-          <TextAreaField
-            label="Description"
-            value={item.excerpt ?? ""}
-            onChange={(excerpt) => onChange({ excerpt } as Partial<GridItem>)}
-          />
-        </>
-      ) : null}
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    panelRef.current?.querySelector<HTMLElement>("input, textarea, select")?.focus();
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [onClose]);
 
-      {item.kind === "projectCell" ? (
-        <>
-          <TextField
-            label="Meta"
-            value={item.meta ?? ""}
-            onChange={(meta) => onChange({ meta } as Partial<GridItem>)}
-          />
-          <TextField
-            label="Title"
-            value={item.title}
-            onChange={(title) => onChange({ title } as Partial<GridItem>)}
-          />
-          <TextField
-            label="Subtitle"
-            value={item.subtitle ?? ""}
-            onChange={(subtitle) => onChange({ subtitle } as Partial<GridItem>)}
-          />
-          <TextField
-            label="Year"
-            value={item.year ?? ""}
-            onChange={(year) => onChange({ year } as Partial<GridItem>)}
-          />
-          <TextField
-            label="Image URL"
-            value={item.imageSrc ?? ""}
-            onChange={(imageSrc) => onChange({ imageSrc } as Partial<GridItem>)}
-          />
-          <SelectField
-            label="Image tone"
-            value={item.placeholderTone ?? "cool"}
-            options={["warm", "cool", "ink"]}
-            onChange={(placeholderTone) =>
-              onChange({ placeholderTone } as Partial<GridItem>)
-            }
-          />
-          <TextAreaField
-            label="Description"
-            value={item.summary ?? ""}
-            onChange={(summary) => onChange({ summary } as Partial<GridItem>)}
-          />
-        </>
-      ) : null}
+  function patchDraft(patch: Partial<GridItem>) {
+    setDraft((prev) => ({ ...prev, ...patch } as GridItem));
+  }
+
+  function apply() {
+    if (draft.kind === "titleRow") {
+      onApply({ label: draft.label });
+      return;
+    }
+    if (draft.kind === "colorCell") {
+      onApply({ fill: draft.fill, label: draft.label });
+      return;
+    }
+    if (draft.kind === "mediaCell") {
+      onApply({
+        meta: draft.meta,
+        title: draft.title,
+        caption: draft.caption,
+        imageSrc: draft.imageSrc,
+        imageAlt: draft.imageAlt,
+        placeholderTone: draft.placeholderTone,
+        description: draft.description,
+      });
+      return;
+    }
+    if (draft.kind === "textCell") {
+      onApply({
+        meta: draft.meta,
+        headline: draft.headline,
+        subtitle: draft.subtitle,
+        imageSrc: draft.imageSrc,
+        imageAlt: draft.imageAlt,
+        placeholderTone: draft.placeholderTone,
+        excerpt: draft.excerpt,
+      });
+      return;
+    }
+    onApply({
+      meta: draft.meta,
+      title: draft.title,
+      subtitle: draft.subtitle,
+      year: draft.year,
+      imageSrc: draft.imageSrc,
+      imageAlt: draft.imageAlt,
+      placeholderTone: draft.placeholderTone,
+      summary: draft.summary,
+    });
+  }
+
+  return (
+    <div
+      className="admin-content-modal"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="admin-content-modal-title"
+        className="admin-content-modal__panel"
+      >
+        <div className="flex items-start justify-between gap-3 border-b border-ink/12 pb-3">
+          <div>
+            <p className="font-mono text-[0.6rem] tracking-[0.16em] text-rust uppercase">
+              Edit content
+            </p>
+            <h2
+              id="admin-content-modal-title"
+              className="mt-1 font-display text-xl tracking-tight text-ink"
+            >
+              {item.kind}
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="border border-ink/20 px-2 py-1 font-mono text-[0.6rem] tracking-[0.12em] uppercase"
+          >
+            Close
+          </button>
+        </div>
+
+        <div className="admin-content-modal__fields space-y-3 py-4">
+          {draft.kind === "titleRow" ? (
+            <TextField
+              label="Label"
+              value={draft.label}
+              onChange={(label) => patchDraft({ label } as Partial<GridItem>)}
+            />
+          ) : null}
+
+          {draft.kind === "colorCell" ? (
+            <>
+              <SelectField
+                label="Fill"
+                value={draft.fill}
+                options={FILLS}
+                onChange={(fill) =>
+                  patchDraft({ fill: fill as CellFill } as Partial<GridItem>)
+                }
+              />
+              <TextField
+                label="Label"
+                value={draft.label ?? ""}
+                onChange={(label) => patchDraft({ label } as Partial<GridItem>)}
+              />
+            </>
+          ) : null}
+
+          {draft.kind === "mediaCell" ? (
+            <>
+              <TextField
+                label="Meta"
+                value={draft.meta ?? ""}
+                onChange={(meta) => patchDraft({ meta } as Partial<GridItem>)}
+              />
+              <TextField
+                label="Title"
+                value={draft.title ?? ""}
+                onChange={(title) => patchDraft({ title } as Partial<GridItem>)}
+              />
+              <TextField
+                label="Caption"
+                value={draft.caption ?? ""}
+                onChange={(caption) =>
+                  patchDraft({ caption } as Partial<GridItem>)
+                }
+              />
+              <TextField
+                label="Image URL"
+                value={draft.imageSrc ?? ""}
+                onChange={(imageSrc) =>
+                  patchDraft({ imageSrc } as Partial<GridItem>)
+                }
+              />
+              <SelectField
+                label="Image tone"
+                value={draft.placeholderTone ?? "warm"}
+                options={["warm", "cool", "ink"]}
+                onChange={(placeholderTone) =>
+                  patchDraft({ placeholderTone } as Partial<GridItem>)
+                }
+              />
+              <TextAreaField
+                label="Description"
+                value={draft.description ?? ""}
+                onChange={(description) =>
+                  patchDraft({ description } as Partial<GridItem>)
+                }
+              />
+            </>
+          ) : null}
+
+          {draft.kind === "textCell" ? (
+            <>
+              <TextField
+                label="Meta"
+                value={draft.meta ?? ""}
+                onChange={(meta) => patchDraft({ meta } as Partial<GridItem>)}
+              />
+              <TextField
+                label="Title"
+                value={draft.headline}
+                onChange={(headline) =>
+                  patchDraft({ headline } as Partial<GridItem>)
+                }
+              />
+              <TextField
+                label="Subtitle"
+                value={draft.subtitle ?? ""}
+                onChange={(subtitle) =>
+                  patchDraft({ subtitle } as Partial<GridItem>)
+                }
+              />
+              <TextField
+                label="Image URL"
+                value={draft.imageSrc ?? ""}
+                onChange={(imageSrc) =>
+                  patchDraft({ imageSrc } as Partial<GridItem>)
+                }
+              />
+              <SelectField
+                label="Image tone"
+                value={draft.placeholderTone ?? "warm"}
+                options={["warm", "cool", "ink"]}
+                onChange={(placeholderTone) =>
+                  patchDraft({ placeholderTone } as Partial<GridItem>)
+                }
+              />
+              <TextAreaField
+                label="Description"
+                value={draft.excerpt ?? ""}
+                onChange={(excerpt) =>
+                  patchDraft({ excerpt } as Partial<GridItem>)
+                }
+              />
+            </>
+          ) : null}
+
+          {draft.kind === "projectCell" ? (
+            <>
+              <TextField
+                label="Meta"
+                value={draft.meta ?? ""}
+                onChange={(meta) => patchDraft({ meta } as Partial<GridItem>)}
+              />
+              <TextField
+                label="Title"
+                value={draft.title}
+                onChange={(title) => patchDraft({ title } as Partial<GridItem>)}
+              />
+              <TextField
+                label="Subtitle"
+                value={draft.subtitle ?? ""}
+                onChange={(subtitle) =>
+                  patchDraft({ subtitle } as Partial<GridItem>)
+                }
+              />
+              <TextField
+                label="Year"
+                value={draft.year ?? ""}
+                onChange={(year) => patchDraft({ year } as Partial<GridItem>)}
+              />
+              <TextField
+                label="Image URL"
+                value={draft.imageSrc ?? ""}
+                onChange={(imageSrc) =>
+                  patchDraft({ imageSrc } as Partial<GridItem>)
+                }
+              />
+              <SelectField
+                label="Image tone"
+                value={draft.placeholderTone ?? "cool"}
+                options={["warm", "cool", "ink"]}
+                onChange={(placeholderTone) =>
+                  patchDraft({ placeholderTone } as Partial<GridItem>)
+                }
+              />
+              <TextAreaField
+                label="Description"
+                value={draft.summary ?? ""}
+                onChange={(summary) =>
+                  patchDraft({ summary } as Partial<GridItem>)
+                }
+              />
+            </>
+          ) : null}
+        </div>
+
+        <div className="flex flex-wrap justify-end gap-2 border-t border-ink/12 pt-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="border border-ink/20 px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] uppercase"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={apply}
+            className="bg-rust px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-paper uppercase"
+          >
+            Save
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
