@@ -785,6 +785,79 @@ select:disabled,
   z-index: 4;
 }
 
+.admin-sortable-cell.is-resizing {
+  cursor: grabbing;
+  z-index: 6;
+  transition: none;
+  user-select: none;
+}
+
+.admin-resize-handle {
+  position: absolute;
+  z-index: 7;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  appearance: none;
+}
+
+.admin-resize-handle--e {
+  top: 0.75rem;
+  right: -0.2rem;
+  bottom: 0.9rem;
+  width: 0.7rem;
+  cursor: ew-resize;
+  background: linear-gradient(
+    to right,
+    transparent 35%,
+    color-mix(in srgb, var(--color-rust) 75%, transparent) 35%,
+    color-mix(in srgb, var(--color-rust) 75%, transparent) 65%,
+    transparent 65%
+  );
+}
+
+.admin-resize-handle--s {
+  left: 0.75rem;
+  right: 0.9rem;
+  bottom: -0.2rem;
+  height: 0.7rem;
+  cursor: ns-resize;
+  background: linear-gradient(
+    to bottom,
+    transparent 35%,
+    color-mix(in srgb, var(--color-rust) 75%, transparent) 35%,
+    color-mix(in srgb, var(--color-rust) 75%, transparent) 65%,
+    transparent 65%
+  );
+}
+
+.admin-resize-handle--se {
+  right: -0.15rem;
+  bottom: -0.15rem;
+  width: 0.95rem;
+  height: 0.95rem;
+  cursor: nwse-resize;
+  border: 2px solid var(--color-rust);
+  background: var(--color-paper);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-paper) 80%, transparent);
+}
+
+.admin-resize-badge {
+  pointer-events: none;
+  position: absolute;
+  left: 0.45rem;
+  bottom: 0.4rem;
+  z-index: 6;
+  padding: 0.15rem 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--color-rust) 45%, transparent);
+  background: color-mix(in srgb, var(--color-paper) 92%, white);
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-rust);
+}
+
 .admin-sortable-cell__grip {
   pointer-events: none;
   position: absolute;

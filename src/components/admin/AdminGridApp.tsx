@@ -227,6 +227,30 @@ export function AdminGridApp({
     );
   }
 
+  function resizeItem(id: string, patch: Partial<GridItem>) {
+    updateItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== id) return item;
+        const colStart = patch.colStart ?? item.colStart;
+        const maxSpan = GRID_COLUMNS - colStart + 1;
+        const colSpan = Math.min(
+          Math.max(1, patch.colSpan ?? item.colSpan),
+          maxSpan,
+        );
+        const rowSpan = Math.min(
+          Math.max(1, patch.rowSpan ?? item.rowSpan ?? 1),
+          4,
+        );
+        return {
+          ...item,
+          colStart,
+          colSpan: item.kind === "titleRow" ? GRID_COLUMNS : colSpan,
+          rowSpan,
+        } as GridItem;
+      }),
+    );
+  }
+
   function addItem() {
     updateItems((prev) => {
       const created = createGridItem(addKind, prev.length + 1);
@@ -414,11 +438,13 @@ export function AdminGridApp({
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink/10 px-4 py-3">
               <div className="min-w-0">
                 <p className="font-mono text-[0.65rem] tracking-[0.18em] text-ink/50 uppercase">
-                  Live preview · drag blocks to reorder
+                  Live preview · drag to reorder · edges to resize
                 </p>
                 <p className="text-xs text-ink/45">
-                  Drop on another cell to change{" "}
-                  <code className="font-mono">order</code> · saves to{" "}
+                  Drop to change <code className="font-mono">order</code> ·
+                  drag right/bottom handles for{" "}
+                  <code className="font-mono">colSpan</code>/
+                  <code className="font-mono">rowSpan</code> · saves to{" "}
                   <code className="font-mono">
                     {source === "sanity"
                       ? "Sanity homepage.gridItems"
@@ -458,6 +484,7 @@ export function AdminGridApp({
                     items={items}
                     selectedId={selectedId}
                     onSelect={setSelectedId}
+                    onResize={resizeItem}
                   />
                 </SortableContext>
               </div>
