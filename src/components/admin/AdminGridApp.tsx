@@ -7,6 +7,9 @@ import {
   DragOverlay,
   PointerSensor,
   closestCenter,
+  pointerWithin,
+  rectIntersection,
+  type CollisionDetection,
   type DragEndEvent,
   type DragStartEvent,
   useSensor,
@@ -14,7 +17,6 @@ import {
 } from "@dnd-kit/core";
 import {
   SortableContext,
-  arrayMove,
   rectSortingStrategy,
   useSortable,
   verticalListSortingStrategy,
@@ -27,10 +29,12 @@ import {
   duplicateGridItem,
   normalizeGridItems,
 } from "@/lib/grid-normalize";
+import { reorderGridItems } from "@/lib/grid-reorder";
 import { IntroBand } from "@/components/IntroBand";
 import {
   AdminDragOverlayCard,
   AdminGridCanvas,
+  GRID_DND_PREFIX,
   gridDndId,
   parseGridDndId,
 } from "@/components/admin/AdminGridCanvas";
@@ -50,6 +54,38 @@ function parseListDndId(dndId: string | number): string | null {
 function parseAnyDndId(dndId: string | number): string | null {
   return parseGridDndId(dndId) ?? parseListDndId(dndId);
 }
+
+function sameSurface(a: string | number, b: string | number): boolean {
+  const left = String(a);
+  const right = String(b);
+  const leftGrid = left.startsWith(GRID_DND_PREFIX);
+  const rightGrid = right.startsWith(GRID_DND_PREFIX);
+  const leftList = left.startsWith(LIST_DND_PREFIX);
+  const rightList = right.startsWith(LIST_DND_PREFIX);
+  return (leftGrid && rightGrid) || (leftList && rightList);
+}
+
+/** Prefer pointer hits; never treat the active node as its own drop target. */
+const adminCollisionDetection: CollisionDetection = (args) => {
+  const containers = args.droppableContainers.filter(
+    (container) => container.id !== args.active.id,
+  );
+  const scoped = { ...args, droppableContainers: containers };
+
+  const pointerHits = pointerWithin(scoped).filter((hit) =>
+    sameSurface(args.active.id, hit.id),
+  );
+  if (pointerHits.length > 0) return pointerHits;
+
+  const rectHits = rectIntersection(scoped).filter((hit) =>
+    sameSurface(args.active.id, hit.id),
+  );
+  if (rectHits.length > 0) return rectHits;
+
+  return closestCenter(scoped).filter((hit) =>
+    sameSurface(args.active.id, hit.id),
+  );
+};
 
 const KINDS: GridItemKind[] = [
   "titleRow",
@@ -122,10 +158,11 @@ export function AdminGridApp({
           items: GridItem[];
           source?: DataSource;
         };
-        setItems(normalizeGridItems(data.items));
+        // Prefer the payload we saved — avoid clobbering optimistic reorder
+        // with a momentarily-stale Sanity read.
+        setItems(normalizeGridItems(next));
         if (data.source) setSource(data.source);
         setSaveState("saved");
-        setPreviewKey((k) => k + 1);
         router.refresh();
       } catch {
         setSaveState("error");
@@ -158,15 +195,11 @@ export function AdminGridApp({
     const { active, over } = event;
     setActiveDragId(null);
     if (!over || active.id === over.id) return;
+    if (!sameSurface(active.id, over.id)) return;
     const activeId = parseAnyDndId(active.id);
     const overId = parseAnyDndId(over.id);
     if (!activeId || !overId || activeId === overId) return;
-    updateItems((prev) => {
-      const oldIndex = prev.findIndex((item) => item.id === activeId);
-      const newIndex = prev.findIndex((item) => item.id === overId);
-      if (oldIndex < 0 || newIndex < 0) return prev;
-      return arrayMove(prev, oldIndex, newIndex);
-    });
+    updateItems((prev) => reorderGridItems(prev, activeId, overId));
   }
 
   function onDragCancel() {
@@ -299,7 +332,7 @@ export function AdminGridApp({
 
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCenter}
+        collisionDetection={adminCollisionDetection}
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
         onDragCancel={onDragCancel}
@@ -416,8 +449,8 @@ function SortableRow({
     useSortable({ id: listDndId(item.id) });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
+    transform: isDragging ? undefined : CSS.Transform.toString(transform),
+    transition: isDragging ? undefined : transition,
   };
 
   const label =

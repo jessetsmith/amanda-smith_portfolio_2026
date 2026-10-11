@@ -75,10 +75,12 @@ function AdminSortableCell({
     isDragging,
   } = useSortable({ id: gridDndId(item.id) });
 
+  // With DragOverlay, keep the source cell parked — transforming it with the
+  // pointer makes closestCenter always hit `active` so drops never reorder.
   const style = {
     ...gridPlacementStyle(item),
-    transform: CSS.Transform.toString(transform),
-    transition,
+    transform: isDragging ? undefined : CSS.Transform.toString(transform),
+    transition: isDragging ? undefined : transition,
   };
 
   return (
@@ -89,6 +91,7 @@ function AdminSortableCell({
         isDragging ? " is-dragging" : ""
       }`}
       data-kind={item.kind}
+      data-dnd-id={gridDndId(item.id)}
       onClick={onSelect}
       {...attributes}
       {...listeners}
