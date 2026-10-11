@@ -1,8 +1,13 @@
+import type { CSSProperties } from "react";
 import type { GridItem, PlaceholderTone } from "@/types/grid";
 import { fillClass, gridPlacementStyle } from "@/lib/grid";
 
 interface GridCellProps {
   item: GridItem;
+  /** When true, skip CSS grid placement (parent owns placement — used by admin DnD). */
+  omitPlacement?: boolean;
+  className?: string;
+  style?: CSSProperties;
 }
 
 function MetaDot({ muted = false }: { muted?: boolean }) {
@@ -55,9 +60,17 @@ function contentCardClass(item: GridItem, kindClass: string): string {
   return `grid-cell relative content-card ${kindClass}${featured}`;
 }
 
-export function GridCell({ item }: GridCellProps) {
-  const style = gridPlacementStyle(item);
-  const base = "grid-cell relative";
+export function GridCell({
+  item,
+  omitPlacement = false,
+  className = "",
+  style: styleOverride,
+}: GridCellProps) {
+  const style = {
+    ...(omitPlacement ? {} : gridPlacementStyle(item)),
+    ...styleOverride,
+  };
+  const base = `grid-cell relative ${className}`.trim();
 
   switch (item.kind) {
     case "titleRow":
@@ -95,7 +108,7 @@ export function GridCell({ item }: GridCellProps) {
     case "mediaCell":
       return (
         <article
-          className={contentCardClass(item, "media-cell")}
+          className={`${contentCardClass(item, "media-cell")} ${className}`.trim()}
           style={style}
           data-kind={item.kind}
           data-featured={item.featured ? "true" : undefined}
@@ -129,7 +142,7 @@ export function GridCell({ item }: GridCellProps) {
     case "textCell":
       return (
         <article
-          className={contentCardClass(item, "text-cell")}
+          className={`${contentCardClass(item, "text-cell")} ${className}`.trim()}
           style={style}
           data-kind={item.kind}
           data-featured={item.featured ? "true" : undefined}
@@ -168,7 +181,7 @@ export function GridCell({ item }: GridCellProps) {
     case "projectCell":
       return (
         <article
-          className={contentCardClass(item, "project-cell")}
+          className={`${contentCardClass(item, "project-cell")} ${className}`.trim()}
           style={style}
           data-kind={item.kind}
           data-featured={item.featured ? "true" : undefined}

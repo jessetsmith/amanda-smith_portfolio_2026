@@ -4,15 +4,18 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   DndContext,
+  DragOverlay,
   PointerSensor,
   closestCenter,
   type DragEndEvent,
+  type DragStartEvent,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
 import {
   SortableContext,
   arrayMove,
+  rectSortingStrategy,
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
@@ -24,8 +27,29 @@ import {
   duplicateGridItem,
   normalizeGridItems,
 } from "@/lib/grid-normalize";
-import { HomepageGrid } from "@/components/grid/HomepageGrid";
 import { IntroBand } from "@/components/IntroBand";
+import {
+  AdminDragOverlayCard,
+  AdminGridCanvas,
+  gridDndId,
+  parseGridDndId,
+} from "@/components/admin/AdminGridCanvas";
+
+const LIST_DND_PREFIX = "list:" as const;
+
+function listDndId(id: string): string {
+  return `${LIST_DND_PREFIX}${id}`;
+}
+
+function parseListDndId(dndId: string | number): string | null {
+  const raw = String(dndId);
+  if (!raw.startsWith(LIST_DND_PREFIX)) return null;
+  return raw.slice(LIST_DND_PREFIX.length);
+}
+
+function parseAnyDndId(dndId: string | number): string | null {
+  return parseGridDndId(dndId) ?? parseListDndId(dndId);
+}
 
 const KINDS: GridItemKind[] = [
   "titleRow",
@@ -58,15 +82,30 @@ export function AdminGridApp({
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [source, setSource] = useState<DataSource>(initialSource);
   const [previewKey, setPreviewKey] = useState(0);
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   );
 
   const selected = useMemo(
     () => items.find((item) => item.id === selectedId) ?? null,
     [items, selectedId],
+  );
+
+  const activeDragItem = useMemo(() => {
+    if (!activeDragId) return null;
+    return items.find((item) => item.id === activeDragId) ?? null;
+  }, [activeDragId, items]);
+
+  const listSortableIds = useMemo(
+    () => items.map((item) => listDndId(item.id)),
+    [items],
+  );
+  const gridSortableIds = useMemo(
+    () => items.map((item) => gridDndId(item.id)),
+    [items],
   );
 
   const persist = useCallback(
@@ -109,15 +148,29 @@ export function AdminGridApp({
     [persist],
   );
 
+  function onDragStart(event: DragStartEvent) {
+    const id = parseAnyDndId(event.active.id);
+    setActiveDragId(id);
+    if (id) setSelectedId(id);
+  }
+
   function onDragEnd(event: DragEndEvent) {
     const { active, over } = event;
+    setActiveDragId(null);
     if (!over || active.id === over.id) return;
+    const activeId = parseAnyDndId(active.id);
+    const overId = parseAnyDndId(over.id);
+    if (!activeId || !overId || activeId === overId) return;
     updateItems((prev) => {
-      const oldIndex = prev.findIndex((item) => item.id === active.id);
-      const newIndex = prev.findIndex((item) => item.id === over.id);
+      const oldIndex = prev.findIndex((item) => item.id === activeId);
+      const newIndex = prev.findIndex((item) => item.id === overId);
       if (oldIndex < 0 || newIndex < 0) return prev;
       return arrayMove(prev, oldIndex, newIndex);
     });
+  }
+
+  function onDragCancel() {
+    setActiveDragId(null);
   }
 
   function patchSelected(patch: Partial<GridItem>) {
@@ -244,39 +297,41 @@ export function AdminGridApp({
         </div>
       </header>
 
-      <div className="grid flex-1 lg:grid-cols-[minmax(20rem,26rem)_minmax(0,1fr)]">
-        <aside className="border-b border-ink/15 lg:border-r lg:border-b-0">
-          <div className="flex items-center gap-2 border-b border-ink/10 px-4 py-3">
-            <select
-              value={addKind}
-              onChange={(e) => setAddKind(e.target.value as GridItemKind)}
-              className="flex-1 border border-ink/20 bg-paper px-2 py-1.5 font-mono text-xs"
-            >
-              {KINDS.map((kind) => (
-                <option key={kind} value={kind}>
-                  {kind}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={addItem}
-              className="bg-rust px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-paper uppercase"
-            >
-              Add
-            </button>
-          </div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        onDragCancel={onDragCancel}
+      >
+        <div className="grid flex-1 lg:grid-cols-[minmax(20rem,26rem)_minmax(0,1fr)]">
+          <aside className="border-b border-ink/15 lg:border-r lg:border-b-0">
+            <div className="flex items-center gap-2 border-b border-ink/10 px-4 py-3">
+              <select
+                value={addKind}
+                onChange={(e) => setAddKind(e.target.value as GridItemKind)}
+                className="flex-1 border border-ink/20 bg-paper px-2 py-1.5 font-mono text-xs"
+              >
+                {KINDS.map((kind) => (
+                  <option key={kind} value={kind}>
+                    {kind}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={addItem}
+                className="bg-rust px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-paper uppercase"
+              >
+                Add
+              </button>
+            </div>
 
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={onDragEnd}
-          >
             <SortableContext
-              items={items.map((item) => item.id)}
+              items={listSortableIds}
               strategy={verticalListSortingStrategy}
             >
-              <ul className="max-h-[40vh] overflow-y-auto lg:max-h-[calc(100vh-12rem)]">
+              <ul className="max-h-[36vh] overflow-y-auto lg:max-h-[calc(100vh-14rem)]">
                 {items.map((item) => (
                   <SortableRow
                     key={item.id}
@@ -287,42 +342,63 @@ export function AdminGridApp({
                 ))}
               </ul>
             </SortableContext>
-          </DndContext>
 
-          {selected ? (
-            <ItemFields
-              item={selected}
-              onChange={patchSelected}
-              onDuplicate={duplicateSelected}
-              onRemove={removeSelected}
-            />
-          ) : (
-            <p className="p-4 text-sm text-ink/50">Select a cell to edit.</p>
-          )}
-        </aside>
+            {selected ? (
+              <ItemFields
+                item={selected}
+                onChange={patchSelected}
+                onDuplicate={duplicateSelected}
+                onRemove={removeSelected}
+              />
+            ) : (
+              <p className="p-4 text-sm text-ink/50">
+                Select or drag a cell in the preview to edit.
+              </p>
+            )}
+          </aside>
 
-        <section className="min-w-0 bg-paper/40">
-          <div className="flex items-center justify-between border-b border-ink/10 px-4 py-3">
-            <p className="font-mono text-[0.65rem] tracking-[0.18em] text-ink/50 uppercase">
-              Live preview
-            </p>
-            <p className="text-xs text-ink/45">
-              Same 4-col grid as public · edits save to{" "}
-              <code className="font-mono">
-                {source === "sanity"
-                  ? "Sanity homepage.gridItems"
-                  : ".data/ (fallback)"}
-              </code>
-            </p>
-          </div>
-          <div className="admin-preview max-h-[calc(100vh-7rem)] overflow-auto p-3 sm:p-4">
-            <div className="origin-top scale-[0.72] sm:scale-[0.8] md:scale-[0.85]">
-              <IntroBand />
-              <HomepageGrid key={previewKey} items={items} />
+          <section className="min-w-0 bg-paper/40">
+            <div className="flex items-center justify-between gap-3 border-b border-ink/10 px-4 py-3">
+              <div>
+                <p className="font-mono text-[0.65rem] tracking-[0.18em] text-ink/50 uppercase">
+                  Live preview · drag blocks to reorder
+                </p>
+                <p className="text-xs text-ink/45">
+                  Drop on another cell to change{" "}
+                  <code className="font-mono">order</code> · saves to{" "}
+                  <code className="font-mono">
+                    {source === "sanity"
+                      ? "Sanity homepage.gridItems"
+                      : ".data/ (fallback)"}
+                  </code>
+                </p>
+              </div>
             </div>
-          </div>
-        </section>
-      </div>
+            <div className="admin-preview max-h-[calc(100vh-7rem)] overflow-auto p-3 sm:p-4">
+              <div className="admin-preview__stage origin-top">
+                <IntroBand />
+                <SortableContext
+                  items={gridSortableIds}
+                  strategy={rectSortingStrategy}
+                >
+                  <AdminGridCanvas
+                    key={previewKey}
+                    items={items}
+                    selectedId={selectedId}
+                    onSelect={setSelectedId}
+                  />
+                </SortableContext>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <DragOverlay dropAnimation={null}>
+          {activeDragItem ? (
+            <AdminDragOverlayCard item={activeDragItem} />
+          ) : null}
+        </DragOverlay>
+      </DndContext>
     </div>
   );
 }
@@ -337,7 +413,7 @@ function SortableRow({
   onSelect: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: item.id });
+    useSortable({ id: listDndId(item.id) });
 
   const style = {
     transform: CSS.Transform.toString(transform),
