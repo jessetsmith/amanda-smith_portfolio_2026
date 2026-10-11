@@ -325,6 +325,14 @@ export function AdminGridApp({
           >
             Open public
           </a>
+          <a
+            href="/studio"
+            target="_blank"
+            rel="noreferrer"
+            className="border border-ink/20 px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-ink uppercase"
+          >
+            Studio
+          </a>
           <button
             type="button"
             onClick={() => void resetToSeed()}
