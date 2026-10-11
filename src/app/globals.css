@@ -28,8 +28,8 @@
 
   --grid-line: color-mix(in srgb, var(--color-ink) 32%, transparent);
   --grid-line-strong: color-mix(in srgb, var(--color-ink) 60%, transparent);
-  /* Tall enough for presence; bands cascade with readable width */
-  --grid-row: clamp(12rem, 26vh, 18rem);
+  /* Compact cards: featured = 50% (span 2), standard = 25% (span 1) */
+  --grid-row: clamp(10rem, 22vh, 15rem);
   --grid-cols: 4;
 }
 
@@ -228,42 +228,48 @@ select:disabled,
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 1.15rem;
+  gap: 0.75rem;
   min-width: 0;
-  padding: 2rem 1.75rem 2.15rem;
+  padding: 1.25rem 1.1rem 1.35rem;
 }
 
 @media (min-width: 640px) {
   .content-card {
-    gap: 1.35rem;
-    padding: 2.5rem 2.35rem 2.75rem;
+    gap: 0.85rem;
+    padding: 1.45rem 1.3rem 1.55rem;
   }
 }
 
 @media (min-width: 1024px) {
   .content-card {
-    gap: 1.5rem;
-    padding: 2.85rem 2.75rem 3.1rem;
+    gap: 0.95rem;
+    padding: 1.6rem 1.45rem 1.7rem;
   }
 }
 
 .content-card .card-meta {
   margin: 0;
+  font-size: 0.6rem;
 }
 
 .content-card .card-title {
   margin: 0;
-  max-width: 28ch;
+  max-width: 18ch;
+  font-size: clamp(1.15rem, 1.6vw, 1.45rem);
+  line-height: 1.15;
 }
 
 .content-card .card-subtitle {
-  margin: -0.35rem 0 0;
-  max-width: 36ch;
+  margin: -0.2rem 0 0;
+  max-width: 24ch;
+  font-size: 0.75rem;
 }
 
 .content-card .card-desc {
   margin: 0;
-  max-width: 40ch;
+  max-width: 28ch;
+  font-size: 0.85rem;
+  line-height: 1.45;
 }
 
 .card-featured-mark {
@@ -272,62 +278,63 @@ select:disabled,
   color: color-mix(in srgb, var(--color-rust) 85%, var(--color-ink));
 }
 
-/* Section lead — larger type, taller image, more air */
+/* Section lead — half width (span 2); slightly larger than standard */
 .content-card--featured {
-  gap: 1.35rem;
-  padding: 2.35rem 2rem 2.5rem;
+  gap: 0.95rem;
+  padding: 1.5rem 1.35rem 1.65rem;
 }
 
 .content-card--featured .card-title {
-  max-width: 22ch;
-  font-size: clamp(1.85rem, 3.2vw, 2.75rem);
-  line-height: 1.08;
+  max-width: 20ch;
+  font-size: clamp(1.4rem, 2.2vw, 1.85rem);
+  line-height: 1.1;
   letter-spacing: -0.02em;
 }
 
 .content-card--featured .card-subtitle {
-  max-width: 48ch;
-  font-size: 0.95rem;
+  max-width: 32ch;
+  font-size: 0.8rem;
 }
 
 .content-card--featured .card-desc {
-  max-width: 52ch;
-  font-size: 1.05rem;
+  max-width: 36ch;
+  font-size: 0.92rem;
 }
 
 .content-card--featured .card-image {
-  aspect-ratio: 16 / 9;
-  min-height: 14rem;
+  aspect-ratio: 16 / 10;
+  min-height: 8.5rem;
 }
 
 @media (min-width: 640px) {
   .content-card--featured {
-    gap: 1.55rem;
-    padding: 2.85rem 2.65rem 3rem;
+    gap: 1.05rem;
+    padding: 1.75rem 1.55rem 1.85rem;
   }
 
   .content-card--featured .card-image {
-    min-height: 18rem;
+    min-height: 10.5rem;
   }
 }
 
 @media (min-width: 1024px) {
   .content-card--featured {
-    gap: 1.75rem;
-    padding: 3.25rem 3rem 3.4rem;
+    gap: 1.15rem;
+    padding: 1.9rem 1.7rem 2rem;
   }
 
   .content-card--featured .card-image {
-    min-height: 22rem;
+    min-height: 12rem;
   }
 }
 
 .card-image {
   width: 100%;
-  margin-block: 0.15rem 0.25rem;
+  margin-block: 0.1rem 0.15rem;
   border: 1px solid color-mix(in srgb, var(--color-ink) 18%, transparent);
   background: color-mix(in srgb, var(--color-tan) 35%, var(--color-paper));
   aspect-ratio: 4 / 3;
+  min-height: 6.5rem;
   overflow: hidden;
 }
 
@@ -417,7 +424,7 @@ select:disabled,
 /* Desktop: true 4-column rhythm */
 @media (min-width: 768px) {
   :root {
-    --grid-row: clamp(14rem, 30vh, 20rem);
+    --grid-row: clamp(11rem, 24vh, 16rem);
   }
 
   .staggered-grid {

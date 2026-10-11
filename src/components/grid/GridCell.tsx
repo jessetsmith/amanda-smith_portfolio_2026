@@ -113,7 +113,7 @@ export function GridCell({
           data-kind={item.kind}
           data-featured={item.featured ? "true" : undefined}
         >
-          <p className="card-meta font-mono text-[0.65rem] tracking-[0.18em] text-ink uppercase">
+          <p className="card-meta font-mono tracking-[0.18em] text-ink uppercase">
             <MetaDot />
             {item.meta || item.caption || "Media"}
             {item.featured ? (
@@ -121,7 +121,7 @@ export function GridCell({
             ) : null}
           </p>
           {item.title ? (
-            <h2 className="card-title font-display text-2xl leading-[1.15] text-ink sm:text-3xl">
+            <h2 className="card-title font-display text-ink">
               {item.title}
             </h2>
           ) : null}
@@ -132,7 +132,7 @@ export function GridCell({
             label={item.caption || "Image"}
           />
           {item.description ? (
-            <p className="card-desc text-base leading-relaxed text-ink/70">
+            <p className="card-desc leading-relaxed text-ink/70">
               {item.description}
             </p>
           ) : null}
@@ -148,7 +148,7 @@ export function GridCell({
           data-featured={item.featured ? "true" : undefined}
         >
           {item.meta ? (
-            <p className="card-meta font-mono text-[0.65rem] tracking-[0.18em] text-ink uppercase">
+            <p className="card-meta font-mono tracking-[0.18em] text-ink uppercase">
               <MetaDot />
               {item.meta}
               {item.featured ? (
@@ -156,11 +156,9 @@ export function GridCell({
               ) : null}
             </p>
           ) : null}
-          <h2 className="card-title font-display text-2xl leading-[1.15] text-ink sm:text-3xl md:text-[2rem]">
-            {item.headline}
-          </h2>
+          <h2 className="card-title font-display text-ink">{item.headline}</h2>
           {item.subtitle ? (
-            <p className="card-subtitle text-sm leading-snug text-ink/55">
+            <p className="card-subtitle leading-snug text-ink/55">
               {item.subtitle}
             </p>
           ) : null}
@@ -171,9 +169,7 @@ export function GridCell({
             label="Image"
           />
           {item.excerpt ? (
-            <p className="card-desc text-base leading-relaxed text-ink/70 sm:text-[1.05rem]">
-              {item.excerpt}
-            </p>
+            <p className="card-desc leading-relaxed text-ink/70">{item.excerpt}</p>
           ) : null}
         </article>
       );
@@ -187,7 +183,7 @@ export function GridCell({
           data-featured={item.featured ? "true" : undefined}
         >
           <div className="card-meta flex items-baseline justify-between gap-3">
-            <p className="font-mono text-[0.65rem] tracking-[0.18em] text-ink uppercase">
+            <p className="font-mono tracking-[0.18em] text-ink uppercase">
               <MetaDot />
               {item.meta || "Project"}
               {item.featured ? (
@@ -195,16 +191,14 @@ export function GridCell({
               ) : null}
             </p>
             {item.year ? (
-              <p className="font-mono text-[0.65rem] tracking-[0.12em] text-ink/45">
+              <p className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/45">
                 {item.year}
               </p>
             ) : null}
           </div>
-          <h2 className="card-title font-display text-2xl leading-[1.15] text-ink sm:text-3xl md:text-[2rem]">
-            {item.title}
-          </h2>
+          <h2 className="card-title font-display text-ink">{item.title}</h2>
           {item.subtitle ? (
-            <p className="card-subtitle text-sm leading-snug text-ink/55">
+            <p className="card-subtitle leading-snug text-ink/55">
               {item.subtitle}
             </p>
           ) : null}
@@ -215,9 +209,7 @@ export function GridCell({
             label="Image"
           />
           {item.summary ? (
-            <p className="card-desc text-base leading-relaxed text-ink/65 sm:text-[1.05rem]">
-              {item.summary}
-            </p>
+            <p className="card-desc leading-relaxed text-ink/65">{item.summary}</p>
           ) : null}
         </article>
       );

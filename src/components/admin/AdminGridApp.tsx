@@ -619,14 +619,24 @@ function ItemFields({
           <input
             type="checkbox"
             checked={Boolean(item.featured)}
-            onChange={(e) =>
+            onChange={(e) => {
+              if (e.target.checked) {
+                const colStart = item.colStart > 3 ? 3 : item.colStart;
+                onChange({
+                  featured: true,
+                  colStart,
+                  colSpan: 2,
+                } as Partial<GridItem>);
+                return;
+              }
               onChange({
-                featured: e.target.checked || undefined,
-              } as Partial<GridItem>)
-            }
+                featured: undefined,
+                colSpan: 1,
+              } as Partial<GridItem>);
+            }}
             className="accent-rust"
           />
-          Featured lead
+          Featured lead · span 2
         </label>
       ) : null}
 
