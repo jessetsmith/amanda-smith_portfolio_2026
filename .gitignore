@@ -27,6 +27,10 @@
 # local admin grid persistence (dev fixture edits)
 .data/
 
+# admin-uploaded images (keep folder via .gitkeep)
+/public/media/uploads/*
+!/public/media/uploads/.gitkeep
+
 # debug
 npm-debug.log*
 yarn-debug.log*

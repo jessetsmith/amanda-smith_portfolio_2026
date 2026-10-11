@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 import { useRouter } from "next/navigation";
 import {
   DndContext,
@@ -798,8 +805,7 @@ function ContentEditModal({
                   patchDraft({ caption } as Partial<GridItem>)
                 }
               />
-              <TextField
-                label="Image URL"
+              <ImagePickerField
                 value={draft.imageSrc ?? ""}
                 onChange={(imageSrc) =>
                   patchDraft({ imageSrc } as Partial<GridItem>)
@@ -844,8 +850,7 @@ function ContentEditModal({
                   patchDraft({ subtitle } as Partial<GridItem>)
                 }
               />
-              <TextField
-                label="Image URL"
+              <ImagePickerField
                 value={draft.imageSrc ?? ""}
                 onChange={(imageSrc) =>
                   patchDraft({ imageSrc } as Partial<GridItem>)
@@ -893,8 +898,7 @@ function ContentEditModal({
                 value={draft.year ?? ""}
                 onChange={(year) => patchDraft({ year } as Partial<GridItem>)}
               />
-              <TextField
-                label="Image URL"
+              <ImagePickerField
                 value={draft.imageSrc ?? ""}
                 onChange={(imageSrc) =>
                   patchDraft({ imageSrc } as Partial<GridItem>)
@@ -934,6 +938,117 @@ function ContentEditModal({
           >
             Save
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ImagePickerField({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showPath, setShowPath] = useState(false);
+
+  async function onFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setUploading(true);
+    setError(null);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        body,
+      });
+      const data = (await res.json()) as { src?: string; error?: string };
+      if (!res.ok || !data.src) {
+        throw new Error(data.error || "Upload failed");
+      }
+      onChange(data.src);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <p className="text-[0.65rem] tracking-[0.08em] text-ink/55 uppercase">
+        Image
+      </p>
+      <div className="admin-image-picker">
+        <div className="admin-image-picker__preview">
+          {value ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={value} alt="" className="admin-image-picker__img" />
+          ) : (
+            <p className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/40 uppercase">
+              No image
+            </p>
+          )}
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            className="sr-only"
+            onChange={(event) => void onFileChange(event)}
+          />
+          <button
+            type="button"
+            disabled={uploading}
+            onClick={() => inputRef.current?.click()}
+            className="bg-ink px-3 py-2 font-mono text-[0.65rem] tracking-[0.14em] text-paper uppercase disabled:opacity-50"
+          >
+            {uploading ? "Uploading…" : value ? "Replace image" : "Choose image"}
+          </button>
+          {value ? (
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={() => onChange("")}
+              className="border border-ink/20 px-3 py-1.5 font-mono text-[0.6rem] tracking-[0.12em] uppercase disabled:opacity-50"
+            >
+              Remove
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => setShowPath((open) => !open)}
+            className="self-start font-mono text-[0.55rem] tracking-[0.12em] text-ink/45 uppercase"
+          >
+            {showPath ? "Hide path" : "Advanced path"}
+          </button>
+          {showPath ? (
+            <input
+              type="text"
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder="/media/…"
+              className="w-full border border-ink/15 bg-paper px-2 py-1.5 font-mono text-[0.7rem] text-ink/70"
+            />
+          ) : value ? (
+            <p className="truncate font-mono text-[0.6rem] text-ink/40">
+              {value}
+            </p>
+          ) : null}
+          {error ? (
+            <p className="text-xs text-rust" role="alert">
+              {error}
+            </p>
+          ) : null}
         </div>
       </div>
     </div>

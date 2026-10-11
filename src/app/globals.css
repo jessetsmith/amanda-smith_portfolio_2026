@@ -808,6 +808,47 @@ body {
   overflow: auto;
 }
 
+.admin-image-picker {
+  display: flex;
+  gap: 0.85rem;
+  align-items: stretch;
+}
+
+.admin-image-picker__preview {
+  width: 7.5rem;
+  min-height: 7.5rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-ink) 18%, transparent);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-tan) 55%, var(--color-paper)) 0%,
+      var(--color-paper) 100%
+    );
+}
+
+.admin-image-picker__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+@media (max-width: 480px) {
+  .admin-image-picker {
+    flex-direction: column;
+  }
+
+  .admin-image-picker__preview {
+    width: 100%;
+    min-height: 10rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .intro-band .intro-frame,
   .intro-mask__video,
@@ -836,4 +877,5 @@ body {
     opacity: 1;
   }
 }
+
 
