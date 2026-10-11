@@ -96,7 +96,12 @@ function AdminSortableCell({
       <span className="admin-sortable-cell__grip" aria-hidden>
         ⋮⋮
       </span>
-      <GridCell item={item} omitPlacement className="admin-sortable-cell__body" />
+      <GridCell
+        item={item}
+        omitPlacement
+        /* is-inview: public grid reveals via IntersectionObserver; admin has none */
+        className="admin-sortable-cell__body is-inview"
+      />
     </div>
   );
 }
