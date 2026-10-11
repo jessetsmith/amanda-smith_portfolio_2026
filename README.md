@@ -2,8 +2,9 @@
 
 Fresh redesign of Amanda Smith’s portfolio. Sibling of `portfolio_2024` (reference only).
 
-**Stack (scaffold):** Next.js App Router · TypeScript · Tailwind CSS  
-**Planned:** Sanity.io · admin drag-and-drop grid · holistic translate API  
+**Stack:** Next.js App Router · TypeScript · Tailwind CSS  
+**Phase 1:** CSS tokens, fixture-driven 12-col staggered grid, connected lines on scroll  
+**Planned:** Sanity.io · custom `/admin` DnD · intro video mask · holistic translate  
 
 Build plan (project store): `docs/portfolio-2026-plan.md`
 
@@ -21,7 +22,13 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Default Next port is 3000. For a quieter local port:
+
+```bash
+npx next dev --port 3456
+```
+
+Open the URL printed in the terminal (e.g. [http://localhost:3456](http://localhost:3456)).
 
 Copy `.env.example` → `.env.local` and fill values when a Sanity project exists. Do not commit secrets.
 
@@ -34,6 +41,15 @@ Copy `.env.example` → `.env.local` and fill values when a Sanity project exist
 | `npm run start` | Serve production build |
 | `npm run lint` | ESLint |
 
+## Phase 1 layout
+
+- Fixture data: `src/data/homepage-grid.json`
+- Grid types: `src/types/grid.ts`
+- Public grid: `src/components/grid/HomepageGrid.tsx` + `GridCell.tsx`
+- Tokens / connected lines: `src/app/globals.css`
+
+Grid items are mock JSON only — no live Sanity yet (Phase 2).
+
 ## Environment
 
 See `.env.example`. Placeholders only — create a real Sanity project before wiring CMS:
@@ -43,7 +59,3 @@ See `.env.example`. Placeholders only — create a real Sanity project before wi
 - `NEXT_PUBLIC_SANITY_API_VERSION`
 - `SANITY_API_READ_TOKEN` (server-only, if needed)
 - `GOOGLE_TRANSLATE_API_KEY` (or equivalent; server-only)
-
-## Scope of this scaffold
-
-Minimal app shell only. Grid, intro mask, hazy menu, Sanity schemas, and DnD are **not** implemented yet — see the phased plan.
