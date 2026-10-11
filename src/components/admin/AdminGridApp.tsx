@@ -476,16 +476,33 @@ function ItemFields({
       {item.kind === "mediaCell" ? (
         <>
           <TextField
-            label="Caption"
-            value={item.caption ?? ""}
-            onChange={(caption) => onChange({ caption } as Partial<GridItem>)}
+            label="Meta"
+            value={item.meta ?? ""}
+            onChange={(meta) => onChange({ meta } as Partial<GridItem>)}
+          />
+          <TextField
+            label="Title"
+            value={item.title ?? ""}
+            onChange={(title) => onChange({ title } as Partial<GridItem>)}
+          />
+          <TextField
+            label="Image URL"
+            value={item.imageSrc ?? ""}
+            onChange={(imageSrc) => onChange({ imageSrc } as Partial<GridItem>)}
           />
           <SelectField
-            label="Tone"
+            label="Image tone"
             value={item.placeholderTone ?? "warm"}
             options={["warm", "cool", "ink"]}
             onChange={(placeholderTone) =>
               onChange({ placeholderTone } as Partial<GridItem>)
+            }
+          />
+          <TextAreaField
+            label="Description"
+            value={item.description ?? ""}
+            onChange={(description) =>
+              onChange({ description } as Partial<GridItem>)
             }
           />
         </>
@@ -499,12 +516,30 @@ function ItemFields({
             onChange={(meta) => onChange({ meta } as Partial<GridItem>)}
           />
           <TextField
-            label="Headline"
+            label="Title"
             value={item.headline}
             onChange={(headline) => onChange({ headline } as Partial<GridItem>)}
           />
+          <TextField
+            label="Subtitle"
+            value={item.subtitle ?? ""}
+            onChange={(subtitle) => onChange({ subtitle } as Partial<GridItem>)}
+          />
+          <TextField
+            label="Image URL"
+            value={item.imageSrc ?? ""}
+            onChange={(imageSrc) => onChange({ imageSrc } as Partial<GridItem>)}
+          />
+          <SelectField
+            label="Image tone"
+            value={item.placeholderTone ?? "warm"}
+            options={["warm", "cool", "ink"]}
+            onChange={(placeholderTone) =>
+              onChange({ placeholderTone } as Partial<GridItem>)
+            }
+          />
           <TextAreaField
-            label="Excerpt"
+            label="Description"
             value={item.excerpt ?? ""}
             onChange={(excerpt) => onChange({ excerpt } as Partial<GridItem>)}
           />
@@ -514,17 +549,40 @@ function ItemFields({
       {item.kind === "projectCell" ? (
         <>
           <TextField
+            label="Meta"
+            value={item.meta ?? ""}
+            onChange={(meta) => onChange({ meta } as Partial<GridItem>)}
+          />
+          <TextField
             label="Title"
             value={item.title}
             onChange={(title) => onChange({ title } as Partial<GridItem>)}
+          />
+          <TextField
+            label="Subtitle"
+            value={item.subtitle ?? ""}
+            onChange={(subtitle) => onChange({ subtitle } as Partial<GridItem>)}
           />
           <TextField
             label="Year"
             value={item.year ?? ""}
             onChange={(year) => onChange({ year } as Partial<GridItem>)}
           />
+          <TextField
+            label="Image URL"
+            value={item.imageSrc ?? ""}
+            onChange={(imageSrc) => onChange({ imageSrc } as Partial<GridItem>)}
+          />
+          <SelectField
+            label="Image tone"
+            value={item.placeholderTone ?? "cool"}
+            options={["warm", "cool", "ink"]}
+            onChange={(placeholderTone) =>
+              onChange({ placeholderTone } as Partial<GridItem>)
+            }
+          />
           <TextAreaField
-            label="Summary"
+            label="Description"
             value={item.summary ?? ""}
             onChange={(summary) => onChange({ summary } as Partial<GridItem>)}
           />

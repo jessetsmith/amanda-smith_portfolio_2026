@@ -1,5 +1,7 @@
 export type CellFill = "rust" | "ochre" | "sage" | "tan" | "paper" | "ink";
 
+export type PlaceholderTone = "warm" | "cool" | "ink";
+
 export type GridItemKind =
   | "titleRow"
   | "colorCell"
@@ -7,7 +9,7 @@ export type GridItemKind =
   | "textCell"
   | "projectCell";
 
-/** Homepage grid is max 4 columns. Spans are 1–4; admin will edit later. */
+/** Homepage grid is max 4 columns. Spans are 1–4. */
 export const GRID_COLUMNS = 4 as const;
 
 export interface GridItemBase {
@@ -34,26 +36,40 @@ export interface ColorCellItem extends GridItemBase {
   label?: string;
 }
 
+/** Content card stack: meta → title → image → description */
 export interface MediaCellItem extends GridItemBase {
   kind: "mediaCell";
+  meta?: string;
+  title?: string;
   caption?: string;
-  /** Placeholder tone until real media lands */
-  placeholderTone?: "warm" | "cool" | "ink";
+  description?: string;
+  imageSrc?: string;
+  imageAlt?: string;
+  placeholderTone?: PlaceholderTone;
 }
 
 export interface TextCellItem extends GridItemBase {
   kind: "textCell";
-  headline: string;
-  excerpt?: string;
   meta?: string;
+  headline: string;
+  subtitle?: string;
+  excerpt?: string;
+  imageSrc?: string;
+  imageAlt?: string;
+  placeholderTone?: PlaceholderTone;
 }
 
 export interface ProjectCellItem extends GridItemBase {
   kind: "projectCell";
+  meta?: string;
   title: string;
+  subtitle?: string;
   year?: string;
   summary?: string;
   href?: string;
+  imageSrc?: string;
+  imageAlt?: string;
+  placeholderTone?: PlaceholderTone;
 }
 
 export type GridItem =

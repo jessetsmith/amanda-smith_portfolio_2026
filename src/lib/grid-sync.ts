@@ -44,9 +44,15 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
       return {
         ...base,
         kind: "projectCell" as const,
+        meta: row.meta as string | undefined,
         title: String(row.title || projectRef?.title || "Untitled"),
+        subtitle: row.subtitle as string | undefined,
         year: (row.year as string) || projectRef?.year,
         summary: (row.summary as string) || projectRef?.summary,
+        imageSrc: row.imageSrc as string | undefined,
+        imageAlt: row.imageAlt as string | undefined,
+        placeholderTone:
+          (row.placeholderTone as "warm" | "cool" | "ink") || "cool",
       };
     }
     if (kind === "titleRow") {
@@ -68,7 +74,12 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
       return {
         ...base,
         kind: "mediaCell" as const,
+        meta: row.meta as string | undefined,
+        title: row.title as string | undefined,
         caption: (row.caption as string) || "Media",
+        description: row.description as string | undefined,
+        imageSrc: row.imageSrc as string | undefined,
+        imageAlt: row.imageAlt as string | undefined,
         placeholderTone:
           (row.placeholderTone as "warm" | "cool" | "ink") || "warm",
       };
@@ -76,9 +87,14 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
     return {
       ...base,
       kind: "textCell" as const,
-      headline: String(row.headline || "Headline"),
-      excerpt: row.excerpt as string | undefined,
       meta: row.meta as string | undefined,
+      headline: String(row.headline || "Headline"),
+      subtitle: row.subtitle as string | undefined,
+      excerpt: row.excerpt as string | undefined,
+      imageSrc: row.imageSrc as string | undefined,
+      imageAlt: row.imageAlt as string | undefined,
+      placeholderTone:
+        (row.placeholderTone as "warm" | "cool" | "ink") || "warm",
     };
   });
   return normalizeGridItems(mapped as GridItem[]);

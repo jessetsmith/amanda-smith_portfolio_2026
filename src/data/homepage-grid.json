@@ -13,10 +13,12 @@
     "kind": "textCell",
     "colStart": 1,
     "colSpan": 3,
-    "rowSpan": 1,
+    "rowSpan": 2,
+    "meta": "Portfolio 2026",
     "headline": "Archival modernism across exhibitions, writing, and research.",
+    "subtitle": "Curatorial practice · writing · education",
     "excerpt": "A staggered editorial grid for projects and publications — connected lines, color cells, and open composition.",
-    "meta": "Portfolio 2026"
+    "placeholderTone": "warm"
   },
   {
     "id": "color-rust-1",
@@ -24,7 +26,7 @@
     "kind": "colorCell",
     "colStart": 4,
     "colSpan": 1,
-    "rowSpan": 1,
+    "rowSpan": 2,
     "fill": "rust",
     "label": "Accent"
   },
@@ -43,9 +45,12 @@
     "colStart": 1,
     "colSpan": 3,
     "rowSpan": 2,
+    "meta": "Exhibition",
     "title": "Echos of Migration",
+    "subtitle": "Research exhibition",
     "year": "2024",
-    "summary": "Exhibition research mapping displacement, memory, and relational space."
+    "summary": "Exhibition research mapping displacement, memory, and relational space.",
+    "placeholderTone": "cool"
   },
   {
     "id": "color-sage-1",
@@ -62,8 +67,11 @@
     "kind": "mediaCell",
     "colStart": 1,
     "colSpan": 2,
-    "rowSpan": 1,
+    "rowSpan": 2,
+    "meta": "Still",
+    "title": "Field study",
     "caption": "Media",
+    "description": "Placeholder frame for archive photography or short loops.",
     "placeholderTone": "warm"
   },
   {
@@ -72,7 +80,7 @@
     "kind": "colorCell",
     "colStart": 3,
     "colSpan": 2,
-    "rowSpan": 1,
+    "rowSpan": 2,
     "fill": "ochre",
     "label": "Field"
   },
@@ -82,10 +90,13 @@
     "kind": "projectCell",
     "colStart": 1,
     "colSpan": 4,
-    "rowSpan": 1,
+    "rowSpan": 2,
+    "meta": "Curatorial",
     "title": "Theater of Relations",
+    "subtitle": "Proposal · encounter and staged proximity",
     "year": "2023",
-    "summary": "Curatorial proposal on encounter and staged proximity."
+    "summary": "Curatorial proposal on encounter and staged proximity.",
+    "placeholderTone": "ink"
   },
   {
     "id": "title-publications",
@@ -101,10 +112,12 @@
     "kind": "textCell",
     "colStart": 1,
     "colSpan": 2,
-    "rowSpan": 1,
+    "rowSpan": 2,
+    "meta": "Academic · Creative",
     "headline": "Exhibition reviews & journal notes",
-    "excerpt": "Critical writing across Musée and related venues — fixture copy until Sanity lands.",
-    "meta": "Academic · Creative"
+    "subtitle": "Musée Magazine and related venues",
+    "excerpt": "Critical writing across Musée and related venues — structure ready for CMS migration.",
+    "placeholderTone": "cool"
   },
   {
     "id": "color-tan-1",
@@ -112,7 +125,7 @@
     "kind": "colorCell",
     "colStart": 3,
     "colSpan": 1,
-    "rowSpan": 1,
+    "rowSpan": 2,
     "fill": "tan"
   },
   {
@@ -121,8 +134,11 @@
     "kind": "mediaCell",
     "colStart": 4,
     "colSpan": 1,
-    "rowSpan": 1,
+    "rowSpan": 2,
+    "meta": "Archive",
+    "title": "Still",
     "caption": "Still",
+    "description": "Short caption under the frame.",
     "placeholderTone": "cool"
   },
   {
@@ -131,10 +147,13 @@
     "kind": "projectCell",
     "colStart": 1,
     "colSpan": 3,
-    "rowSpan": 1,
+    "rowSpan": 2,
+    "meta": "Site-responsive",
     "title": "Connecting Stodůlky",
+    "subtitle": "Neighborhood memory",
     "year": "2022",
-    "summary": "Site-responsive work on neighborhood memory and shared infrastructure."
+    "summary": "Site-responsive work on neighborhood memory and shared infrastructure.",
+    "placeholderTone": "warm"
   },
   {
     "id": "color-ochre-2",
@@ -142,7 +161,7 @@
     "kind": "colorCell",
     "colStart": 4,
     "colSpan": 1,
-    "rowSpan": 1,
+    "rowSpan": 2,
     "fill": "ochre"
   },
   {
@@ -151,8 +170,11 @@
     "kind": "mediaCell",
     "colStart": 1,
     "colSpan": 4,
-    "rowSpan": 1,
-    "caption": "Archive still",
+    "rowSpan": 2,
+    "meta": "Archive",
+    "title": "Archive still",
+    "caption": "Full-width media",
+    "description": "Wide media band — image sits between title and supporting copy.",
     "placeholderTone": "ink"
   },
   {
@@ -169,7 +191,7 @@
     "kind": "colorCell",
     "colStart": 1,
     "colSpan": 1,
-    "rowSpan": 1,
+    "rowSpan": 2,
     "fill": "ink",
     "label": "Study"
   },
@@ -179,10 +201,12 @@
     "kind": "textCell",
     "colStart": 2,
     "colSpan": 3,
-    "rowSpan": 1,
+    "rowSpan": 2,
+    "meta": "Grants · Presentations",
     "headline": "Trauma-informed qualitative practice",
-    "excerpt": "Awards, grants, and presentations — structure ready for CMS migration.",
-    "meta": "Grants · Presentations"
+    "subtitle": "Awards, grants, and presentations",
+    "excerpt": "Structure ready for CMS migration from fixture content.",
+    "placeholderTone": "cool"
   },
   {
     "id": "color-sage-2",

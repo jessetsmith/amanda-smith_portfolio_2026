@@ -1,4 +1,9 @@
-import type { CellFill, GridItem, GridItemKind } from "@/types/grid";
+import type {
+  CellFill,
+  GridItem,
+  GridItemKind,
+  PlaceholderTone,
+} from "@/types/grid";
 import { GRID_COLUMNS } from "@/types/grid";
 
 const FILLS: CellFill[] = ["rust", "ochre", "sage", "tan", "paper", "ink"];
@@ -9,9 +14,20 @@ const KINDS: GridItemKind[] = [
   "textCell",
   "projectCell",
 ];
+const TONES: PlaceholderTone[] = ["warm", "cool", "ink"];
 
 function clamp(n: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, Number.isFinite(n) ? n : min));
+}
+
+function str(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
+function tone(value: unknown, fallback: PlaceholderTone = "warm"): PlaceholderTone {
+  return TONES.includes(value as PlaceholderTone)
+    ? (value as PlaceholderTone)
+    : fallback;
 }
 
 export function normalizeGridItem(item: GridItem, order: number): GridItem {
@@ -39,10 +55,7 @@ export function normalizeGridItem(item: GridItem, order: number): GridItem {
       return {
         ...base,
         kind: "titleRow",
-        label:
-          "label" in item && typeof item.label === "string"
-            ? item.label
-            : "Section",
+        label: str((item as { label?: string }).label) || "Section",
       };
     case "colorCell": {
       const fill =
@@ -53,63 +66,81 @@ export function normalizeGridItem(item: GridItem, order: number): GridItem {
         ...base,
         kind: "colorCell",
         fill,
-        label:
-          "label" in item && typeof item.label === "string"
-            ? item.label
-            : undefined,
-        href:
-          "href" in item && typeof item.href === "string" ? item.href : undefined,
+        label: str((item as { label?: string }).label),
+        href: str((item as { href?: string }).href),
       };
     }
-    case "mediaCell":
+    case "mediaCell": {
+      const row = item as {
+        meta?: string;
+        title?: string;
+        caption?: string;
+        description?: string;
+        imageSrc?: string;
+        imageAlt?: string;
+        placeholderTone?: PlaceholderTone;
+      };
       return {
         ...base,
         kind: "mediaCell",
-        caption:
-          "caption" in item && typeof item.caption === "string"
-            ? item.caption
-            : "Media",
-        placeholderTone:
-          "placeholderTone" in item &&
-          (item.placeholderTone === "warm" ||
-            item.placeholderTone === "cool" ||
-            item.placeholderTone === "ink")
-            ? item.placeholderTone
-            : "warm",
+        meta: str(row.meta),
+        title: str(row.title),
+        caption: str(row.caption) || "Media",
+        description: str(row.description),
+        imageSrc: str(row.imageSrc),
+        imageAlt: str(row.imageAlt),
+        placeholderTone: tone(row.placeholderTone, "warm"),
       };
-    case "projectCell":
+    }
+    case "projectCell": {
+      const row = item as {
+        meta?: string;
+        title?: string;
+        subtitle?: string;
+        year?: string;
+        summary?: string;
+        href?: string;
+        imageSrc?: string;
+        imageAlt?: string;
+        placeholderTone?: PlaceholderTone;
+      };
       return {
         ...base,
         kind: "projectCell",
-        title:
-          "title" in item && typeof item.title === "string"
-            ? item.title
-            : "Untitled project",
-        year:
-          "year" in item && typeof item.year === "string" ? item.year : undefined,
-        summary:
-          "summary" in item && typeof item.summary === "string"
-            ? item.summary
-            : undefined,
-        href:
-          "href" in item && typeof item.href === "string" ? item.href : undefined,
+        meta: str(row.meta),
+        title: str(row.title) || "Untitled project",
+        subtitle: str(row.subtitle),
+        year: str(row.year),
+        summary: str(row.summary),
+        href: str(row.href),
+        imageSrc: str(row.imageSrc),
+        imageAlt: str(row.imageAlt),
+        placeholderTone: tone(row.placeholderTone, "cool"),
       };
+    }
     case "textCell":
-    default:
+    default: {
+      const row = item as {
+        meta?: string;
+        headline?: string;
+        subtitle?: string;
+        excerpt?: string;
+        imageSrc?: string;
+        imageAlt?: string;
+        placeholderTone?: PlaceholderTone;
+      };
       return {
         ...base,
         kind: "textCell",
-        headline:
-          "headline" in item && typeof item.headline === "string"
-            ? item.headline
-            : "Headline",
-        excerpt:
-          "excerpt" in item && typeof item.excerpt === "string"
-            ? item.excerpt
-            : undefined,
-        meta:
-          "meta" in item && typeof item.meta === "string" ? item.meta : undefined,
+        meta: str(row.meta),
+        headline: str(row.headline) || "Headline",
+        subtitle: str(row.subtitle),
+        excerpt: str(row.excerpt),
+        imageSrc: str(row.imageSrc),
+        imageAlt: str(row.imageAlt),
+        placeholderTone: tone(row.placeholderTone, "warm"),
       };
+    }
   }
 }
 
@@ -148,8 +179,11 @@ export function createGridItem(kind: GridItemKind, order: number): GridItem {
         kind,
         colStart: 1,
         colSpan: 2,
-        rowSpan: 1,
-        caption: "Media",
+        rowSpan: 2,
+        meta: "Media",
+        title: "New media",
+        caption: "Image",
+        description: "Supporting note under the image.",
         placeholderTone: "warm",
       };
     case "projectCell":
@@ -159,10 +193,13 @@ export function createGridItem(kind: GridItemKind, order: number): GridItem {
         kind,
         colStart: 1,
         colSpan: 3,
-        rowSpan: 1,
+        rowSpan: 2,
+        meta: "Project",
         title: "New project",
+        subtitle: "Subtitle",
         year: String(new Date().getFullYear()),
-        summary: "Short summary",
+        summary: "Short summary below the image.",
+        placeholderTone: "cool",
       };
     case "textCell":
     default:
@@ -172,10 +209,12 @@ export function createGridItem(kind: GridItemKind, order: number): GridItem {
         kind: "textCell",
         colStart: 1,
         colSpan: 3,
-        rowSpan: 1,
-        headline: "New text block",
-        excerpt: "Supporting copy",
+        rowSpan: 2,
         meta: "Meta",
+        headline: "New text block",
+        subtitle: "Subtitle",
+        excerpt: "Description below the image.",
+        placeholderTone: "warm",
       };
   }
 }
