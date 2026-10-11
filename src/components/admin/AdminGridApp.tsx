@@ -8,6 +8,7 @@ import {
   useState,
   type ChangeEvent,
 } from "react";
+import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
   DndContext,
@@ -177,34 +178,27 @@ export function AdminGridApp({
     [items],
   );
 
-  const persist = useCallback(
-    async (next: GridItem[]) => {
-      setSaveState("saving");
-      try {
-        const res = await fetch("/api/homepage-grid", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ items: next }),
-        });
-        if (!res.ok) throw new Error("save failed");
-        const data = (await res.json()) as {
-          items: GridItem[];
-          source?: DataSource;
-        };
-        // Prefer the payload we saved — avoid clobbering optimistic reorder
-        // with a momentarily-stale Sanity read.
-        const normalized = normalizeGridItems(next);
-        itemsRef.current = normalized;
-        setItems(normalized);
-        if (data.source) setSource(data.source);
-        setSaveState("saved");
-        router.refresh();
-      } catch {
-        setSaveState("error");
-      }
-    },
-    [router],
-  );
+  const persist = useCallback(async (next: GridItem[]) => {
+    setSaveState("saving");
+    try {
+      const res = await fetch("/api/homepage-grid", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: next }),
+      });
+      if (!res.ok) throw new Error("save failed");
+      const data = (await res.json()) as {
+        items: GridItem[];
+        source?: DataSource;
+      };
+      // Keep the optimistic client layout — re-setItems / router.refresh()
+      // remount churn was flashing blocks back to the pre-drop slot.
+      if (data.source) setSource(data.source);
+      setSaveState("saved");
+    } catch {
+      setSaveState("error");
+    }
+  }, []);
 
   const schedulePersist = useCallback(
     (next: GridItem[]) => {
@@ -325,13 +319,23 @@ export function AdminGridApp({
 
   function onDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-    setActiveDragId(null);
-    if (!over || active.id === over.id) return;
-    if (!sameSurface(active.id, over.id)) return;
+    if (!over || active.id === over.id || !sameSurface(active.id, over.id)) {
+      setActiveDragId(null);
+      return;
+    }
     const activeId = parseAnyDndId(active.id);
     const overId = parseAnyDndId(over.id);
-    if (!activeId || !overId || activeId === overId) return;
-    updateItems((prev) => reorderGridItems(prev, activeId, overId));
+    if (!activeId || !overId || activeId === overId) {
+      setActiveDragId(null);
+      return;
+    }
+
+    // Commit new CSS-grid placement before DragOverlay / isDragging tear down
+    // so the source never paints one frame at the old slot (snap-back).
+    flushSync(() => {
+      updateItems((prev) => reorderGridItems(prev, activeId, overId));
+    });
+    setActiveDragId(null);
   }
 
   function onDragCancel() {
@@ -711,12 +715,17 @@ function SortableRow({
   active: boolean;
   onSelect: () => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: listDndId(item.id) });
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useSortable({
+      id: listDndId(item.id),
+      animateLayoutChanges: () => false,
+      transition: null,
+    });
 
   const style = {
     transform: isDragging ? undefined : CSS.Transform.toString(transform),
-    transition: isDragging ? undefined : transition,
+    transition: undefined,
+    opacity: isDragging ? 0 : undefined,
   };
 
   const label =

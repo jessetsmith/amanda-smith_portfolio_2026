@@ -106,11 +106,13 @@ function AdminSortableCell({
     listeners,
     setNodeRef,
     transform,
-    transition,
     isDragging,
   } = useSortable({
     id: gridDndId(item.id),
     disabled: resizing,
+    // CSS grid owns placement — sortable layout animations cause snap-back.
+    animateLayoutChanges: () => false,
+    transition: null,
   });
 
   const setRefs = useCallback(
@@ -121,12 +123,13 @@ function AdminSortableCell({
     [setNodeRef],
   );
 
-  // With DragOverlay, keep the source cell parked — transforming it with the
-  // pointer makes closestCenter always hit `active` so drops never reorder.
+  // Park source under DragOverlay (no pointer transform). Hide it fully so
+  // drop never flashes the old grid slot before optimistic placement paints.
   const style = {
     ...gridPlacementStyle(item),
     transform: isDragging ? undefined : CSS.Transform.toString(transform),
-    transition: isDragging || resizing ? undefined : transition,
+    transition: undefined,
+    opacity: isDragging ? 0 : undefined,
   };
 
   const canResizeCols = item.kind !== "titleRow";

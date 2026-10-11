@@ -814,7 +814,7 @@ select:disabled,
 
 .admin-sortable-cell.is-dragging {
   cursor: grabbing;
-  opacity: 0.35;
+  /* Opacity set inline to 0 — avoid flashing the parked source on drop */
   z-index: 4;
 }
 
