@@ -31,6 +31,7 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
       | { title?: string; summary?: string; year?: string }
       | undefined;
     const kind = String(row.kind || "textCell");
+    const featured = Boolean(row.featured);
     const base = {
       id: String(row.id || row._key || `sanity-${index + 1}`),
       order: Number(row.order ?? index + 1),
@@ -38,6 +39,7 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
       colSpan: Number(row.colSpan ?? 1),
       rowSpan: Number(row.rowSpan ?? 1),
       fill: row.fill as GridItem["fill"],
+      ...(featured ? { featured: true as const } : {}),
     };
 
     if (kind === "projectCell") {

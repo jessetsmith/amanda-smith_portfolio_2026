@@ -378,7 +378,9 @@ function SortableRow({
         className="min-w-0 flex-1 px-2 py-2.5 text-left"
       >
         <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
-          {item.kind} · c{item.colStart}/{item.colSpan} · r{item.rowSpan ?? 1}
+          {item.kind}
+          {item.featured ? " · lead" : ""} · c{item.colStart}/{item.colSpan} · r
+          {item.rowSpan ?? 1}
         </p>
         <p className="truncate text-sm text-ink">{label}</p>
       </button>
@@ -446,6 +448,24 @@ function ItemFields({
           onChange={(rowSpan) => onChange({ rowSpan } as Partial<GridItem>)}
         />
       </div>
+
+      {item.kind === "mediaCell" ||
+      item.kind === "textCell" ||
+      item.kind === "projectCell" ? (
+        <label className="flex items-center gap-2 font-mono text-[0.65rem] tracking-[0.12em] text-ink uppercase">
+          <input
+            type="checkbox"
+            checked={Boolean(item.featured)}
+            onChange={(e) =>
+              onChange({
+                featured: e.target.checked || undefined,
+              } as Partial<GridItem>)
+            }
+            className="accent-rust"
+          />
+          Featured lead
+        </label>
+      ) : null}
 
       {item.kind === "titleRow" ? (
         <TextField

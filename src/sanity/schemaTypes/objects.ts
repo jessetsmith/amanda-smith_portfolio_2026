@@ -98,6 +98,14 @@ export const gridItem = defineType({
       validation: (Rule) => Rule.min(1).max(4),
     }),
     defineField({
+      name: "featured",
+      type: "boolean",
+      title: "Featured lead",
+      description:
+        "Highlight as the section lead (larger type/image). One per section, right after the title row.",
+      initialValue: false,
+    }),
+    defineField({
       name: "fill",
       type: "string",
       options: {
@@ -138,11 +146,17 @@ export const gridItem = defineType({
     }),
   ],
   preview: {
-    select: { kind: "kind", title: "title", headline: "headline", label: "label" },
-    prepare({ kind, title, headline, label }) {
+    select: {
+      kind: "kind",
+      title: "title",
+      headline: "headline",
+      label: "label",
+      featured: "featured",
+    },
+    prepare({ kind, title, headline, label, featured }) {
       return {
         title: title || headline || label || kind,
-        subtitle: kind,
+        subtitle: featured ? `${kind} · featured lead` : kind,
       };
     },
   },

@@ -42,12 +42,14 @@ export function normalizeGridItem(item: GridItem, order: number): GridItem {
       ? item.id
       : `${kind}-${order}`;
 
+  const featured = Boolean((item as { featured?: boolean }).featured);
   const base = {
     id,
     order,
     colStart: kind === "titleRow" ? 1 : colStart,
     colSpan,
     rowSpan,
+    ...(featured ? { featured: true as const } : {}),
   };
 
   switch (kind) {

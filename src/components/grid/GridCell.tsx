@@ -49,6 +49,12 @@ function CardImage({
   );
 }
 
+function contentCardClass(item: GridItem, kindClass: string): string {
+  const featured =
+    "featured" in item && item.featured ? " content-card--featured" : "";
+  return `grid-cell relative content-card ${kindClass}${featured}`;
+}
+
 export function GridCell({ item }: GridCellProps) {
   const style = gridPlacementStyle(item);
   const base = "grid-cell relative";
@@ -89,13 +95,17 @@ export function GridCell({ item }: GridCellProps) {
     case "mediaCell":
       return (
         <article
-          className={`${base} content-card media-cell`}
+          className={contentCardClass(item, "media-cell")}
           style={style}
           data-kind={item.kind}
+          data-featured={item.featured ? "true" : undefined}
         >
           <p className="card-meta font-mono text-[0.65rem] tracking-[0.18em] text-ink uppercase">
             <MetaDot />
             {item.meta || item.caption || "Media"}
+            {item.featured ? (
+              <span className="card-featured-mark"> · Lead</span>
+            ) : null}
           </p>
           {item.title ? (
             <h2 className="card-title font-display text-2xl leading-[1.15] text-ink sm:text-3xl">
@@ -119,14 +129,18 @@ export function GridCell({ item }: GridCellProps) {
     case "textCell":
       return (
         <article
-          className={`${base} content-card text-cell`}
+          className={contentCardClass(item, "text-cell")}
           style={style}
           data-kind={item.kind}
+          data-featured={item.featured ? "true" : undefined}
         >
           {item.meta ? (
             <p className="card-meta font-mono text-[0.65rem] tracking-[0.18em] text-ink uppercase">
               <MetaDot />
               {item.meta}
+              {item.featured ? (
+                <span className="card-featured-mark"> · Lead</span>
+              ) : null}
             </p>
           ) : null}
           <h2 className="card-title font-display text-2xl leading-[1.15] text-ink sm:text-3xl md:text-[2rem]">
@@ -154,14 +168,18 @@ export function GridCell({ item }: GridCellProps) {
     case "projectCell":
       return (
         <article
-          className={`${base} content-card project-cell`}
+          className={contentCardClass(item, "project-cell")}
           style={style}
           data-kind={item.kind}
+          data-featured={item.featured ? "true" : undefined}
         >
           <div className="card-meta flex items-baseline justify-between gap-3">
             <p className="font-mono text-[0.65rem] tracking-[0.18em] text-ink uppercase">
               <MetaDot />
               {item.meta || "Project"}
+              {item.featured ? (
+                <span className="card-featured-mark"> · Lead</span>
+              ) : null}
             </p>
             {item.year ? (
               <p className="font-mono text-[0.65rem] tracking-[0.12em] text-ink/45">

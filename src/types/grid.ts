@@ -22,6 +22,11 @@ export interface GridItemBase {
   colSpan: number;
   rowSpan?: number;
   fill?: CellFill;
+  /**
+   * Section lead / highlighted card. Prefer one featured content cell
+   * immediately after each titleRow (near-full width + larger type/image).
+   */
+  featured?: boolean;
 }
 
 export interface TitleRowItem extends GridItemBase {
