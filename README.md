@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Portfolio 2026
 
-## Getting Started
+Fresh redesign of Amanda Smith’s portfolio. Sibling of `portfolio_2024` (reference only).
 
-First, run the development server:
+**Stack (scaffold):** Next.js App Router · TypeScript · Tailwind CSS  
+**Planned:** Sanity.io · admin drag-and-drop grid · holistic translate API  
+
+Build plan (project store): `docs/portfolio-2026-plan.md`
+
+## Requirements
+
+- Node.js 20+ recommended
+- npm (comes with Node)
+
+## Setup
 
 ```bash
+cd ~/Desktop/Projects/Amanda-Portfolio/portfolio_2026
+npm install
+cp .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Copy `.env.example` → `.env.local` and fill values when a Sanity project exists. Do not commit secrets.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
 
-## Learn More
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Dev server (Turbopack) |
+| `npm run build` | Production build |
+| `npm run start` | Serve production build |
+| `npm run lint` | ESLint |
 
-To learn more about Next.js, take a look at the following resources:
+## Environment
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+See `.env.example`. Placeholders only — create a real Sanity project before wiring CMS:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `NEXT_PUBLIC_SANITY_PROJECT_ID`
+- `NEXT_PUBLIC_SANITY_DATASET`
+- `NEXT_PUBLIC_SANITY_API_VERSION`
+- `SANITY_API_READ_TOKEN` (server-only, if needed)
+- `GOOGLE_TRANSLATE_API_KEY` (or equivalent; server-only)
 
-## Deploy on Vercel
+## Scope of this scaffold
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Minimal app shell only. Grid, intro mask, hazy menu, Sanity schemas, and DnD are **not** implemented yet — see the phased plan.

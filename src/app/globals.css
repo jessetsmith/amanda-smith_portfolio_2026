@@ -1,26 +1,34 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Palette tokens — see docs/portfolio-2026-plan.md */
+  --color-rust: #8d4233;
+  --color-ochre: #c68b2b;
+  --color-sage: #8a9a7b;
+  --color-tan: #d4c4a8;
+  --color-ink: #1a1a1a;
+  --color-paper: #f7f4ef;
+  --color-haze: rgba(247, 244, 239, 0.55);
+
+  --background: var(--color-paper);
+  --foreground: var(--color-ink);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-rust: var(--color-rust);
+  --color-ochre: var(--color-ochre);
+  --color-sage: var(--color-sage);
+  --color-tan: var(--color-tan);
+  --color-ink: var(--color-ink);
+  --color-paper: var(--color-paper);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, sans-serif;
 }
