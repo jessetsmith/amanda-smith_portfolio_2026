@@ -438,11 +438,11 @@ export function AdminGridApp({
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink/10 px-4 py-3">
               <div className="min-w-0">
                 <p className="font-mono text-[0.65rem] tracking-[0.18em] text-ink/50 uppercase">
-                  Live preview · drag to reorder · edges to resize
+                  Live preview · grip reorder · edge resize
                 </p>
                 <p className="text-xs text-ink/45">
-                  Drop to change <code className="font-mono">order</code> ·
-                  drag right/bottom handles for{" "}
+                  Use <code className="font-mono">⋮⋮</code> to reorder · drag
+                  rust edge handles for{" "}
                   <code className="font-mono">colSpan</code>/
                   <code className="font-mono">rowSpan</code> · saves to{" "}
                   <code className="font-mono">

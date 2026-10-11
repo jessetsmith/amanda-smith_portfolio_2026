@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type PointerEvent as ReactPointerEvent,
-} from "react";
+import { useCallback, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GridCell } from "@/components/grid/GridCell";
@@ -49,7 +43,7 @@ export function AdminGridCanvas({
       aria-label="Admin homepage grid canvas"
     >
       <p className="mb-3 font-mono text-[0.65rem] tracking-[0.16em] text-ink/45 uppercase">
-        Drag to reorder · click to select · drag edges to resize
+        Click to select · ⋮⋮ grip to reorder · edge handles to resize
       </p>
       <div className="grid-canvas">
         <div className="grid-lines" aria-hidden style={{ opacity: 0.45 }} />
@@ -87,18 +81,11 @@ function AdminSortableCell({
   onResize: (id: string, patch: Partial<GridResizePatch>) => void;
 }) {
   const cellRef = useRef<HTMLDivElement | null>(null);
+  const onResizeRef = useRef(onResize);
+  onResizeRef.current = onResize;
+  const itemRef = useRef(item);
+  itemRef.current = item;
   const [resizing, setResizing] = useState(false);
-  const resizeSession = useRef<{
-    edge: ResizeEdge;
-    startX: number;
-    startY: number;
-    colUnit: number;
-    rowUnit: number;
-    colStart: number;
-    colSpan: number;
-    rowSpan: number;
-    lastKey: string;
-  } | null>(null);
 
   const {
     attributes,
@@ -125,18 +112,52 @@ function AdminSortableCell({
   const style = {
     ...gridPlacementStyle(item),
     transform: isDragging ? undefined : CSS.Transform.toString(transform),
-    transition:
-      isDragging || resizing ? undefined : transition,
+    transition: isDragging || resizing ? undefined : transition,
   };
 
   const canResizeCols = item.kind !== "titleRow";
 
-  useEffect(() => {
-    if (!resizing) return;
+  function beginResize(edge: ResizeEdge, event: ReactPointerEvent<HTMLButtonElement>) {
+    // Keep dnd-kit / cell handlers from seeing this gesture.
+    event.preventDefault();
+    event.stopPropagation();
+    event.nativeEvent.stopImmediatePropagation();
+    if (edge !== "s" && !canResizeCols) return;
 
-    function onPointerMove(event: PointerEvent) {
-      const session = resizeSession.current;
-      if (!session) return;
+    const el = cellRef.current;
+    if (!el) return;
+    const current = itemRef.current;
+    const grid = el.closest(".staggered-grid");
+    const gridWidth = grid?.clientWidth || el.offsetWidth;
+    const colUnit = Math.max(24, gridWidth / GRID_COLUMNS);
+    const startRowSpan = current.rowSpan ?? 1;
+    const rowUnit = Math.max(48, el.offsetHeight / Math.max(1, startRowSpan));
+
+    const session = {
+      edge,
+      startX: event.clientX,
+      startY: event.clientY,
+      colUnit,
+      rowUnit,
+      colStart: current.colStart,
+      colSpan: current.colSpan,
+      rowSpan: startRowSpan,
+      lastKey: "",
+      pointerId: event.pointerId,
+    };
+
+    setResizing(true);
+    onSelect();
+
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      /* ignore */
+    }
+
+    function onPointerMove(moveEvent: PointerEvent) {
+      if (moveEvent.pointerId !== session.pointerId) return;
+      moveEvent.preventDefault();
 
       const patch: Partial<GridResizePatch> = {};
       let colStart = session.colStart;
@@ -144,11 +165,10 @@ function AdminSortableCell({
       let rowSpan = session.rowSpan;
 
       if (session.edge === "e" || session.edge === "se") {
-        const dx = event.clientX - session.startX;
+        const dx = moveEvent.clientX - session.startX;
         const deltaCols = Math.round(dx / session.colUnit);
         const maxSpan = GRID_COLUMNS - session.colStart + 1;
         colSpan = clamp(session.colSpan + deltaCols, 1, maxSpan);
-        // Keep in bounds: colStart + colSpan ≤ 5
         if (colStart + colSpan - 1 > GRID_COLUMNS) {
           colStart = Math.max(1, GRID_COLUMNS - colSpan + 1);
         }
@@ -157,7 +177,7 @@ function AdminSortableCell({
       }
 
       if (session.edge === "s" || session.edge === "se") {
-        const dy = event.clientY - session.startY;
+        const dy = moveEvent.clientY - session.startY;
         const deltaRows = Math.round(dy / session.rowUnit);
         rowSpan = clamp(session.rowSpan + deltaRows, 1, 4);
         patch.rowSpan = rowSpan;
@@ -166,50 +186,21 @@ function AdminSortableCell({
       const key = `${patch.colStart ?? ""}-${patch.colSpan ?? ""}-${patch.rowSpan ?? ""}`;
       if (key === session.lastKey) return;
       session.lastKey = key;
-      onResize(item.id, patch);
+      onResizeRef.current(current.id, patch);
     }
 
-    function endResize() {
-      resizeSession.current = null;
-      setResizing(false);
-    }
-
-    window.addEventListener("pointermove", onPointerMove);
-    window.addEventListener("pointerup", endResize);
-    window.addEventListener("pointercancel", endResize);
-    return () => {
+    function endResize(endEvent: PointerEvent) {
+      if (endEvent.pointerId !== session.pointerId) return;
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", endResize);
       window.removeEventListener("pointercancel", endResize);
-    };
-  }, [resizing, item.id, onResize]);
+      setResizing(false);
+    }
 
-  function beginResize(edge: ResizeEdge, event: ReactPointerEvent) {
-    event.preventDefault();
-    event.stopPropagation();
-    if (edge !== "s" && !canResizeCols) return;
-
-    const el = cellRef.current;
-    if (!el) return;
-    const grid = el.closest(".staggered-grid");
-    const gridWidth = grid?.clientWidth || el.offsetWidth;
-    const colUnit = gridWidth / GRID_COLUMNS;
-    const rowSpan = item.rowSpan ?? 1;
-    const rowUnit = Math.max(48, el.offsetHeight / Math.max(1, rowSpan));
-
-    resizeSession.current = {
-      edge,
-      startX: event.clientX,
-      startY: event.clientY,
-      colUnit: Math.max(24, colUnit),
-      rowUnit,
-      colStart: item.colStart,
-      colSpan: item.colSpan,
-      rowSpan,
-      lastKey: "",
-    };
-    setResizing(true);
-    onSelect();
+    // Attach immediately — do not wait for a useEffect after setState.
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", endResize);
+    window.addEventListener("pointercancel", endResize);
   }
 
   return (
@@ -221,13 +212,22 @@ function AdminSortableCell({
       }${resizing ? " is-resizing" : ""}`}
       data-kind={item.kind}
       data-dnd-id={gridDndId(item.id)}
-      onClick={onSelect}
-      {...attributes}
-      {...(resizing ? {} : listeners)}
+      onClick={() => onSelect()}
     >
-      <span className="admin-sortable-cell__grip" aria-hidden>
+      {/* Drag only from grip — leaves edges free for resize handles */}
+      <button
+        type="button"
+        className="admin-sortable-cell__grip"
+        aria-label="Drag to reorder"
+        onClick={(event) => {
+          event.stopPropagation();
+          onSelect();
+        }}
+        {...attributes}
+        {...listeners}
+      >
         ⋮⋮
-      </span>
+      </button>
       <GridCell
         item={item}
         omitPlacement

@@ -103,16 +103,29 @@ select:disabled,
   cursor: not-allowed;
 }
 
-/* Drag grips / sortable cells keep grab (overrides pointer above) */
-.admin-sortable-cell,
+/* Drag grips keep grab (cell body is click-to-select → pointer) */
+.admin-sortable-cell__grip,
 .cursor-grab {
   cursor: grab;
 }
 
+.admin-sortable-cell__grip:active,
 .admin-sortable-cell.is-dragging,
 .cursor-grab:active,
 .cursor-grabbing {
   cursor: grabbing;
+}
+
+.admin-resize-handle--e {
+  cursor: ew-resize;
+}
+
+.admin-resize-handle--s {
+  cursor: ns-resize;
+}
+
+.admin-resize-handle--se {
+  cursor: nwse-resize;
 }
 
 /* Display / titles — Helvetica Neue Bold / Black */
@@ -760,8 +773,7 @@ select:disabled,
   box-sizing: border-box;
   border-bottom: 1px solid var(--grid-line);
   border-right: 1px solid var(--grid-line);
-  cursor: grab;
-  touch-action: none;
+  cursor: pointer;
   outline: 1px solid transparent;
   outline-offset: -1px;
   transition: outline-color 0.15s ease, box-shadow 0.15s ease;
@@ -775,7 +787,7 @@ select:disabled,
 .admin-sortable-cell.is-selected {
   outline: 2px solid var(--color-rust);
   outline-offset: -2px;
-  z-index: 3;
+  z-index: 5;
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-rust) 25%, transparent);
 }
 
@@ -786,56 +798,68 @@ select:disabled,
 }
 
 .admin-sortable-cell.is-resizing {
-  cursor: grabbing;
-  z-index: 6;
+  z-index: 8;
   transition: none;
   user-select: none;
 }
 
 .admin-resize-handle {
   position: absolute;
-  z-index: 7;
+  z-index: 9;
   padding: 0;
   border: 0;
-  background: transparent;
   appearance: none;
+  pointer-events: auto;
+  touch-action: none;
 }
 
 .admin-resize-handle--e {
-  top: 0.75rem;
-  right: -0.2rem;
-  bottom: 0.9rem;
-  width: 0.7rem;
+  top: 1.75rem;
+  right: 0;
+  bottom: 1.1rem;
+  width: 14px;
   cursor: ew-resize;
-  background: linear-gradient(
-    to right,
-    transparent 35%,
-    color-mix(in srgb, var(--color-rust) 75%, transparent) 35%,
-    color-mix(in srgb, var(--color-rust) 75%, transparent) 65%,
-    transparent 65%
-  );
+  background: color-mix(in srgb, var(--color-rust) 55%, transparent);
+}
+
+.admin-resize-handle--e::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3px;
+  height: 2rem;
+  transform: translate(-50%, -50%);
+  background: var(--color-paper);
+  border-radius: 1px;
 }
 
 .admin-resize-handle--s {
-  left: 0.75rem;
-  right: 0.9rem;
-  bottom: -0.2rem;
-  height: 0.7rem;
+  left: 0.5rem;
+  right: 1.1rem;
+  bottom: 0;
+  height: 14px;
   cursor: ns-resize;
-  background: linear-gradient(
-    to bottom,
-    transparent 35%,
-    color-mix(in srgb, var(--color-rust) 75%, transparent) 35%,
-    color-mix(in srgb, var(--color-rust) 75%, transparent) 65%,
-    transparent 65%
-  );
+  background: color-mix(in srgb, var(--color-rust) 55%, transparent);
+}
+
+.admin-resize-handle--s::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2rem;
+  height: 3px;
+  transform: translate(-50%, -50%);
+  background: var(--color-paper);
+  border-radius: 1px;
 }
 
 .admin-resize-handle--se {
-  right: -0.15rem;
-  bottom: -0.15rem;
-  width: 0.95rem;
-  height: 0.95rem;
+  right: 0;
+  bottom: 0;
+  width: 18px;
+  height: 18px;
   cursor: nwse-resize;
   border: 2px solid var(--color-rust);
   background: var(--color-paper);
@@ -846,8 +870,8 @@ select:disabled,
   pointer-events: none;
   position: absolute;
   left: 0.45rem;
-  bottom: 0.4rem;
-  z-index: 6;
+  bottom: 1.15rem;
+  z-index: 8;
   padding: 0.15rem 0.35rem;
   border: 1px solid color-mix(in srgb, var(--color-rust) 45%, transparent);
   background: color-mix(in srgb, var(--color-paper) 92%, white);
@@ -859,23 +883,30 @@ select:disabled,
 }
 
 .admin-sortable-cell__grip {
-  pointer-events: none;
   position: absolute;
   top: 0.45rem;
-  right: 0.5rem;
-  z-index: 5;
+  right: 0.45rem;
+  z-index: 10;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.5rem;
-  padding: 0.15rem 0.35rem;
-  border: 1px solid color-mix(in srgb, var(--color-ink) 18%, transparent);
-  background: color-mix(in srgb, var(--color-paper) 88%, white);
+  min-width: 1.75rem;
+  min-height: 1.5rem;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--color-ink) 22%, transparent);
+  background: color-mix(in srgb, var(--color-paper) 94%, white);
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 0.7rem;
   letter-spacing: 0.08em;
   line-height: 1;
-  color: color-mix(in srgb, var(--color-ink) 45%, transparent);
+  color: color-mix(in srgb, var(--color-ink) 55%, transparent);
+  cursor: grab;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.admin-sortable-cell__grip:active {
+  cursor: grabbing;
 }
 
 /* Force visible — public .grid-cell starts at opacity:0 until .is-inview */
