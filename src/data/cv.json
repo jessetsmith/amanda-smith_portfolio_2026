@@ -5,7 +5,7 @@
   "email": "Amandajsmith@arizona.edu",
   "location": "Tucson, Arizona",
   "relocationNote": "Open to Relocation",
-  "summary": "Curatorial practice, arts education, and research spanning exhibitions, archives, and public programming.",
+  "summary": "Curatorial practice, arts education, and research spanning exhibitions, archives, and public programming. Writing and visual work treat language and image as sites of inquiry — trauma-informed, relational, and research-driven across Musée Magazine, Bittersweet Woman, and binational exhibition projects.",
   "expertiseTags": [
     "Curatorial Practice",
     "Exhibition Management",
@@ -180,19 +180,54 @@
     { "language": "Greek", "level": "Basic" }
   ],
   "publications": [
-    { "title": "Schema: World as Diagram", "venue": "Musée Magazine", "date": "2023" },
+    {
+      "title": "Schema: World as Diagram",
+      "venue": "Musée Magazine",
+      "date": "2023",
+      "url": "https://museemagazine.com/culture/2023/6/13/schema-world-as-diagram"
+    },
     { "title": "Dawoud Bey", "venue": "Musée Magazine", "date": "2023" },
-    { "title": "Vik Muniz Foto Cubismo", "venue": "Musée Magazine", "date": "2023" },
+    {
+      "title": "Vik Muniz Foto Cubismo",
+      "venue": "Musée Magazine",
+      "date": "2023",
+      "url": "https://museemagazine.com/culture/2023/5/10/exhibition-review-vik-muniz-fotocubismo"
+    },
     { "title": "Katie Burnett", "venue": "Musée Magazine", "date": "2023" },
-    { "title": "Kehinde Wiley Havana", "venue": "Musée Magazine", "date": "2023" },
-    { "title": "Gösta Peterson", "venue": "Musée Magazine", "date": "2023" },
+    {
+      "title": "Kehinde Wiley Havana",
+      "venue": "Musée Magazine",
+      "date": "2023",
+      "url": "https://museemagazine.com/culture/2023/5/9/exhibtion-review-kehinde-wiley"
+    },
+    {
+      "title": "Gösta Peterson",
+      "venue": "Musée Magazine",
+      "date": "2023",
+      "url": "https://museemagazine.com/culture/2023/4/19/exhbition-review-gsta-peterson-deborah-bell-photographs"
+    },
     { "title": "Gilbert & George", "venue": "Musée Magazine", "date": "2023" },
-    { "title": "Expo Chicago 2023", "venue": "Musée Magazine", "date": "2023" },
+    {
+      "title": "Expo Chicago 2023",
+      "venue": "Musée Magazine",
+      "date": "2023",
+      "url": "https://museemagazine.com/culture/2023/4/11/exhibiton-review-expo-chicago-2023"
+    },
     { "title": "Cary Leibowitz", "venue": "Musée Magazine", "date": "2023" },
     { "title": "Phoenix Gallery Fashioning Self", "venue": "Musée Magazine", "date": "2023" },
-    { "title": "Michal Chelbin", "venue": "Musée Magazine", "date": "2023" },
+    {
+      "title": "Michal Chelbin",
+      "venue": "Musée Magazine",
+      "date": "2023",
+      "url": "https://museemagazine.com/culture/2023/3/29/exhibition-review-michal-chelbin-sailboats-and-swans"
+    },
     { "title": "Urs Fischer", "venue": "Musée Magazine", "date": "2023" },
-    { "title": "Azuma Makoto", "venue": "Musée Magazine", "date": "2023" },
+    {
+      "title": "Azuma Makoto",
+      "venue": "Musée Magazine",
+      "date": "2023",
+      "url": "https://museemagazine.com/culture/2023/3/10/exhibition-review-azuma-makoto-frozen-flowers"
+    },
     { "title": "Tony Oursler", "venue": "Musée Magazine", "date": "2023" }
   ]
 }

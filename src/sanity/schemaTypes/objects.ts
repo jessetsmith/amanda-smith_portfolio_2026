@@ -116,8 +116,9 @@ export const gridItem = defineType({
     defineField({ name: "year", type: "string" }),
     defineField({
       name: "imageSrc",
-      type: "url",
-      description: "Image between title and description (URL for now)",
+      type: "string",
+      description:
+        "Image between title and description — absolute URL or site path (/media/...)",
     }),
     defineField({ name: "imageAlt", type: "string" }),
     defineField({
