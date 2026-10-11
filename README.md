@@ -47,14 +47,14 @@ Schemas live in `src/sanity/schemaTypes` (`project`, `publication`, `researchIte
 
 **Without real IDs:** leave `NEXT_PUBLIC_SANITY_PROJECT_ID` empty — `/studio` shows a setup message; public + `/admin` keep using fixtures / `.data`.
 
-**With a real project:** set in `.env.local`:
+**With a real project:** set in `.env.local` (gitignored — never commit tokens):
 
 - `NEXT_PUBLIC_SANITY_PROJECT_ID`
 - `NEXT_PUBLIC_SANITY_DATASET`
 - `NEXT_PUBLIC_SANITY_API_VERSION`
-- `SANITY_API_READ_TOKEN` (optional read)
+- `SANITY_API_READ_TOKEN` (and optionally `SANITY_API_WRITE_TOKEN` for seeding)
 
-Then restart the dev server. Homepage/CV/nav fetch Sanity when configured, else fall back.
+Then restart the dev server. Seed fixtures once with `npm run sanity:seed`. Homepage/CV/nav fetch Sanity when configured, else fall back.
 
 ## Intro / chrome
 
