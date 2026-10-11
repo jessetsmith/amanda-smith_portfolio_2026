@@ -35,6 +35,12 @@ export interface GridItemBase {
   featured?: boolean;
 }
 
+/**
+ * Content section membership is structural: the nearest preceding titleRow
+ * in the ordered grid array (Practice / Projects / …). Not a denormalized
+ * Sanity field — the Edit modal moves the item between titleRow bands.
+ */
+
 export interface TitleRowItem extends GridItemBase {
   kind: "titleRow";
   label: string;

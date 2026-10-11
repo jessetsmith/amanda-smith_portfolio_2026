@@ -31,13 +31,16 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import type { CellFill, GridItem, GridItemKind } from "@/types/grid";
 import { GRID_COLUMNS } from "@/types/grid";
-import {
-  createGridItem,
-  duplicateGridItem,
-  normalizeGridItems,
-} from "@/lib/grid-normalize";
+import { duplicateGridItem, normalizeGridItems } from "@/lib/grid-normalize";
 import { reorderGridItems } from "@/lib/grid-reorder";
 import { applyGridResize } from "@/lib/grid-resize";
+import {
+  addGridItem,
+  contentSectionOf,
+  listContentSections,
+  moveItemToContentSection,
+  type SectionTarget,
+} from "@/lib/grid-section";
 import { IntroBand } from "@/components/IntroBand";
 import {
   AdminDragOverlayCard,
@@ -300,6 +303,10 @@ export function AdminGridApp({
       ) {
         return;
       }
+      if (event.key === "Escape" && !contentOpen) {
+        setSelectedId(null);
+        return;
+      }
       const mod = event.metaKey || event.ctrlKey;
       if (!mod || event.key.toLowerCase() !== "z") return;
       event.preventDefault();
@@ -308,7 +315,7 @@ export function AdminGridApp({
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [undo, redo]);
+  }, [undo, redo, contentOpen]);
 
   function onDragStart(event: DragStartEvent) {
     const id = parseAnyDndId(event.active.id);
@@ -329,15 +336,6 @@ export function AdminGridApp({
 
   function onDragCancel() {
     setActiveDragId(null);
-  }
-
-  function patchSelected(patch: Partial<GridItem>) {
-    if (!selectedId) return;
-    updateItems((prev) =>
-      prev.map((item) =>
-        item.id === selectedId ? ({ ...item, ...patch } as GridItem) : item,
-      ),
-    );
   }
 
   function resizeItem(
@@ -362,9 +360,9 @@ export function AdminGridApp({
 
   function addItem() {
     updateItems((prev) => {
-      const created = createGridItem(addKind, prev.length + 1);
-      setSelectedId(created.id);
-      return [...prev, created];
+      const result = addGridItem(prev, addKind, selectedId);
+      setSelectedId(result.selectedId);
+      return result.items;
     });
   }
 
@@ -494,25 +492,32 @@ export function AdminGridApp({
       >
         <div className="grid flex-1 lg:grid-cols-[minmax(20rem,26rem)_minmax(0,1fr)]">
           <aside className="border-b border-ink/15 lg:border-r lg:border-b-0">
-            <div className="flex items-center gap-2 border-b border-ink/10 px-4 py-3">
-              <select
-                value={addKind}
-                onChange={(e) => setAddKind(e.target.value as GridItemKind)}
-                className="flex-1 border border-ink/20 bg-paper px-2 py-1.5 font-mono text-xs"
-              >
-                {KINDS.map((kind) => (
-                  <option key={kind} value={kind}>
-                    {kind}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={addItem}
-                className="bg-rust px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-paper uppercase"
-              >
-                Add
-              </button>
+            <div className="space-y-1.5 border-b border-ink/10 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <select
+                  value={addKind}
+                  onChange={(e) => setAddKind(e.target.value as GridItemKind)}
+                  className="flex-1 border border-ink/20 bg-paper px-2 py-1.5 font-mono text-xs"
+                >
+                  {KINDS.map((kind) => (
+                    <option key={kind} value={kind}>
+                      {kind}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={addItem}
+                  className="bg-rust px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-paper uppercase"
+                >
+                  Add
+                </button>
+              </div>
+              <p className="font-mono text-[0.55rem] tracking-[0.1em] text-ink/40 uppercase">
+                {selectedId
+                  ? "Fills the selected cell in place"
+                  : "No selection · new section at bottom"}
+              </p>
             </div>
 
             <SortableContext
@@ -625,8 +630,18 @@ export function AdminGridApp({
                 )}
               </div>
             </div>
-            <div className="admin-preview max-h-[calc(100vh-7rem)] overflow-auto p-3 sm:p-4">
-              <div className="admin-preview__stage origin-top">
+            <div
+              className="admin-preview max-h-[calc(100vh-7rem)] overflow-auto p-3 sm:p-4"
+              onMouseDown={(event) => {
+                if (event.target === event.currentTarget) setSelectedId(null);
+              }}
+            >
+              <div
+                className="admin-preview__stage origin-top"
+                onMouseDown={(event) => {
+                  if (event.target === event.currentTarget) setSelectedId(null);
+                }}
+              >
                 <IntroBand />
                 <SortableContext
                   items={gridSortableIds}
@@ -659,8 +674,25 @@ export function AdminGridApp({
       {contentOpen && selected ? (
         <ContentEditModal
           item={selected}
-          onApply={(patch) => {
-            patchSelected(patch);
+          sections={listContentSections(items)}
+          currentSectionId={contentSectionOf(items, selected.id)?.titleId ?? null}
+          onApply={(patch, sectionTarget) => {
+            updateItems((prev) => {
+              let next = prev;
+              if (sectionTarget) {
+                next = moveItemToContentSection(
+                  next,
+                  selected.id,
+                  sectionTarget,
+                );
+              }
+              if (Object.keys(patch).length === 0) return next;
+              return next.map((row) =>
+                row.id === selected.id
+                  ? ({ ...row, ...patch } as GridItem)
+                  : row,
+              );
+            });
             setContentOpen(false);
           }}
           onClose={() => setContentOpen(false)}
@@ -846,21 +878,33 @@ function ItemFields({
   );
 }
 
+const NEW_SECTION_VALUE = "__new__";
+
 function ContentEditModal({
   item,
+  sections,
+  currentSectionId,
   onApply,
   onClose,
 }: {
   item: GridItem;
-  onApply: (patch: Partial<GridItem>) => void;
+  sections: { titleId: string; label: string }[];
+  currentSectionId: string | null;
+  onApply: (patch: Partial<GridItem>, sectionTarget?: SectionTarget) => void;
   onClose: () => void;
 }) {
   const [draft, setDraft] = useState<GridItem>(() => structuredClone(item));
+  const [sectionChoice, setSectionChoice] = useState(
+    () => currentSectionId ?? NEW_SECTION_VALUE,
+  );
+  const [newSectionLabel, setNewSectionLabel] = useState("New section");
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setDraft(structuredClone(item));
-  }, [item]);
+    setSectionChoice(currentSectionId ?? NEW_SECTION_VALUE);
+    setNewSectionLabel("New section");
+  }, [item, currentSectionId]);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -880,9 +924,23 @@ function ContentEditModal({
     setDraft((prev) => ({ ...prev, ...patch } as GridItem));
   }
 
+  function resolveSectionTarget(): SectionTarget | undefined {
+    if (item.kind === "titleRow") return undefined;
+    if (sectionChoice === NEW_SECTION_VALUE) {
+      return { type: "new", label: newSectionLabel };
+    }
+    if (currentSectionId && sectionChoice === currentSectionId) {
+      return undefined;
+    }
+    return { type: "existing", titleId: sectionChoice };
+  }
+
   function apply() {
+    const sectionTarget = resolveSectionTarget();
+
     if (draft.kind === "blankCell") {
-      onClose();
+      if (sectionTarget) onApply({}, sectionTarget);
+      else onClose();
       return;
     }
     if (draft.kind === "titleRow") {
@@ -890,43 +948,52 @@ function ContentEditModal({
       return;
     }
     if (draft.kind === "colorCell") {
-      onApply({ fill: draft.fill, label: draft.label });
+      onApply({ fill: draft.fill, label: draft.label }, sectionTarget);
       return;
     }
     if (draft.kind === "mediaCell") {
-      onApply({
-        meta: draft.meta,
-        title: draft.title,
-        caption: draft.caption,
-        imageSrc: draft.imageSrc,
-        imageAlt: draft.imageAlt,
-        placeholderTone: draft.placeholderTone,
-        description: draft.description,
-      });
+      onApply(
+        {
+          meta: draft.meta,
+          title: draft.title,
+          caption: draft.caption,
+          imageSrc: draft.imageSrc,
+          imageAlt: draft.imageAlt,
+          placeholderTone: draft.placeholderTone,
+          description: draft.description,
+        },
+        sectionTarget,
+      );
       return;
     }
     if (draft.kind === "textCell") {
-      onApply({
+      onApply(
+        {
+          meta: draft.meta,
+          headline: draft.headline,
+          subtitle: draft.subtitle,
+          imageSrc: draft.imageSrc,
+          imageAlt: draft.imageAlt,
+          placeholderTone: draft.placeholderTone,
+          excerpt: draft.excerpt,
+        },
+        sectionTarget,
+      );
+      return;
+    }
+    onApply(
+      {
         meta: draft.meta,
-        headline: draft.headline,
+        title: draft.title,
         subtitle: draft.subtitle,
+        year: draft.year,
         imageSrc: draft.imageSrc,
         imageAlt: draft.imageAlt,
         placeholderTone: draft.placeholderTone,
-        excerpt: draft.excerpt,
-      });
-      return;
-    }
-    onApply({
-      meta: draft.meta,
-      title: draft.title,
-      subtitle: draft.subtitle,
-      year: draft.year,
-      imageSrc: draft.imageSrc,
-      imageAlt: draft.imageAlt,
-      placeholderTone: draft.placeholderTone,
-      summary: draft.summary,
-    });
+        summary: draft.summary,
+      },
+      sectionTarget,
+    );
   }
 
   return (
@@ -966,16 +1033,41 @@ function ContentEditModal({
         </div>
 
         <div className="admin-content-modal__fields space-y-3 py-4">
+          {draft.kind !== "titleRow" ? (
+            <div className="space-y-2">
+              <SelectField
+                label="Content section"
+                value={sectionChoice}
+                options={[
+                  ...sections.map((section) => ({
+                    value: section.titleId,
+                    label: section.label,
+                  })),
+                  { value: NEW_SECTION_VALUE, label: "New section…" },
+                ]}
+                onChange={setSectionChoice}
+              />
+              {sectionChoice === NEW_SECTION_VALUE ? (
+                <TextField
+                  label="New section name"
+                  value={newSectionLabel}
+                  onChange={setNewSectionLabel}
+                />
+              ) : null}
+            </div>
+          ) : null}
+
           {draft.kind === "blankCell" ? (
             <p className="text-sm text-ink/60">
               Empty spacer — no content fields. Use placement controls or resize
-              handles to change size, or remove the block.
+              handles to change size, or remove the block. Change content section
+              above to move this spacer into another band.
             </p>
           ) : null}
 
           {draft.kind === "titleRow" ? (
             <TextField
-              label="Label"
+              label="Content section"
               value={draft.label}
               onChange={(label) => patchDraft({ label } as Partial<GridItem>)}
             />
@@ -1351,7 +1443,7 @@ function SelectField({
 }: {
   label: string;
   value: string;
-  options: string[];
+  options: Array<string | { value: string; label: string }>;
   onChange: (value: string) => void;
 }) {
   return (
@@ -1362,11 +1454,17 @@ function SelectField({
         onChange={(e) => onChange(e.target.value)}
         className="mt-1 w-full border border-ink/20 bg-paper px-2 py-1.5 font-mono text-sm text-ink"
       >
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
+        {options.map((option) => {
+          const opt =
+            typeof option === "string"
+              ? { value: option, label: option }
+              : option;
+          return (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          );
+        })}
       </select>
     </label>
   );
