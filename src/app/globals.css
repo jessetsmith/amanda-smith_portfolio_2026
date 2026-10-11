@@ -13,6 +13,19 @@
   --background: var(--color-paper);
   --foreground: var(--color-ink);
 
+  /* Helvetica system — distinct forms via weight / tracking, not other families */
+  --font-helvetica: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-display: var(--font-helvetica);
+  --font-body: var(--font-helvetica);
+  --font-meta: var(--font-helvetica);
+  --weight-display: 800;
+  --weight-title: 700;
+  --weight-body: 400;
+  --weight-meta: 300;
+  --weight-meta-strong: 500;
+  --tracking-display: -0.03em;
+  --tracking-meta: 0.16em;
+
   --grid-line: color-mix(in srgb, var(--color-ink) 32%, transparent);
   --grid-line-strong: color-mix(in srgb, var(--color-ink) 60%, transparent);
   /* Tall enough for presence; bands cascade with readable width */
@@ -31,7 +44,8 @@
   --color-paper: var(--color-paper);
   --font-sans: var(--font-body);
   --font-display: var(--font-display);
-  --font-mono: var(--font-mono);
+  /* Keep Tailwind `font-mono` utility on Helvetica meta (not a mono face) */
+  --font-mono: var(--font-meta);
 }
 
 body {
@@ -48,15 +62,23 @@ body {
     ),
     var(--background);
   color: var(--foreground);
-  font-family: var(--font-body), ui-sans-serif, sans-serif;
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
 }
 
+/* Display / titles — Helvetica Neue Bold / Black */
 .font-display {
-  font-family: var(--font-display), ui-sans-serif, sans-serif;
+  font-family: var(--font-display);
+  font-weight: var(--weight-title);
+  letter-spacing: var(--tracking-display);
 }
 
+/* Meta / labels / definitions — Helvetica Neue Light (+ tracking) */
 .font-mono {
-  font-family: var(--font-mono), ui-monospace, monospace;
+  font-family: var(--font-meta);
+  font-weight: var(--weight-meta);
+  letter-spacing: var(--tracking-meta);
+  font-variant-numeric: normal;
 }
 
 /* —— Intro band —— */
@@ -293,7 +315,8 @@ body {
   position: relative;
   z-index: 1;
   max-width: 16rem;
-  font-family: var(--font-mono), ui-monospace, monospace;
+  font-family: var(--font-meta);
+  font-weight: var(--weight-meta);
   font-size: 0.7rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -327,11 +350,11 @@ body {
   bottom: 28%;
   margin: 0;
   max-width: 14ch;
-  font-family: var(--font-display), ui-sans-serif, sans-serif;
+  font-family: var(--font-display);
   font-size: clamp(3.75rem, 13vw, 9rem);
-  font-weight: 800;
+  font-weight: var(--weight-display);
   line-height: 0.9;
-  letter-spacing: -0.035em;
+  letter-spacing: var(--tracking-display);
   color: #000;
   mix-blend-mode: destination-out;
   transform: translateY(calc(var(--intro-progress) * -18vh));
@@ -362,7 +385,8 @@ body {
 }
 
 .intro-mask__brand {
-  font-family: var(--font-mono), ui-monospace, monospace;
+  font-family: var(--font-meta);
+  font-weight: var(--weight-meta-strong);
   font-size: 0.7rem;
   letter-spacing: 0.28em;
   text-transform: uppercase;
@@ -374,11 +398,11 @@ body {
 .intro-mask__title-readable {
   margin-top: 0.75rem;
   max-width: 14ch;
-  font-family: var(--font-display), ui-sans-serif, sans-serif;
+  font-family: var(--font-display);
   font-size: clamp(3.75rem, 13vw, 9rem);
-  font-weight: 800;
+  font-weight: var(--weight-display);
   line-height: 0.9;
-  letter-spacing: -0.035em;
+  letter-spacing: var(--tracking-display);
   color: transparent;
   -webkit-text-stroke: 1px color-mix(in srgb, var(--color-paper) 55%, transparent);
   transform: translateY(calc(var(--intro-progress) * -18vh));
@@ -387,6 +411,8 @@ body {
 .intro-mask__support {
   margin-top: 1.25rem;
   max-width: 28rem;
+  font-family: var(--font-body);
+  font-weight: var(--weight-body);
   font-size: 1.05rem;
   line-height: 1.5;
   color: var(--color-paper);
@@ -424,9 +450,9 @@ body {
 }
 
 .hazy-nav__brand {
-  font-family: var(--font-display), ui-sans-serif, sans-serif;
+  font-family: var(--font-display);
   font-size: 1.05rem;
-  font-weight: 600;
+  font-weight: var(--weight-title);
   letter-spacing: -0.02em;
   color: var(--color-ink);
   text-decoration: none;
@@ -460,7 +486,8 @@ body {
 }
 
 .hazy-nav__link {
-  font-family: var(--font-mono), ui-monospace, monospace;
+  font-family: var(--font-meta);
+  font-weight: var(--weight-meta-strong);
   font-size: 0.68rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -526,7 +553,8 @@ body {
   border: 1px solid color-mix(in srgb, var(--color-ink) 20%, transparent);
   background: transparent;
   padding: 0.2rem 0.4rem;
-  font-family: var(--font-mono), ui-monospace, monospace;
+  font-family: var(--font-meta);
+  font-weight: var(--weight-meta-strong);
   font-size: 0.62rem;
   letter-spacing: 0.12em;
   color: var(--color-ink);
