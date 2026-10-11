@@ -70,6 +70,7 @@ export const gridItem = defineType({
           { title: "Media cell", value: "mediaCell" },
           { title: "Text cell", value: "textCell" },
           { title: "Project cell", value: "projectCell" },
+          { title: "Blank spacer", value: "blankCell" },
         ],
       },
       validation: (Rule) => Rule.required(),

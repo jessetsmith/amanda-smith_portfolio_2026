@@ -105,6 +105,18 @@ export function GridCell({
         </div>
       );
 
+    case "blankCell":
+      return (
+        <div
+          className={`${base} blank-cell`}
+          style={style}
+          data-kind={item.kind}
+          aria-hidden
+        >
+          <span className="blank-cell__label">Blank</span>
+        </div>
+      );
+
     case "mediaCell":
       return (
         <article

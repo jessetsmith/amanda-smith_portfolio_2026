@@ -13,6 +13,7 @@ const KINDS: GridItemKind[] = [
   "mediaCell",
   "textCell",
   "projectCell",
+  "blankCell",
 ];
 const TONES: PlaceholderTone[] = ["warm", "cool", "ink"];
 
@@ -120,6 +121,11 @@ export function normalizeGridItem(item: GridItem, order: number): GridItem {
         placeholderTone: tone(row.placeholderTone, "cool"),
       };
     }
+    case "blankCell":
+      return {
+        ...base,
+        kind: "blankCell",
+      };
     case "textCell":
     default: {
       const row = item as {
@@ -202,6 +208,15 @@ export function createGridItem(kind: GridItemKind, order: number): GridItem {
         year: String(new Date().getFullYear()),
         summary: "Short summary below the image.",
         placeholderTone: "cool",
+      };
+    case "blankCell":
+      return {
+        id,
+        order,
+        kind: "blankCell",
+        colStart: 1,
+        colSpan: 1,
+        rowSpan: 1,
       };
     case "textCell":
     default:

@@ -37,6 +37,7 @@ import {
   normalizeGridItems,
 } from "@/lib/grid-normalize";
 import { reorderGridItems } from "@/lib/grid-reorder";
+import { applyGridResize } from "@/lib/grid-resize";
 import { IntroBand } from "@/components/IntroBand";
 import {
   AdminDragOverlayCard,
@@ -100,6 +101,7 @@ const KINDS: GridItemKind[] = [
   "mediaCell",
   "textCell",
   "projectCell",
+  "blankCell",
 ];
 
 const FILLS: CellFill[] = ["rust", "ochre", "sage", "tan", "paper", "ink"];
@@ -227,28 +229,11 @@ export function AdminGridApp({
     );
   }
 
-  function resizeItem(id: string, patch: Partial<GridItem>) {
-    updateItems((prev) =>
-      prev.map((item) => {
-        if (item.id !== id) return item;
-        const colStart = patch.colStart ?? item.colStart;
-        const maxSpan = GRID_COLUMNS - colStart + 1;
-        const colSpan = Math.min(
-          Math.max(1, patch.colSpan ?? item.colSpan),
-          maxSpan,
-        );
-        const rowSpan = Math.min(
-          Math.max(1, patch.rowSpan ?? item.rowSpan ?? 1),
-          4,
-        );
-        return {
-          ...item,
-          colStart,
-          colSpan: item.kind === "titleRow" ? GRID_COLUMNS : colSpan,
-          rowSpan,
-        } as GridItem;
-      }),
-    );
+  function resizeItem(
+    id: string,
+    patch: Partial<Pick<GridItem, "colStart" | "colSpan" | "rowSpan">>,
+  ) {
+    updateItems((prev) => applyGridResize(prev, id, patch));
   }
 
   function addItem() {
@@ -423,7 +408,27 @@ export function AdminGridApp({
             {selected ? (
               <ItemFields
                 item={selected}
-                onChange={patchSelected}
+                onResize={(patch) => resizeItem(selected.id, patch)}
+                onFeaturedChange={(featured) => {
+                  updateItems((prev) => {
+                    const current = prev.find((row) => row.id === selected.id);
+                    if (!current) return prev;
+                    const colStart =
+                      featured && current.colStart > 3 ? 3 : current.colStart;
+                    const resized = applyGridResize(prev, selected.id, {
+                      colStart,
+                      colSpan: featured ? 2 : 1,
+                    });
+                    return resized.map((row) =>
+                      row.id === selected.id
+                        ? ({
+                            ...row,
+                            featured: featured || undefined,
+                          } as GridItem)
+                        : row,
+                    );
+                  });
+                }}
                 onDuplicate={duplicateSelected}
                 onRemove={removeSelected}
               />
@@ -539,7 +544,9 @@ function SortableRow({
           ? item.title
           : item.kind === "colorCell"
             ? item.label || item.fill
-            : item.caption || "Media";
+            : item.kind === "blankCell"
+              ? "Blank spacer"
+              : item.caption || "Media";
 
   return (
     <li
@@ -579,17 +586,22 @@ function itemContentPreview(item: GridItem): string {
   if (item.kind === "colorCell") return item.label || item.fill;
   if (item.kind === "textCell") return item.headline;
   if (item.kind === "projectCell") return item.title;
+  if (item.kind === "blankCell") return "Blank spacer";
   return item.title || item.caption || "Media";
 }
 
 function ItemFields({
   item,
-  onChange,
+  onResize,
+  onFeaturedChange,
   onDuplicate,
   onRemove,
 }: {
   item: GridItem;
-  onChange: (patch: Partial<GridItem>) => void;
+  onResize: (
+    patch: Partial<Pick<GridItem, "colStart" | "colSpan" | "rowSpan">>,
+  ) => void;
+  onFeaturedChange: (featured: boolean) => void;
   onDuplicate: () => void;
   onRemove: () => void;
 }) {
@@ -626,7 +638,7 @@ function ItemFields({
           max={GRID_COLUMNS}
           onChange={(colStart) => {
             const colSpan = Math.min(item.colSpan, GRID_COLUMNS - colStart + 1);
-            onChange({ colStart, colSpan } as Partial<GridItem>);
+            onResize({ colStart, colSpan });
           }}
           disabled={item.kind === "titleRow"}
         />
@@ -635,7 +647,7 @@ function ItemFields({
           value={item.colSpan}
           min={1}
           max={maxSpan}
-          onChange={(colSpan) => onChange({ colSpan } as Partial<GridItem>)}
+          onChange={(colSpan) => onResize({ colSpan })}
           disabled={item.kind === "titleRow"}
         />
         <NumberField
@@ -643,7 +655,7 @@ function ItemFields({
           value={item.rowSpan ?? 1}
           min={1}
           max={4}
-          onChange={(rowSpan) => onChange({ rowSpan } as Partial<GridItem>)}
+          onChange={(rowSpan) => onResize({ rowSpan })}
         />
       </div>
 
@@ -654,21 +666,7 @@ function ItemFields({
           <input
             type="checkbox"
             checked={Boolean(item.featured)}
-            onChange={(e) => {
-              if (e.target.checked) {
-                const colStart = item.colStart > 3 ? 3 : item.colStart;
-                onChange({
-                  featured: true,
-                  colStart,
-                  colSpan: 2,
-                } as Partial<GridItem>);
-                return;
-              }
-              onChange({
-                featured: undefined,
-                colSpan: 1,
-              } as Partial<GridItem>);
-            }}
+            onChange={(e) => onFeaturedChange(e.target.checked)}
             className="accent-rust"
           />
           Featured lead · span 2
@@ -680,10 +678,17 @@ function ItemFields({
           Content
         </p>
         <p className="truncate text-sm text-ink">{itemContentPreview(item)}</p>
-        <p className="text-xs text-ink/45">
-          Use <span className="font-mono uppercase">Edit</span> in the preview
-          bar to change inner content.
-        </p>
+        {item.kind === "blankCell" ? (
+          <p className="text-xs text-ink/45">
+            Spacer holds vacated space so other sections don’t reflow up. Resize
+            or remove it.
+          </p>
+        ) : (
+          <p className="text-xs text-ink/45">
+            Use <span className="font-mono uppercase">Edit</span> in the preview
+            bar to change inner content.
+          </p>
+        )}
       </div>
     </div>
   );
@@ -724,6 +729,10 @@ function ContentEditModal({
   }
 
   function apply() {
+    if (draft.kind === "blankCell") {
+      onClose();
+      return;
+    }
     if (draft.kind === "titleRow") {
       onApply({ label: draft.label });
       return;
@@ -805,6 +814,13 @@ function ContentEditModal({
         </div>
 
         <div className="admin-content-modal__fields space-y-3 py-4">
+          {draft.kind === "blankCell" ? (
+            <p className="text-sm text-ink/60">
+              Blank spacer — no content fields. Use placement controls or resize
+              handles to change size, or remove the block.
+            </p>
+          ) : null}
+
           {draft.kind === "titleRow" ? (
             <TextField
               label="Label"

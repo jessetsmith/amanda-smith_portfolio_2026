@@ -7,7 +7,8 @@ export type GridItemKind =
   | "colorCell"
   | "mediaCell"
   | "textCell"
-  | "projectCell";
+  | "projectCell"
+  | "blankCell";
 
 /** Homepage grid is max 4 columns. Spans are 1–4. */
 export const GRID_COLUMNS = 4 as const;
@@ -77,9 +78,15 @@ export interface ProjectCellItem extends GridItemBase {
   placeholderTone?: PlaceholderTone;
 }
 
+/** Empty spacer — holds vacated grid cells so later sections don’t reflow up. */
+export interface BlankCellItem extends GridItemBase {
+  kind: "blankCell";
+}
+
 export type GridItem =
   | TitleRowItem
   | ColorCellItem
   | MediaCellItem
   | TextCellItem
-  | ProjectCellItem;
+  | ProjectCellItem
+  | BlankCellItem;

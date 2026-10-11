@@ -280,7 +280,9 @@ export function AdminDragOverlayCard({ item }: { item: GridItem }) {
           ? item.title
           : item.kind === "colorCell"
             ? item.label || item.fill
-            : item.title || item.caption || "Media";
+            : item.kind === "blankCell"
+              ? "Blank spacer"
+              : item.title || item.caption || "Media";
 
   return (
     <div className="admin-drag-overlay">

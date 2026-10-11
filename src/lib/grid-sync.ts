@@ -86,6 +86,12 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
           (row.placeholderTone as "warm" | "cool" | "ink") || "warm",
       };
     }
+    if (kind === "blankCell") {
+      return {
+        ...base,
+        kind: "blankCell" as const,
+      };
+    }
     return {
       ...base,
       kind: "textCell" as const,
