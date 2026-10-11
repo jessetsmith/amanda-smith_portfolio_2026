@@ -206,11 +206,7 @@ select:disabled,
   background: transparent;
 }
 
-.blank-cell__label {
-  display: none;
-}
-
-/* Admin: dashed empty spacer */
+/* Admin: unlabeled dashed empty spacer */
 .admin-sortable-cell[data-kind="blankCell"] .blank-cell,
 .admin-sortable-cell__body.blank-cell {
   outline: 1px dashed color-mix(in srgb, var(--color-ink) 28%, transparent);
@@ -223,16 +219,6 @@ select:disabled,
       color-mix(in srgb, var(--color-ink) 4%, transparent) 6px,
       color-mix(in srgb, var(--color-ink) 4%, transparent) 7px
     );
-}
-
-.admin-sortable-cell[data-kind="blankCell"] .blank-cell__label {
-  display: block;
-  margin: 0.75rem;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 0.55rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--color-ink) 40%, transparent);
 }
 
 .grid-cell {

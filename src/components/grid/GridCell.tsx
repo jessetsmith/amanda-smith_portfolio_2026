@@ -112,9 +112,7 @@ export function GridCell({
           style={style}
           data-kind={item.kind}
           aria-hidden
-        >
-          <span className="blank-cell__label">Blank</span>
-        </div>
+        />
       );
 
     case "mediaCell":

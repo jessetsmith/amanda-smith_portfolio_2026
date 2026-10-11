@@ -297,7 +297,7 @@ export function AdminDragOverlayCard({ item }: { item: GridItem }) {
           : item.kind === "colorCell"
             ? item.label || item.fill
             : item.kind === "blankCell"
-              ? "Blank spacer"
+              ? "Spacer"
               : item.title || item.caption || "Media";
 
   return (

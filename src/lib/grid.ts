@@ -33,10 +33,15 @@ export function gridPlacementStyle(item: GridItem): CSSProperties {
       ? GRID_COLUMNS
       : clamp(item.colSpan, 1, maxSpan);
   const rowSpan = item.rowSpan && item.rowSpan > 1 ? item.rowSpan : 1;
+  const rowStart =
+    typeof item.rowStart === "number" && item.rowStart >= 1
+      ? Math.floor(item.rowStart)
+      : undefined;
 
   return {
     gridColumn: item.kind === "titleRow" ? "1 / -1" : `${start} / span ${span}`,
-    gridRow: `span ${rowSpan}`,
+    // Explicit rowStart locks section bands; mobile CSS forces auto stack.
+    gridRow: rowStart ? `${rowStart} / span ${rowSpan}` : `span ${rowSpan}`,
   };
 }
 

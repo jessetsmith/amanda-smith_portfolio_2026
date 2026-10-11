@@ -452,24 +452,6 @@ export function AdminGridApp({
           <span className="font-mono text-[0.65rem] tracking-[0.12em] text-ink/50 uppercase">
             {statusLabel}
           </span>
-          <button
-            type="button"
-            onClick={undo}
-            disabled={!canUndo}
-            title="Undo (⌘Z / Ctrl+Z)"
-            className="border border-ink/20 px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-ink uppercase disabled:cursor-not-allowed disabled:opacity-35"
-          >
-            Undo
-          </button>
-          <button
-            type="button"
-            onClick={redo}
-            disabled={!canRedo}
-            title="Redo (⌘⇧Z / Ctrl+Shift+Z)"
-            className="border border-ink/20 px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-ink uppercase disabled:cursor-not-allowed disabled:opacity-35"
-          >
-            Redo
-          </button>
           <a
             href="/"
             target="_blank"
@@ -604,20 +586,40 @@ export function AdminGridApp({
                 </p>
               </div>
               <div className="flex shrink-0 flex-col items-end gap-1">
-                <button
-                  type="button"
-                  disabled={!selected}
-                  onClick={() => setContentOpen(true)}
-                  className="bg-rust px-4 py-2 font-mono text-[0.7rem] tracking-[0.16em] text-paper uppercase disabled:cursor-not-allowed disabled:bg-ink/20 disabled:text-paper/70"
-                >
-                  Edit
-                </button>
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={undo}
+                    disabled={!canUndo}
+                    title="Undo (⌘Z / Ctrl+Z)"
+                    className="border border-ink/20 px-3 py-2 font-mono text-[0.65rem] tracking-[0.14em] text-ink uppercase disabled:cursor-not-allowed disabled:opacity-35"
+                  >
+                    Undo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={redo}
+                    disabled={!canRedo}
+                    title="Redo (⌘⇧Z / Ctrl+Shift+Z)"
+                    className="border border-ink/20 px-3 py-2 font-mono text-[0.65rem] tracking-[0.14em] text-ink uppercase disabled:cursor-not-allowed disabled:opacity-35"
+                  >
+                    Redo
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!selected}
+                    onClick={() => setContentOpen(true)}
+                    className="bg-rust px-4 py-2 font-mono text-[0.7rem] tracking-[0.16em] text-paper uppercase disabled:cursor-not-allowed disabled:bg-ink/20 disabled:text-paper/70"
+                  >
+                    Edit
+                  </button>
+                </div>
                 {!selected ? (
                   <p className="font-mono text-[0.55rem] tracking-[0.12em] text-ink/40 uppercase">
                     Select a block first
                   </p>
                 ) : (
-                  <p className="max-w-[14rem] truncate font-mono text-[0.55rem] tracking-[0.1em] text-ink/45 uppercase">
+                  <p className="max-w-[18rem] truncate font-mono text-[0.55rem] tracking-[0.1em] text-ink/45 uppercase">
                     {itemContentPreview(selected)}
                   </p>
                 )}
@@ -695,7 +697,7 @@ function SortableRow({
           : item.kind === "colorCell"
             ? item.label || item.fill
             : item.kind === "blankCell"
-              ? "Blank spacer"
+              ? "Spacer"
               : item.caption || "Media";
 
   return (
@@ -736,7 +738,7 @@ function itemContentPreview(item: GridItem): string {
   if (item.kind === "colorCell") return item.label || item.fill;
   if (item.kind === "textCell") return item.headline;
   if (item.kind === "projectCell") return item.title;
-  if (item.kind === "blankCell") return "Blank spacer";
+  if (item.kind === "blankCell") return "Spacer";
   return item.title || item.caption || "Media";
 }
 
@@ -830,8 +832,8 @@ function ItemFields({
         <p className="truncate text-sm text-ink">{itemContentPreview(item)}</p>
         {item.kind === "blankCell" ? (
           <p className="text-xs text-ink/45">
-            Spacer holds vacated space so other sections don’t reflow up. Resize
-            or remove it.
+            Empty spacer — holds vacated space in this section. Resize or remove
+            it.
           </p>
         ) : (
           <p className="text-xs text-ink/45">
@@ -966,7 +968,7 @@ function ContentEditModal({
         <div className="admin-content-modal__fields space-y-3 py-4">
           {draft.kind === "blankCell" ? (
             <p className="text-sm text-ink/60">
-              Blank spacer — no content fields. Use placement controls or resize
+              Empty spacer — no content fields. Use placement controls or resize
               handles to change size, or remove the block.
             </p>
           ) : null}

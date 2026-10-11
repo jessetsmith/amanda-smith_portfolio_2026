@@ -21,6 +21,11 @@ export interface GridItemBase {
   colStart: number;
   /** Width in columns (1–4) */
   colSpan: number;
+  /**
+   * 1-based explicit row start from section-isolated packing.
+   * Keeps later titleRow bands from auto-flowing into holes above.
+   */
+  rowStart?: number;
   rowSpan?: number;
   fill?: CellFill;
   /**

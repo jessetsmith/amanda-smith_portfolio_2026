@@ -93,6 +93,14 @@ export const gridItem = defineType({
       validation: (Rule) => Rule.min(1).max(4),
     }),
     defineField({
+      name: "rowStart",
+      type: "number",
+      title: "Row start",
+      description:
+        "Explicit 1-based row from section-isolated packing (keeps bands from reflowing).",
+      validation: (Rule) => Rule.min(1),
+    }),
+    defineField({
       name: "rowSpan",
       type: "number",
       initialValue: 1,

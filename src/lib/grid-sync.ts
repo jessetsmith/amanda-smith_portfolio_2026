@@ -32,6 +32,7 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
       | undefined;
     const kind = String(row.kind || "textCell");
     const featured = Boolean(row.featured);
+    const rowStartNum = Number(row.rowStart);
     const base = {
       id: String(row.id || row._key || `sanity-${index + 1}`),
       order: Number(row.order ?? index + 1),
@@ -39,6 +40,9 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
       colSpan: Number(row.colSpan ?? 1),
       rowSpan: Number(row.rowSpan ?? 1),
       fill: row.fill as GridItem["fill"],
+      ...(Number.isFinite(rowStartNum) && rowStartNum >= 1
+        ? { rowStart: Math.floor(rowStartNum) }
+        : {}),
       ...(featured ? { featured: true as const } : {}),
     };
 

@@ -1,3 +1,4 @@
+import { assignSectionRows } from "@/lib/grid-layout";
 import type {
   CellFill,
   GridItem,
@@ -44,12 +45,18 @@ export function normalizeGridItem(item: GridItem, order: number): GridItem {
       : `${kind}-${order}`;
 
   const featured = Boolean((item as { featured?: boolean }).featured);
+  const rowStartRaw = (item as { rowStart?: number }).rowStart;
+  const rowStart =
+    typeof rowStartRaw === "number" && rowStartRaw >= 1
+      ? Math.floor(rowStartRaw)
+      : undefined;
   const base = {
     id,
     order,
     colStart: kind === "titleRow" ? 1 : colStart,
     colSpan,
     rowSpan,
+    ...(rowStart ? { rowStart } : {}),
     ...(featured ? { featured: true as const } : {}),
   };
 
@@ -153,7 +160,11 @@ export function normalizeGridItem(item: GridItem, order: number): GridItem {
 }
 
 export function normalizeGridItems(items: GridItem[]): GridItem[] {
-  return items.map((item, index) => normalizeGridItem(item, index + 1));
+  const normalized = items.map((item, index) =>
+    normalizeGridItem(item, index + 1),
+  );
+  // Always recompute explicit rows so section bands stay isolated.
+  return assignSectionRows(normalized);
 }
 
 export function createGridItem(kind: GridItemKind, order: number): GridItem {

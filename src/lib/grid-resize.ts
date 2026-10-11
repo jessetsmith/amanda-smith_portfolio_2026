@@ -1,58 +1,16 @@
+import {
+  packGridSectioned,
+  sectionIndexRange,
+  type GridGeom,
+} from "@/lib/grid-layout";
 import { normalizeGridItems } from "@/lib/grid-normalize";
 import { GRID_COLUMNS, type BlankCellItem, type GridItem } from "@/types/grid";
 
-export type GridGeom = {
-  col: number;
-  row: number;
-  w: number;
-  h: number;
-};
+export type { GridGeom };
+export { packGridSectioned as packGrid } from "@/lib/grid-layout";
 
 function clamp(n: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, n));
-}
-
-function itemSize(item: GridItem): { col: number; w: number; h: number } {
-  if (item.kind === "titleRow") {
-    return { col: 1, w: GRID_COLUMNS, h: item.rowSpan ?? 1 };
-  }
-  const col = clamp(item.colStart, 1, GRID_COLUMNS);
-  const w = clamp(item.colSpan, 1, GRID_COLUMNS - col + 1);
-  const h = clamp(item.rowSpan ?? 1, 1, 4);
-  return { col, w, h };
-}
-
-/** CSS-grid-like packing without dense backfill. */
-export function packGrid(items: GridItem[]): Map<string, GridGeom> {
-  const occ = new Set<string>();
-  const placed = new Map<string, GridGeom>();
-
-  function fits(col: number, row: number, w: number, h: number): boolean {
-    for (let r = row; r < row + h; r += 1) {
-      for (let c = col; c < col + w; c += 1) {
-        if (c < 1 || c > GRID_COLUMNS || occ.has(`${c},${r}`)) return false;
-      }
-    }
-    return true;
-  }
-
-  function mark(col: number, row: number, w: number, h: number) {
-    for (let r = row; r < row + h; r += 1) {
-      for (let c = col; c < col + w; c += 1) {
-        occ.add(`${c},${r}`);
-      }
-    }
-  }
-
-  for (const item of items) {
-    const { col, w, h } = itemSize(item);
-    let row = 1;
-    while (!fits(col, row, w, h)) row += 1;
-    mark(col, row, w, h);
-    placed.set(item.id, { col, row, w, h });
-  }
-
-  return placed;
 }
 
 function makeBlank(colStart: number, colSpan: number, rowSpan: number): BlankCellItem {
@@ -87,7 +45,6 @@ function subtractRect(blank: GridGeom, cut: GridGeom): GridGeom[] {
   const overlapRow = Math.max(blank.row, cut.row);
   const overlapRowEnd = Math.min(blank.row + blank.h, cut.row + cut.h);
 
-  // Left
   if (blank.col < overlapCol) {
     parts.push({
       col: blank.col,
@@ -96,7 +53,6 @@ function subtractRect(blank: GridGeom, cut: GridGeom): GridGeom[] {
       h: blank.h,
     });
   }
-  // Right
   if (blank.col + blank.w > overlapColEnd) {
     parts.push({
       col: overlapColEnd,
@@ -105,7 +61,6 @@ function subtractRect(blank: GridGeom, cut: GridGeom): GridGeom[] {
       h: blank.h,
     });
   }
-  // Top (middle band only)
   if (blank.row < overlapRow) {
     parts.push({
       col: overlapCol,
@@ -114,7 +69,6 @@ function subtractRect(blank: GridGeom, cut: GridGeom): GridGeom[] {
       h: overlapRow - blank.row,
     });
   }
-  // Bottom (middle band only)
   if (blank.row + blank.h > overlapRowEnd) {
     parts.push({
       col: overlapCol,
@@ -127,15 +81,20 @@ function subtractRect(blank: GridGeom, cut: GridGeom): GridGeom[] {
   return parts.filter((p) => p.w > 0 && p.h > 0);
 }
 
-function consumeBlanks(
+/** Only consume blanks that live in the same section index range. */
+function consumeBlanksInSection(
   items: GridItem[],
   packed: Map<string, GridGeom>,
   footprint: GridGeom,
+  range: { start: number; end: number },
 ): GridItem[] {
   const next: GridItem[] = [];
+  const sectionIds = new Set(
+    items.slice(range.start, range.end + 1).map((item) => item.id),
+  );
 
   for (const item of items) {
-    if (item.kind !== "blankCell") {
+    if (item.kind !== "blankCell" || !sectionIds.has(item.id)) {
       next.push(item);
       continue;
     }
@@ -144,11 +103,8 @@ function consumeBlanks(
       next.push(item);
       continue;
     }
-    const remainders = subtractRect(geom, footprint);
-    for (const part of remainders) {
-      next.push(
-        makeBlank(part.col, part.w, part.h),
-      );
+    for (const part of subtractRect(geom, footprint)) {
+      next.push(makeBlank(part.col, part.w, part.h));
     }
   }
 
@@ -166,9 +122,14 @@ function insertBlanksAfter(
   return next;
 }
 
+function finalize(items: GridItem[]): GridItem[] {
+  return normalizeGridItems(items);
+}
+
 /**
- * Apply colStart/colSpan/rowSpan change: insert blankCell spacers on shrink,
- * consume overlapping blanks on grow. Keeps later sections from reflowing up.
+ * Apply colStart/colSpan/rowSpan change within one titleRow section only:
+ * insert unlabeled blankCell spacers on shrink; consume same-section blanks
+ * on grow. Section-isolated rowStarts keep foreign sections from packing up.
  */
 export function applyGridResize(
   items: GridItem[],
@@ -178,8 +139,11 @@ export function applyGridResize(
   const idx = items.findIndex((item) => item.id === id);
   if (idx < 0) return items;
 
+  const range = sectionIndexRange(items, id);
+  if (!range) return items;
+
   const item = items[idx];
-  const packed = packGrid(items);
+  const packed = packGridSectioned(items);
   const geom = packed.get(id);
   if (!geom) return items;
 
@@ -191,7 +155,7 @@ export function applyGridResize(
     );
     if (rowSpan < (item.rowSpan ?? 1)) {
       const blank = makeBlank(1, GRID_COLUMNS, (item.rowSpan ?? 1) - rowSpan);
-      return normalizeGridItems(insertBlanksAfter(updated, idx, [blank]));
+      return finalize(insertBlanksAfter(updated, idx, [blank]));
     }
     const footprint: GridGeom = {
       col: 1,
@@ -199,7 +163,7 @@ export function applyGridResize(
       w: GRID_COLUMNS,
       h: rowSpan,
     };
-    return normalizeGridItems(consumeBlanks(updated, packed, footprint));
+    return finalize(consumeBlanksInSection(updated, packed, footprint, range));
   }
 
   const oldC = item.colStart;
@@ -219,38 +183,31 @@ export function applyGridResize(
   );
 
   const neu: GridGeom = { col: newC, row: geom.row, w: newW, h: newH };
-  const old: GridGeom = { col: oldC, row: geom.row, w: oldW, h: oldH };
 
-  // Grow / shift into neighbors: eat blanks in the new footprint.
+  // Grow: eat blanks in this section only — never steal from later sections.
   if (newW > oldW || newH > oldH || newC !== oldC) {
-    next = consumeBlanks(next, packed, neu);
+    next = consumeBlanksInSection(next, packed, neu, range);
   }
 
-  // Shrink: park blank spacers in vacated cells (same band, after this item).
+  // Shrink: park empty spacers in vacated cells (same section, after item).
   const blanks: BlankCellItem[] = [];
   if (newW < oldW) {
-    blanks.push(
-      makeBlank(newC + newW, oldC + oldW - (newC + newW), oldH),
-    );
+    blanks.push(makeBlank(newC + newW, oldC + oldW - (newC + newW), oldH));
   }
   if (newH < oldH) {
     blanks.push(makeBlank(newC, newW, oldH - newH));
   }
-
-  // If colStart moved right, vacated left strip.
   if (newC > oldC) {
     blanks.push(makeBlank(oldC, newC - oldC, oldH));
   }
 
   next = insertBlanksAfter(next, idx, blanks);
-
-  // Drop zero-area / invalid and resequence.
   next = next.filter((row) => {
     if (row.kind !== "blankCell") return true;
     return row.colSpan >= 1 && (row.rowSpan ?? 1) >= 1;
   });
 
-  return normalizeGridItems(next);
+  return finalize(next);
 }
 
 export function isBlankCell(item: GridItem): item is BlankCellItem {
