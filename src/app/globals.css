@@ -15,7 +15,8 @@
 
   --grid-line: color-mix(in srgb, var(--color-ink) 28%, transparent);
   --grid-line-strong: color-mix(in srgb, var(--color-ink) 55%, transparent);
-  --grid-row: 9.5rem;
+  /* Tall row unit — fewer bands per viewport; cascade reads vertically */
+  --grid-row: clamp(14rem, 28vh, 20rem);
   --grid-gap-line: 1px;
 }
 
@@ -62,7 +63,7 @@ body {
 .intro-band .intro-frame {
   border-top: 1px solid var(--grid-line);
   border-bottom: 1px solid var(--grid-line);
-  padding-block: 1.75rem 2rem;
+  padding-block: 2.5rem 3rem;
   animation: intro-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -143,8 +144,15 @@ body {
 }
 
 .grid-cell.title-row {
-  min-height: 3.25rem;
+  min-height: 4rem;
   background: color-mix(in srgb, var(--color-paper) 70%, var(--color-tan));
+}
+
+.media-cell .media-placeholder {
+  flex: 1;
+  width: 100%;
+  min-height: 100%;
+  padding: 1.25rem 1.5rem;
 }
 
 .media-cell[data-tone="warm"] .media-placeholder {
@@ -154,9 +162,6 @@ body {
       color-mix(in srgb, var(--color-tan) 55%, transparent),
       color-mix(in srgb, var(--color-ochre) 25%, transparent)
     );
-  min-height: 6rem;
-  width: 100%;
-  padding: 0.75rem;
 }
 
 .media-cell[data-tone="cool"] .media-placeholder {
@@ -166,9 +171,6 @@ body {
       color-mix(in srgb, var(--color-sage) 45%, transparent),
       color-mix(in srgb, var(--color-tan) 30%, transparent)
     );
-  min-height: 6rem;
-  width: 100%;
-  padding: 0.75rem;
 }
 
 .media-cell[data-tone="ink"] .media-placeholder {
@@ -178,9 +180,6 @@ body {
       color-mix(in srgb, var(--color-ink) 12%, transparent),
       color-mix(in srgb, var(--color-rust) 18%, transparent)
     );
-  min-height: 6rem;
-  width: 100%;
-  padding: 0.75rem;
 }
 
 /* Connected line draw: top edge extends as cells enter */
@@ -201,10 +200,6 @@ body {
 
 /* —— Responsive rhythm —— */
 @media (min-width: 640px) {
-  :root {
-    --grid-row: 10.5rem;
-  }
-
   .staggered-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -220,7 +215,7 @@ body {
 
 @media (min-width: 768px) {
   :root {
-    --grid-row: 11.5rem;
+    --grid-row: clamp(16rem, 32vh, 22rem);
   }
 
   .staggered-grid {
@@ -237,7 +232,7 @@ body {
   }
 
   .homepage-grid.lines-active .grid-lines {
-    opacity: 0.28;
+    opacity: 0.22;
   }
 }
 
