@@ -3,7 +3,7 @@
 Fresh redesign of Amanda Smith’s portfolio. Sibling of `portfolio_2024` (reference only).
 
 **Stack:** Next.js App Router · TypeScript · Tailwind CSS  
-**Phase 1:** CSS tokens, fixture-driven 12-col staggered grid, connected lines on scroll  
+**Phase 1:** CSS tokens, fixture-driven **4-col** staggered grid, connected lines on scroll  
 **Planned:** Sanity.io · custom `/admin` DnD · intro video mask · holistic translate  
 
 Build plan (project store): `docs/portfolio-2026-plan.md`
@@ -43,12 +43,12 @@ Copy `.env.example` → `.env.local` and fill values when a Sanity project exist
 
 ## Phase 1 layout
 
-- Fixture data: `src/data/homepage-grid.json`
-- Grid types: `src/types/grid.ts`
+- Fixture data: `src/data/homepage-grid.json` (`colSpan` 1–4)
+- Grid types: `src/types/grid.ts` (`GRID_COLUMNS = 4`)
 - Public grid: `src/components/grid/HomepageGrid.tsx` + `GridCell.tsx`
 - Tokens / connected lines: `src/app/globals.css`
 
-Grid items are mock JSON only — no live Sanity yet (Phase 2).
+Max 4 columns; row mixes vary (full, halves, 1+3, 3+1, up to four equal). Mock JSON only — no live Sanity yet (Phase 2).
 
 ## Environment
 

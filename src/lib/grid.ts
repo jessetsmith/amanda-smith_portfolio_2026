@@ -1,4 +1,5 @@
 import type { CellFill, GridItem } from "@/types/grid";
+import { GRID_COLUMNS } from "@/types/grid";
 import type { CSSProperties } from "react";
 
 const FILL_CLASS: Record<CellFill, string> = {
@@ -19,16 +20,23 @@ function clamp(n: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, n));
 }
 
-/** Desktop (md+) placement via inline styles; mobile stacks via CSS. */
+/**
+ * Direct grid placement (not CSS variables — var() + `1 / span n`
+ * was collapsing columns into overlapping strips).
+ * Mobile CSS forces full-width stack.
+ */
 export function gridPlacementStyle(item: GridItem): CSSProperties {
-  const start = clamp(item.colStart, 1, 12);
-  const span = clamp(item.colSpan, 1, 13 - start);
+  const start = clamp(item.colStart, 1, GRID_COLUMNS);
+  const maxSpan = GRID_COLUMNS - start + 1;
+  const span =
+    item.kind === "titleRow"
+      ? GRID_COLUMNS
+      : clamp(item.colSpan, 1, maxSpan);
   const rowSpan = item.rowSpan && item.rowSpan > 1 ? item.rowSpan : 1;
 
   return {
-    ["--grid-col" as string]:
-      item.kind === "titleRow" ? "1 / -1" : `${start} / span ${span}`,
-    ["--grid-row-span" as string]: String(rowSpan),
+    gridColumn: item.kind === "titleRow" ? "1 / -1" : `${start} / span ${span}`,
+    gridRow: `span ${rowSpan}`,
   };
 }
 

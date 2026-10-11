@@ -4,7 +4,7 @@
     "order": 1,
     "kind": "titleRow",
     "colStart": 1,
-    "colSpan": 12,
+    "colSpan": 4,
     "label": "Practice"
   },
   {
@@ -12,8 +12,8 @@
     "order": 2,
     "kind": "textCell",
     "colStart": 1,
-    "colSpan": 8,
-    "rowSpan": 2,
+    "colSpan": 3,
+    "rowSpan": 1,
     "headline": "Archival modernism across exhibitions, writing, and research.",
     "excerpt": "A staggered editorial grid for projects and publications — connected lines, color cells, and open composition.",
     "meta": "Portfolio 2026"
@@ -22,17 +22,18 @@
     "id": "color-rust-1",
     "order": 3,
     "kind": "colorCell",
-    "colStart": 9,
-    "colSpan": 4,
-    "rowSpan": 2,
-    "fill": "rust"
+    "colStart": 4,
+    "colSpan": 1,
+    "rowSpan": 1,
+    "fill": "rust",
+    "label": "Accent"
   },
   {
     "id": "title-projects",
     "order": 4,
     "kind": "titleRow",
     "colStart": 1,
-    "colSpan": 12,
+    "colSpan": 4,
     "label": "Projects"
   },
   {
@@ -40,8 +41,8 @@
     "order": 5,
     "kind": "projectCell",
     "colStart": 1,
-    "colSpan": 9,
-    "rowSpan": 3,
+    "colSpan": 3,
+    "rowSpan": 2,
     "title": "Echos of Migration",
     "year": "2024",
     "summary": "Exhibition research mapping displacement, memory, and relational space."
@@ -50,38 +51,38 @@
     "id": "color-sage-1",
     "order": 6,
     "kind": "colorCell",
-    "colStart": 10,
-    "colSpan": 3,
-    "rowSpan": 3,
+    "colStart": 4,
+    "colSpan": 1,
+    "rowSpan": 2,
     "fill": "sage"
   },
   {
-    "id": "color-ochre-1",
-    "order": 7,
-    "kind": "colorCell",
-    "colStart": 1,
-    "colSpan": 4,
-    "rowSpan": 2,
-    "fill": "ochre",
-    "label": "Accent"
-  },
-  {
     "id": "media-placeholder-1",
-    "order": 8,
+    "order": 7,
     "kind": "mediaCell",
-    "colStart": 5,
-    "colSpan": 8,
-    "rowSpan": 2,
+    "colStart": 1,
+    "colSpan": 2,
+    "rowSpan": 1,
     "caption": "Media",
     "placeholderTone": "warm"
+  },
+  {
+    "id": "color-ochre-1",
+    "order": 8,
+    "kind": "colorCell",
+    "colStart": 3,
+    "colSpan": 2,
+    "rowSpan": 1,
+    "fill": "ochre",
+    "label": "Field"
   },
   {
     "id": "project-theater",
     "order": 9,
     "kind": "projectCell",
-    "colStart": 3,
-    "colSpan": 10,
-    "rowSpan": 2,
+    "colStart": 1,
+    "colSpan": 4,
+    "rowSpan": 1,
     "title": "Theater of Relations",
     "year": "2023",
     "summary": "Curatorial proposal on encounter and staged proximity."
@@ -91,7 +92,7 @@
     "order": 10,
     "kind": "titleRow",
     "colStart": 1,
-    "colSpan": 12,
+    "colSpan": 4,
     "label": "Publications"
   },
   {
@@ -99,8 +100,8 @@
     "order": 11,
     "kind": "textCell",
     "colStart": 1,
-    "colSpan": 7,
-    "rowSpan": 2,
+    "colSpan": 2,
+    "rowSpan": 1,
     "headline": "Exhibition reviews & journal notes",
     "excerpt": "Critical writing across Musée and related venues — fixture copy until Sanity lands.",
     "meta": "Academic · Creative"
@@ -109,28 +110,28 @@
     "id": "color-tan-1",
     "order": 12,
     "kind": "colorCell",
-    "colStart": 8,
-    "colSpan": 5,
-    "rowSpan": 2,
+    "colStart": 3,
+    "colSpan": 1,
+    "rowSpan": 1,
     "fill": "tan"
   },
   {
     "id": "media-placeholder-2",
     "order": 13,
     "kind": "mediaCell",
-    "colStart": 1,
-    "colSpan": 12,
-    "rowSpan": 2,
-    "caption": "Archive still",
-    "placeholderTone": "ink"
+    "colStart": 4,
+    "colSpan": 1,
+    "rowSpan": 1,
+    "caption": "Still",
+    "placeholderTone": "cool"
   },
   {
     "id": "project-stodulky",
     "order": 14,
     "kind": "projectCell",
     "colStart": 1,
-    "colSpan": 10,
-    "rowSpan": 2,
+    "colSpan": 3,
+    "rowSpan": 1,
     "title": "Connecting Stodůlky",
     "year": "2022",
     "summary": "Site-responsive work on neighborhood memory and shared infrastructure."
@@ -139,38 +140,84 @@
     "id": "color-ochre-2",
     "order": 15,
     "kind": "colorCell",
-    "colStart": 11,
-    "colSpan": 2,
-    "rowSpan": 2,
+    "colStart": 4,
+    "colSpan": 1,
+    "rowSpan": 1,
     "fill": "ochre"
   },
   {
-    "id": "title-research",
+    "id": "media-placeholder-3",
     "order": 16,
+    "kind": "mediaCell",
+    "colStart": 1,
+    "colSpan": 4,
+    "rowSpan": 1,
+    "caption": "Archive still",
+    "placeholderTone": "ink"
+  },
+  {
+    "id": "title-research",
+    "order": 17,
     "kind": "titleRow",
     "colStart": 1,
-    "colSpan": 12,
+    "colSpan": 4,
     "label": "Research"
   },
   {
     "id": "color-ink-1",
-    "order": 17,
+    "order": 18,
     "kind": "colorCell",
     "colStart": 1,
-    "colSpan": 5,
-    "rowSpan": 2,
+    "colSpan": 1,
+    "rowSpan": 1,
     "fill": "ink",
     "label": "Study"
   },
   {
     "id": "text-research",
-    "order": 18,
+    "order": 19,
     "kind": "textCell",
-    "colStart": 6,
-    "colSpan": 7,
-    "rowSpan": 2,
+    "colStart": 2,
+    "colSpan": 3,
+    "rowSpan": 1,
     "headline": "Trauma-informed qualitative practice",
     "excerpt": "Awards, grants, and presentations — structure ready for CMS migration.",
     "meta": "Grants · Presentations"
+  },
+  {
+    "id": "color-sage-2",
+    "order": 20,
+    "kind": "colorCell",
+    "colStart": 1,
+    "colSpan": 1,
+    "rowSpan": 1,
+    "fill": "sage"
+  },
+  {
+    "id": "color-tan-2",
+    "order": 21,
+    "kind": "colorCell",
+    "colStart": 2,
+    "colSpan": 1,
+    "rowSpan": 1,
+    "fill": "tan"
+  },
+  {
+    "id": "color-ochre-3",
+    "order": 22,
+    "kind": "colorCell",
+    "colStart": 3,
+    "colSpan": 1,
+    "rowSpan": 1,
+    "fill": "ochre"
+  },
+  {
+    "id": "color-rust-2",
+    "order": 23,
+    "kind": "colorCell",
+    "colStart": 4,
+    "colSpan": 1,
+    "rowSpan": 1,
+    "fill": "rust"
   }
 ]

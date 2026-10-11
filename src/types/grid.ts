@@ -7,12 +7,16 @@ export type GridItemKind =
   | "textCell"
   | "projectCell";
 
+/** Homepage grid is max 4 columns. Spans are 1–4; admin will edit later. */
+export const GRID_COLUMNS = 4 as const;
+
 export interface GridItemBase {
   id: string;
   order: number;
   kind: GridItemKind;
-  /** 1-based column start on the 12-col grid */
+  /** 1-based column start on the 4-col grid */
   colStart: number;
+  /** Width in columns (1–4) */
   colSpan: number;
   rowSpan?: number;
   fill?: CellFill;

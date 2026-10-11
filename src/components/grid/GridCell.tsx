@@ -8,13 +8,13 @@ interface GridCellProps {
 export function GridCell({ item }: GridCellProps) {
   const style = gridPlacementStyle(item);
   const base =
-    "grid-cell relative flex flex-col justify-between gap-5 p-6 sm:p-8 md:p-10 lg:p-12";
+    "grid-cell relative flex flex-col justify-between gap-4 p-6 sm:p-8 md:p-9";
 
   switch (item.kind) {
     case "titleRow":
       return (
         <div
-          className={`${base} title-row items-start justify-center py-3 md:py-4`}
+          className={`${base} title-row items-start justify-center !py-4`}
           style={style}
           data-kind={item.kind}
         >
@@ -50,7 +50,7 @@ export function GridCell({ item }: GridCellProps) {
           data-kind={item.kind}
           data-tone={item.placeholderTone ?? "warm"}
         >
-          <div className="media-placeholder flex flex-1 items-end">
+          <div className="media-placeholder">
             <span className="font-mono text-[0.65rem] tracking-[0.18em] text-ink/55 uppercase">
               {item.caption ?? "Media"}
             </span>
@@ -70,12 +70,12 @@ export function GridCell({ item }: GridCellProps) {
               {item.meta}
             </p>
           ) : null}
-          <div className="mt-auto space-y-3">
-            <h2 className="font-display text-3xl leading-[1.1] tracking-tight text-ink sm:text-4xl md:text-5xl">
+          <div className="mt-auto max-w-2xl space-y-3">
+            <h2 className="font-display text-2xl leading-[1.15] tracking-tight text-ink sm:text-3xl md:text-4xl">
               {item.headline}
             </h2>
             {item.excerpt ? (
-              <p className="max-w-prose text-base leading-relaxed text-ink/70 sm:text-lg">
+              <p className="text-base leading-relaxed text-ink/70 sm:text-lg">
                 {item.excerpt}
               </p>
             ) : null}
@@ -100,12 +100,12 @@ export function GridCell({ item }: GridCellProps) {
               </p>
             ) : null}
           </div>
-          <div className="mt-auto space-y-2">
-            <h2 className="font-display text-3xl leading-[1.1] tracking-tight text-ink sm:text-4xl md:text-[2.75rem]">
+          <div className="mt-auto max-w-2xl space-y-2">
+            <h2 className="font-display text-2xl leading-[1.15] tracking-tight text-ink sm:text-3xl md:text-4xl">
               {item.title}
             </h2>
             {item.summary ? (
-              <p className="max-w-xl text-base leading-relaxed text-ink/65 sm:text-lg">
+              <p className="text-base leading-relaxed text-ink/65 sm:text-lg">
                 {item.summary}
               </p>
             ) : null}
