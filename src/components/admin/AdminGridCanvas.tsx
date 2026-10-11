@@ -26,6 +26,8 @@ interface AdminGridCanvasProps {
   items: GridItem[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  onResizeStart?: () => void;
+  onResizeEnd?: () => void;
   onResize: (id: string, patch: Partial<GridResizePatch>) => void;
 }
 
@@ -33,6 +35,8 @@ export function AdminGridCanvas({
   items,
   selectedId,
   onSelect,
+  onResizeStart,
+  onResizeEnd,
   onResize,
 }: AdminGridCanvasProps) {
   const sorted = sortGridItems(items);
@@ -54,6 +58,8 @@ export function AdminGridCanvas({
               item={item}
               selected={item.id === selectedId}
               onSelect={() => onSelect(item.id)}
+              onResizeStart={onResizeStart}
+              onResizeEnd={onResizeEnd}
               onResize={onResize}
             />
           ))}
@@ -73,16 +79,24 @@ function AdminSortableCell({
   item,
   selected,
   onSelect,
+  onResizeStart,
+  onResizeEnd,
   onResize,
 }: {
   item: GridItem;
   selected: boolean;
   onSelect: () => void;
+  onResizeStart?: () => void;
+  onResizeEnd?: () => void;
   onResize: (id: string, patch: Partial<GridResizePatch>) => void;
 }) {
   const cellRef = useRef<HTMLDivElement | null>(null);
   const onResizeRef = useRef(onResize);
   onResizeRef.current = onResize;
+  const onResizeStartRef = useRef(onResizeStart);
+  onResizeStartRef.current = onResizeStart;
+  const onResizeEndRef = useRef(onResizeEnd);
+  onResizeEndRef.current = onResizeEnd;
   const itemRef = useRef(item);
   itemRef.current = item;
   const [resizing, setResizing] = useState(false);
@@ -148,6 +162,7 @@ function AdminSortableCell({
 
     setResizing(true);
     onSelect();
+    onResizeStartRef.current?.();
 
     try {
       event.currentTarget.setPointerCapture(event.pointerId);
@@ -195,6 +210,7 @@ function AdminSortableCell({
       window.removeEventListener("pointerup", endResize);
       window.removeEventListener("pointercancel", endResize);
       setResizing(false);
+      onResizeEndRef.current?.();
     }
 
     // Attach immediately — do not wait for a useEffect after setState.

@@ -114,6 +114,12 @@ interface AdminGridAppProps {
   initialSource?: DataSource;
 }
 
+const HISTORY_CAP = 40;
+
+function cloneItems(items: GridItem[]): GridItem[] {
+  return structuredClone(normalizeGridItems(items));
+}
+
 export function AdminGridApp({
   initialItems,
   initialSource = "fixture",
@@ -129,7 +135,17 @@ export function AdminGridApp({
   const [previewKey, setPreviewKey] = useState(0);
   const [contentOpen, setContentOpen] = useState(false);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [historyTick, setHistoryTick] = useState(0);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+  const pastRef = useRef<GridItem[][]>([]);
+  const futureRef = useRef<GridItem[][]>([]);
+  const resizeHistoryArmed = useRef(true);
+
+  const canUndo = pastRef.current.length > 0;
+  const canRedo = futureRef.current.length > 0;
+  void historyTick;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -174,7 +190,9 @@ export function AdminGridApp({
         };
         // Prefer the payload we saved — avoid clobbering optimistic reorder
         // with a momentarily-stale Sanity read.
-        setItems(normalizeGridItems(next));
+        const normalized = normalizeGridItems(next);
+        itemsRef.current = normalized;
+        setItems(normalized);
         if (data.source) setSource(data.source);
         setSaveState("saved");
         router.refresh();
@@ -185,19 +203,112 @@ export function AdminGridApp({
     [router],
   );
 
-  const updateItems = useCallback(
-    (updater: (prev: GridItem[]) => GridItem[]) => {
-      setItems((prev) => {
-        const next = normalizeGridItems(updater(prev));
-        if (saveTimer.current) clearTimeout(saveTimer.current);
-        saveTimer.current = setTimeout(() => {
-          void persist(next);
-        }, 400);
-        return next;
-      });
+  const schedulePersist = useCallback(
+    (next: GridItem[]) => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(() => {
+        void persist(next);
+      }, 400);
     },
     [persist],
   );
+
+  const pushHistory = useCallback((snapshot: GridItem[]) => {
+    pastRef.current = [...pastRef.current, cloneItems(snapshot)].slice(
+      -HISTORY_CAP,
+    );
+    futureRef.current = [];
+    setHistoryTick((tick) => tick + 1);
+  }, []);
+
+  const commitItems = useCallback(
+    (
+      updater: (prev: GridItem[]) => GridItem[],
+      options?: { recordHistory?: boolean },
+    ) => {
+      const prev = itemsRef.current;
+      const next = normalizeGridItems(updater(prev));
+      if (options?.recordHistory !== false) {
+        pushHistory(prev);
+      }
+      itemsRef.current = next;
+      setItems(next);
+      schedulePersist(next);
+      return next;
+    },
+    [pushHistory, schedulePersist],
+  );
+
+  const updateItems = useCallback(
+    (updater: (prev: GridItem[]) => GridItem[]) => {
+      commitItems(updater, { recordHistory: true });
+    },
+    [commitItems],
+  );
+
+  const undo = useCallback(() => {
+    const past = pastRef.current;
+    if (past.length === 0) return;
+    const previous = past[past.length - 1];
+    pastRef.current = past.slice(0, -1);
+    futureRef.current = [
+      ...futureRef.current,
+      cloneItems(itemsRef.current),
+    ].slice(-HISTORY_CAP);
+    itemsRef.current = previous;
+    setItems(previous);
+    setSelectedId((current) =>
+      current && previous.some((item) => item.id === current)
+        ? current
+        : (previous[0]?.id ?? null),
+    );
+    setHistoryTick((tick) => tick + 1);
+    setPreviewKey((key) => key + 1);
+    schedulePersist(previous);
+  }, [schedulePersist]);
+
+  const redo = useCallback(() => {
+    const future = futureRef.current;
+    if (future.length === 0) return;
+    const next = future[future.length - 1];
+    futureRef.current = future.slice(0, -1);
+    pastRef.current = [
+      ...pastRef.current,
+      cloneItems(itemsRef.current),
+    ].slice(-HISTORY_CAP);
+    itemsRef.current = next;
+    setItems(next);
+    setSelectedId((current) =>
+      current && next.some((item) => item.id === current)
+        ? current
+        : (next[0]?.id ?? null),
+    );
+    setHistoryTick((tick) => tick + 1);
+    setPreviewKey((key) => key + 1);
+    schedulePersist(next);
+  }, [schedulePersist]);
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        target?.isContentEditable
+      ) {
+        return;
+      }
+      const mod = event.metaKey || event.ctrlKey;
+      if (!mod || event.key.toLowerCase() !== "z") return;
+      event.preventDefault();
+      if (event.shiftKey) redo();
+      else undo();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [undo, redo]);
 
   function onDragStart(event: DragStartEvent) {
     const id = parseAnyDndId(event.active.id);
@@ -232,8 +343,21 @@ export function AdminGridApp({
   function resizeItem(
     id: string,
     patch: Partial<Pick<GridItem, "colStart" | "colSpan" | "rowSpan">>,
+    options?: { recordHistory?: boolean },
   ) {
-    updateItems((prev) => applyGridResize(prev, id, patch));
+    commitItems((prev) => applyGridResize(prev, id, patch), {
+      recordHistory: options?.recordHistory !== false,
+    });
+  }
+
+  function onCanvasResizeStart() {
+    if (!resizeHistoryArmed.current) return;
+    pushHistory(itemsRef.current);
+    resizeHistoryArmed.current = false;
+  }
+
+  function onCanvasResizeEnd() {
+    resizeHistoryArmed.current = true;
   }
 
   function addItem() {
@@ -273,6 +397,7 @@ export function AdminGridApp({
     ) {
       return;
     }
+    pushHistory(itemsRef.current);
     setSaveState("saving");
     const res = await fetch("/api/homepage-grid", { method: "DELETE" });
     if (!res.ok) {
@@ -284,6 +409,7 @@ export function AdminGridApp({
       source?: DataSource;
     };
     const next = normalizeGridItems(data.items);
+    itemsRef.current = next;
     setItems(next);
     setSelectedId(next[0]?.id ?? null);
     if (data.source) setSource(data.source);
@@ -326,6 +452,24 @@ export function AdminGridApp({
           <span className="font-mono text-[0.65rem] tracking-[0.12em] text-ink/50 uppercase">
             {statusLabel}
           </span>
+          <button
+            type="button"
+            onClick={undo}
+            disabled={!canUndo}
+            title="Undo (⌘Z / Ctrl+Z)"
+            className="border border-ink/20 px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-ink uppercase disabled:cursor-not-allowed disabled:opacity-35"
+          >
+            Undo
+          </button>
+          <button
+            type="button"
+            onClick={redo}
+            disabled={!canRedo}
+            title="Redo (⌘⇧Z / Ctrl+Shift+Z)"
+            className="border border-ink/20 px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-ink uppercase disabled:cursor-not-allowed disabled:opacity-35"
+          >
+            Redo
+          </button>
           <a
             href="/"
             target="_blank"
@@ -408,7 +552,9 @@ export function AdminGridApp({
             {selected ? (
               <ItemFields
                 item={selected}
-                onResize={(patch) => resizeItem(selected.id, patch)}
+                onResize={(patch) =>
+                  resizeItem(selected.id, patch, { recordHistory: true })
+                }
                 onFeaturedChange={(featured) => {
                   updateItems((prev) => {
                     const current = prev.find((row) => row.id === selected.id);
@@ -489,7 +635,11 @@ export function AdminGridApp({
                     items={items}
                     selectedId={selectedId}
                     onSelect={setSelectedId}
-                    onResize={resizeItem}
+                    onResizeStart={onCanvasResizeStart}
+                    onResizeEnd={onCanvasResizeEnd}
+                    onResize={(id, patch) =>
+                      resizeItem(id, patch, { recordHistory: false })
+                    }
                   />
                 </SortableContext>
               </div>
