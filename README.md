@@ -37,9 +37,10 @@ Open [http://localhost:3456](http://localhost:3456).
 1. Open `/admin` (redirects to login if needed).
 2. Sign in: **`admin` / `admin`** (`ADMIN_USER` / `ADMIN_PASSWORD` override in `.env.local`).
 3. Reorder (DnD), edit spans (1–4), fill/copy, add/remove/duplicate.
-4. Live preview updates immediately; public `/` reads the same store (`.data/homepage-grid.json`).
+4. Live preview updates immediately; saves patch Sanity `homepage.gridItems` (same doc Studio uses). Public `/` refetches after `revalidatePath`.
+5. `.data/` is only a mirror/fallback if Sanity is unavailable.
 
-Not production auth — cookie mock until real auth + Sanity mutations.
+Not production auth — cookie mock until real auth.
 
 ## Sanity
 

@@ -1,6 +1,5 @@
 import { readGridItems } from "@/lib/grid-store";
-import type { GridItem } from "@/types/grid";
-import { normalizeGridItems } from "@/lib/grid-normalize";
+import { loadGridItems, mapSanityGridItems } from "@/lib/grid-sync";
 import { client } from "@/sanity/lib/client";
 import { isSanityConfigured } from "@/sanity/env";
 import {
@@ -12,81 +11,20 @@ import cvFixture from "@/data/cv.json";
 import siteFixture from "@/data/site-settings.json";
 import type { CvData, HomepageContent, NavItem, SiteSettings } from "@/types/content";
 
-function mapSanityGridItems(raw: unknown): GridItem[] | null {
-  if (!Array.isArray(raw) || raw.length === 0) return null;
-  const mapped = raw.map((item, index) => {
-    const row = item as Record<string, unknown>;
-    const projectRef = row.projectRef as
-      | { title?: string; summary?: string; year?: string }
-      | undefined;
-    const kind = String(row.kind || "textCell");
-    const base = {
-      id: String(row.id || `sanity-${index + 1}`),
-      order: Number(row.order ?? index + 1),
-      colStart: Number(row.colStart ?? 1),
-      colSpan: Number(row.colSpan ?? 1),
-      rowSpan: Number(row.rowSpan ?? 1),
-      fill: row.fill as GridItem["fill"],
-    };
-
-    if (kind === "projectCell") {
-      return {
-        ...base,
-        kind: "projectCell" as const,
-        title: String(row.title || projectRef?.title || "Untitled"),
-        year: (row.year as string) || projectRef?.year,
-        summary: (row.summary as string) || projectRef?.summary,
-      };
-    }
-    if (kind === "titleRow") {
-      return {
-        ...base,
-        kind: "titleRow" as const,
-        label: String(row.label || "Section"),
-      };
-    }
-    if (kind === "colorCell") {
-      return {
-        ...base,
-        kind: "colorCell" as const,
-        fill: (row.fill as GridItem["fill"]) || "rust",
-        label: row.label as string | undefined,
-      };
-    }
-    if (kind === "mediaCell") {
-      return {
-        ...base,
-        kind: "mediaCell" as const,
-        caption: (row.caption as string) || "Media",
-        placeholderTone:
-          (row.placeholderTone as "warm" | "cool" | "ink") || "warm",
-      };
-    }
-    return {
-      ...base,
-      kind: "textCell" as const,
-      headline: String(row.headline || "Headline"),
-      excerpt: row.excerpt as string | undefined,
-      meta: row.meta as string | undefined,
-    };
-  });
-  return normalizeGridItems(mapped as GridItem[]);
-}
-
 export async function getHomepageContent(): Promise<HomepageContent> {
-  const fixtureGrid = await readGridItems();
+  const grid = await loadGridItems();
   const defaults: HomepageContent = {
-    source: "fixture",
+    source: grid.source,
     maskText: "Amanda Smith",
     support:
       "Exhibitions, research, and writing — arranged as one connected grid.",
     videoSrc: "/media/intro.mp4",
     posterSrc: undefined,
-    gridItems: fixtureGrid,
+    gridItems: grid.items,
   };
 
   if (!isSanityConfigured() || !client) {
-    return defaults;
+    return { ...defaults, source: "fixture", gridItems: await readGridItems() };
   }
 
   try {
@@ -94,12 +32,12 @@ export async function getHomepageContent(): Promise<HomepageContent> {
     if (!data) return defaults;
     const sanityGrid = mapSanityGridItems(data.gridItems);
     return {
-      source: sanityGrid ? "sanity" : "fixture",
+      source: sanityGrid ? "sanity" : grid.source,
       maskText: data.introMaskText || defaults.maskText,
       support: data.introSupport || defaults.support,
       videoSrc: data.introVideoUrl || defaults.videoSrc,
       posterSrc: data.introPosterUrl || defaults.posterSrc,
-      gridItems: sanityGrid ?? fixtureGrid,
+      gridItems: sanityGrid ?? grid.items,
     };
   } catch {
     return defaults;

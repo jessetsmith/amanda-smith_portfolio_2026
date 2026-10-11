@@ -1,15 +1,22 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { isAdminAuthenticated } from "@/lib/auth";
 import {
-  readGridItems,
-  resetGridItems,
-  writeGridItems,
-} from "@/lib/grid-store";
+  loadGridItems,
+  resetGridToSeed,
+  saveGridItems,
+} from "@/lib/grid-sync";
 import type { GridItem } from "@/types/grid";
 
+function revalidatePublicViews() {
+  revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath("/cv");
+}
+
 export async function GET() {
-  const items = await readGridItems();
-  return NextResponse.json({ items });
+  const result = await loadGridItems();
+  return NextResponse.json(result);
 }
 
 export async function PUT(request: Request) {
@@ -26,17 +33,22 @@ export async function PUT(request: Request) {
 
   const items = (body as { items?: GridItem[] })?.items;
   if (!Array.isArray(items)) {
-    return NextResponse.json({ error: "Expected { items: GridItem[] }" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Expected { items: GridItem[] }" },
+      { status: 400 },
+    );
   }
 
-  const saved = await writeGridItems(items);
-  return NextResponse.json({ items: saved });
+  const result = await saveGridItems(items);
+  revalidatePublicViews();
+  return NextResponse.json(result);
 }
 
 export async function DELETE() {
   if (!(await isAdminAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const items = await resetGridItems();
-  return NextResponse.json({ items });
+  const result = await resetGridToSeed();
+  revalidatePublicViews();
+  return NextResponse.json(result);
 }

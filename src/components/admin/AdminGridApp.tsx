@@ -38,12 +38,17 @@ const KINDS: GridItemKind[] = [
 const FILLS: CellFill[] = ["rust", "ochre", "sage", "tan", "paper", "ink"];
 
 type SaveState = "idle" | "saving" | "saved" | "error";
+type DataSource = "sanity" | "fixture";
 
 interface AdminGridAppProps {
   initialItems: GridItem[];
+  initialSource?: DataSource;
 }
 
-export function AdminGridApp({ initialItems }: AdminGridAppProps) {
+export function AdminGridApp({
+  initialItems,
+  initialSource = "fixture",
+}: AdminGridAppProps) {
   const router = useRouter();
   const [items, setItems] = useState(() => normalizeGridItems(initialItems));
   const [selectedId, setSelectedId] = useState<string | null>(
@@ -51,6 +56,7 @@ export function AdminGridApp({ initialItems }: AdminGridAppProps) {
   );
   const [addKind, setAddKind] = useState<GridItemKind>("textCell");
   const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [source, setSource] = useState<DataSource>(initialSource);
   const [previewKey, setPreviewKey] = useState(0);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -63,23 +69,31 @@ export function AdminGridApp({ initialItems }: AdminGridAppProps) {
     [items, selectedId],
   );
 
-  const persist = useCallback(async (next: GridItem[]) => {
-    setSaveState("saving");
-    try {
-      const res = await fetch("/api/homepage-grid", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: next }),
-      });
-      if (!res.ok) throw new Error("save failed");
-      const data = (await res.json()) as { items: GridItem[] };
-      setItems(normalizeGridItems(data.items));
-      setSaveState("saved");
-      setPreviewKey((k) => k + 1);
-    } catch {
-      setSaveState("error");
-    }
-  }, []);
+  const persist = useCallback(
+    async (next: GridItem[]) => {
+      setSaveState("saving");
+      try {
+        const res = await fetch("/api/homepage-grid", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items: next }),
+        });
+        if (!res.ok) throw new Error("save failed");
+        const data = (await res.json()) as {
+          items: GridItem[];
+          source?: DataSource;
+        };
+        setItems(normalizeGridItems(data.items));
+        if (data.source) setSource(data.source);
+        setSaveState("saved");
+        setPreviewKey((k) => k + 1);
+        router.refresh();
+      } catch {
+        setSaveState("error");
+      }
+    },
+    [router],
+  );
 
   const updateItems = useCallback(
     (updater: (prev: GridItem[]) => GridItem[]) => {
@@ -145,7 +159,11 @@ export function AdminGridApp({ initialItems }: AdminGridAppProps) {
   }
 
   async function resetToSeed() {
-    if (!confirm("Reset grid to seed fixtures? Local edits will be wiped.")) {
+    if (
+      !confirm(
+        "Reset grid to seed fixtures and write to Sanity (or .data fallback)?",
+      )
+    ) {
       return;
     }
     setSaveState("saving");
@@ -154,12 +172,17 @@ export function AdminGridApp({ initialItems }: AdminGridAppProps) {
       setSaveState("error");
       return;
     }
-    const data = (await res.json()) as { items: GridItem[] };
+    const data = (await res.json()) as {
+      items: GridItem[];
+      source?: DataSource;
+    };
     const next = normalizeGridItems(data.items);
     setItems(next);
     setSelectedId(next[0]?.id ?? null);
+    if (data.source) setSource(data.source);
     setSaveState("saved");
     setPreviewKey((k) => k + 1);
+    router.refresh();
   }
 
   async function logout() {
@@ -172,10 +195,14 @@ export function AdminGridApp({ initialItems }: AdminGridAppProps) {
     saveState === "saving"
       ? "Saving…"
       : saveState === "saved"
-        ? "Saved to .data/"
+        ? source === "sanity"
+          ? "Saved to Sanity"
+          : "Saved to .data (fallback)"
         : saveState === "error"
           ? "Save failed"
-          : "Ready";
+          : source === "sanity"
+            ? "Ready · Sanity"
+            : "Ready · fixture";
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
@@ -281,7 +308,11 @@ export function AdminGridApp({ initialItems }: AdminGridAppProps) {
             </p>
             <p className="text-xs text-ink/45">
               Same 4-col grid as public · edits save to{" "}
-              <code className="font-mono">.data/homepage-grid.json</code>
+              <code className="font-mono">
+                {source === "sanity"
+                  ? "Sanity homepage.gridItems"
+                  : ".data/ (fallback)"}
+              </code>
             </p>
           </div>
           <div className="admin-preview max-h-[calc(100vh-7rem)] overflow-auto p-3 sm:p-4">
