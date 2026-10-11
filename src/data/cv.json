@@ -1,0 +1,198 @@
+{
+  "name": "Amanda Smith",
+  "headline": "Curator, Artist, & Art Educator",
+  "phone": "317-452-6237",
+  "email": "Amandajsmith@arizona.edu",
+  "location": "Tucson, Arizona",
+  "relocationNote": "Open to Relocation",
+  "summary": "Curatorial practice, arts education, and research spanning exhibitions, archives, and public programming.",
+  "expertiseTags": [
+    "Curatorial Practice",
+    "Exhibition Management",
+    "Art & Visual Culture",
+    "Community Engagement",
+    "Arts Education",
+    "Research & Analysis",
+    "Public Programming",
+    "Arts Journalism",
+    "Museum Collaboration"
+  ],
+  "expertiseHighlights": [
+    { "text": "Where we go together — conceptual lead" },
+    { "text": "Ilias Lalaounis archival research" },
+    { "text": "12+ Musée Magazine reviews" }
+  ],
+  "experience": [
+    {
+      "title": "Doctoral Candidate & Graduate Associate, Art & Visual Culture Education",
+      "org": "University of Arizona",
+      "location": "Tucson, AZ",
+      "startDate": "2025",
+      "current": true
+    },
+    {
+      "title": "Independent Author & Creative Writer",
+      "org": "Bittersweet Woman / Musée Magazine",
+      "startDate": "2018",
+      "current": true
+    },
+    {
+      "title": "Co-Curator, Where we go together",
+      "org": "University of Arizona",
+      "startDate": "2023-11",
+      "endDate": "2025-01"
+    },
+    {
+      "title": "Curatorial Intern",
+      "org": "Alfa Art Gallery",
+      "startDate": "2024-03",
+      "endDate": "2024-08"
+    },
+    {
+      "title": "Co-Curator, Teatro Delle Relazioni",
+      "org": "Istituto Europeo di Design, Firenze",
+      "startDate": "2025-10",
+      "endDate": "2025-11"
+    },
+    {
+      "title": "Curatorial Archive Research & Visitor Experience Assistant",
+      "org": "Ilias Lalaounis Jewelry Museum, Athens",
+      "startDate": "2025-07",
+      "endDate": "2025-08"
+    },
+    {
+      "title": "Artist & Co-Curator, Rewalking Histories",
+      "org": "University of Arizona",
+      "startDate": "2025-11",
+      "endDate": "2025-12"
+    },
+    {
+      "title": "Curator, Invisible Force: Sound in Sculpture",
+      "org": "Sculpture Tucson",
+      "startDate": "2026-12",
+      "endDate": "2027-04"
+    },
+    {
+      "title": "Artist & Curator, Material Matters: Endeavors in Arts Based Inquiry",
+      "org": "University of Arizona",
+      "startDate": "2026-08",
+      "endDate": "2026-09"
+    }
+  ],
+  "awards": [
+    {
+      "title": "Graduate Student Scholar Award",
+      "org": "Arizona Women's Hall of Fame",
+      "date": "2025-06"
+    },
+    {
+      "title": "CSW Award for En·coun·ter: Designing Environments for Psychological Respite and Advocacy",
+      "org": "UA Commission on the Status of Women",
+      "date": "2026-03"
+    }
+  ],
+  "speaking": [
+    {
+      "role": "presenter",
+      "eventTitle": "Emerging Conversations",
+      "org": "University of Arizona"
+    },
+    {
+      "role": "panelist",
+      "eventTitle": "Health and Arts Community Collaboratory",
+      "org": "Ar2u Memphis"
+    },
+    {
+      "role": "coFacilitator",
+      "eventTitle": "SRAE Chairperson’s Salon",
+      "org": "NAEA Louisville"
+    },
+    {
+      "role": "lecturer",
+      "eventTitle": "ART160d3 Museums as Cultural and Community Centers",
+      "org": "University of Arizona"
+    },
+    {
+      "role": "lecturer",
+      "eventTitle": "ART150a1 Children’s Art & Visual Culture (Lygia Clark / Caminhando)",
+      "org": "University of Arizona"
+    }
+  ],
+  "education": [
+    {
+      "credentialType": "degree",
+      "title": "PhD Art History & Visual Culture Education",
+      "institution": "University of Arizona",
+      "startYear": "2025",
+      "endYear": "2027"
+    },
+    {
+      "credentialType": "degree",
+      "title": "Master in Curatorial Practice",
+      "institution": "IED Firenze",
+      "startYear": "2023",
+      "endYear": "2024"
+    },
+    {
+      "credentialType": "degree",
+      "title": "BA Art & Museum Studies",
+      "institution": "Arizona State University",
+      "startYear": "2022",
+      "endYear": "2023"
+    },
+    {
+      "credentialType": "degree",
+      "title": "AA",
+      "institution": "Eastern Gateway",
+      "startYear": "2019",
+      "endYear": "2022"
+    },
+    {
+      "credentialType": "certificate",
+      "title": "Massage Therapy Certificate",
+      "institution": "—",
+      "endYear": "2022"
+    },
+    {
+      "credentialType": "certificate",
+      "title": "Health Coaching & Hormone Balance",
+      "institution": "—",
+      "endYear": "2018"
+    }
+  ],
+  "technicalSkills": [
+    "MS Office",
+    "Google Workspace",
+    "Adobe CC",
+    "Canva",
+    "Basic HTML/web",
+    "Data & archival research",
+    "Multimedia editing",
+    "Databases",
+    "Spreadsheets",
+    "Information ethics"
+  ],
+  "languages": [
+    { "language": "English", "level": "Fluent" },
+    { "language": "Italian", "level": "Limited" },
+    { "language": "French", "level": "Limited" },
+    { "language": "German", "level": "Basic" },
+    { "language": "Greek", "level": "Basic" }
+  ],
+  "publications": [
+    { "title": "Schema: World as Diagram", "venue": "Musée Magazine", "date": "2023" },
+    { "title": "Dawoud Bey", "venue": "Musée Magazine", "date": "2023" },
+    { "title": "Vik Muniz Foto Cubismo", "venue": "Musée Magazine", "date": "2023" },
+    { "title": "Katie Burnett", "venue": "Musée Magazine", "date": "2023" },
+    { "title": "Kehinde Wiley Havana", "venue": "Musée Magazine", "date": "2023" },
+    { "title": "Gösta Peterson", "venue": "Musée Magazine", "date": "2023" },
+    { "title": "Gilbert & George", "venue": "Musée Magazine", "date": "2023" },
+    { "title": "Expo Chicago 2023", "venue": "Musée Magazine", "date": "2023" },
+    { "title": "Cary Leibowitz", "venue": "Musée Magazine", "date": "2023" },
+    { "title": "Phoenix Gallery Fashioning Self", "venue": "Musée Magazine", "date": "2023" },
+    { "title": "Michal Chelbin", "venue": "Musée Magazine", "date": "2023" },
+    { "title": "Urs Fischer", "venue": "Musée Magazine", "date": "2023" },
+    { "title": "Azuma Makoto", "venue": "Musée Magazine", "date": "2023" },
+    { "title": "Tony Oursler", "venue": "Musée Magazine", "date": "2023" }
+  ]
+}

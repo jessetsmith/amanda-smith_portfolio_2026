@@ -2,10 +2,8 @@
 
 Fresh redesign of Amanda Smith’s portfolio. Sibling of `portfolio_2024` (reference only).
 
-**Stack:** Next.js App Router · TypeScript · Tailwind CSS  
-**Phase 1:** CSS tokens, fixture-driven **4-col** staggered grid, connected lines on scroll  
-**Admin (early):** custom `/admin` with DnD + live preview against local fixtures (no Sanity yet)  
-**Planned:** Sanity.io · intro video mask · holistic translate  
+**Stack:** Next.js App Router · TypeScript · Tailwind CSS · Sanity (scaffolded)  
+**Live locally:** 4-col grid, fixture `/admin`, Vermeer intro, hazy nav, CV, translate stub  
 
 Build plan (project store): `docs/portfolio-2026-plan.md`
 
@@ -20,65 +18,60 @@ Build plan (project store): `docs/portfolio-2026-plan.md`
 cd ~/Desktop/Projects/Amanda-Portfolio/portfolio_2026
 npm install
 cp .env.example .env.local
-npm run dev
-```
-
-Default Next port is 3000. For a quieter local port:
-
-```bash
 npx next dev --port 3456
 ```
 
-Open the URL printed in the terminal (e.g. [http://localhost:3456](http://localhost:3456)).
+Open [http://localhost:3456](http://localhost:3456).
 
-## Admin (local fixture editing)
+## URLs (local)
 
-1. Start the dev server (port **3456** if following the usual local setup).
-2. Open [http://localhost:3456/admin](http://localhost:3456/admin) — redirects to login if needed.
-3. Sign in with placeholder credentials:
-   - **Username:** `admin`
-   - **Password:** `admin`  
-   (Override via `ADMIN_USER` / `ADMIN_PASSWORD` in `.env.local`.)
+| Surface | URL |
+| --- | --- |
+| Public | http://localhost:3456 |
+| Admin | http://localhost:3456/admin |
+| Studio | http://localhost:3456/studio |
+| CV | http://localhost:3456/cv |
 
-### What you can edit
+## Admin (fixture editing)
 
-- Reorder cells (drag-and-drop)
-- `colStart` / `colSpan` (1–4), `rowSpan`
-- Color `fill` / labels, text headlines & excerpts, project titles, media captions
-- Add / remove / duplicate cell kinds (`titleRow`, `colorCell`, `mediaCell`, `textCell`, `projectCell`)
-- Live preview updates as you edit; public `/` reads the same store
+1. Open `/admin` (redirects to login if needed).
+2. Sign in: **`admin` / `admin`** (`ADMIN_USER` / `ADMIN_PASSWORD` override in `.env.local`).
+3. Reorder (DnD), edit spans (1–4), fill/copy, add/remove/duplicate.
+4. Live preview updates immediately; public `/` reads the same store (`.data/homepage-grid.json`).
 
-Edits persist to `.data/homepage-grid.json` (gitignored). **Reset seed** in the admin bar restores `src/data/homepage-grid.json`.
+Not production auth — cookie mock until real auth + Sanity mutations.
 
-This is **not** production auth — cookie session mock only until Sanity + real auth land.
+## Sanity
+
+Schemas live in `src/sanity/schemaTypes` (`project`, `publication`, `researchItem`, `cv`, `homepage`, `siteSettings`, 4-col `gridItem`). Studio mounts at `/studio` via `sanity.config.ts`.
+
+**Without real IDs:** leave `NEXT_PUBLIC_SANITY_PROJECT_ID` empty — `/studio` shows a setup message; public + `/admin` keep using fixtures / `.data`.
+
+**With a real project:** set in `.env.local`:
+
+- `NEXT_PUBLIC_SANITY_PROJECT_ID`
+- `NEXT_PUBLIC_SANITY_DATASET`
+- `NEXT_PUBLIC_SANITY_API_VERSION`
+- `SANITY_API_READ_TOKEN` (optional read)
+
+Then restart the dev server. Homepage/CV/nav fetch Sanity when configured, else fall back.
+
+## Intro / chrome
+
+- Full-bleed intro video: `public/media/intro.mp4` (placeholder from 2024 banner)
+- Scroll text mask punches through video to an under-layer
+- Hazy nav clears on hover/focus; definition tooltips on selected phrases
+- Language control calls `/api/translate` (stub without `GOOGLE_TRANSLATE_API_KEY`)
+
+## Environment
+
+See `.env.example`. Do not invent production Sanity credentials.
 
 ## Scripts
 
 | Command | Description |
 | --- | --- |
-| `npm run dev` | Dev server (Turbopack) |
+| `npm run dev` | Dev server |
 | `npm run build` | Production build |
 | `npm run start` | Serve production build |
 | `npm run lint` | ESLint |
-
-## Phase 1 layout
-
-- Fixture data: `src/data/homepage-grid.json` (`colSpan` 1–4)
-- Runtime edits: `.data/homepage-grid.json` (via `/api/homepage-grid`)
-- Grid types: `src/types/grid.ts` (`GRID_COLUMNS = 4`)
-- Public grid: `src/components/grid/HomepageGrid.tsx` + `GridCell.tsx`
-- Admin: `src/app/admin/` + `src/components/admin/AdminGridApp.tsx`
-- Tokens / connected lines: `src/app/globals.css`
-
-Max 4 columns; row mixes vary (full, halves, 1+3, 3+1, up to four equal).
-
-## Environment
-
-See `.env.example`. Placeholders only — create a real Sanity project before wiring CMS:
-
-- `ADMIN_USER` / `ADMIN_PASSWORD` (local admin gate)
-- `NEXT_PUBLIC_SANITY_PROJECT_ID`
-- `NEXT_PUBLIC_SANITY_DATASET`
-- `NEXT_PUBLIC_SANITY_API_VERSION`
-- `SANITY_API_READ_TOKEN` (server-only, if needed)
-- `GOOGLE_TRANSLATE_API_KEY` (or equivalent; server-only)

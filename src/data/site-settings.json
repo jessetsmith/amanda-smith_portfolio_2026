@@ -1,0 +1,12 @@
+{
+  "siteTitle": "Amanda Smith",
+  "nav": [
+    { "label": "Work", "href": "/#grid" },
+    { "label": "CV", "href": "/cv" },
+    { "label": "Studio", "href": "/studio" },
+    { "label": "Admin", "href": "/admin" },
+    { "label": "Contact", "href": "mailto:Amandajsmith@arizona.edu" }
+  ],
+  "contactEmail": "Amandajsmith@arizona.edu",
+  "contactNote": "Tucson, Arizona — open to relocation."
+}
