@@ -1,4 +1,4 @@
-import { assignSectionRows } from "@/lib/grid-layout";
+import { finalizeGridLayout } from "@/lib/grid-layout";
 import type {
   CellFill,
   GridItem,
@@ -163,8 +163,8 @@ export function normalizeGridItems(items: GridItem[]): GridItem[] {
   const normalized = items.map((item, index) =>
     normalizeGridItem(item, index + 1),
   );
-  // Always recompute explicit rows so section bands stay isolated.
-  return assignSectionRows(normalized);
+  // Fill empty cells with unlabeled spacers + lock section-isolated rows.
+  return finalizeGridLayout(normalized);
 }
 
 export function createGridItem(kind: GridItemKind, order: number): GridItem {

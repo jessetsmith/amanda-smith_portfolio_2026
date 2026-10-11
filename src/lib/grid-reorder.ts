@@ -1,11 +1,14 @@
 import { arrayMove } from "@dnd-kit/sortable";
+import { sectionIndexRange } from "@/lib/grid-layout";
 import type { GridItem } from "@/types/grid";
 
 /**
  * Reorder by dropping active onto over:
  * 1) arrayMove so `order` updates
- * 2) swap colStart/colSpan/rowSpan so CSS-grid slots actually trade places
- *    (fixed placement alone often makes arrayMove look like a no-op)
+ * 2) swap placement when both are non-title and in the same section
+ *    (including blankCell slots — empty columns are real drop targets)
+ *
+ * Caller should run normalize/finalize afterward so vacancies refill.
  */
 export function reorderGridItems(
   items: GridItem[],
@@ -26,15 +29,30 @@ export function reorderGridItems(
     return moved;
   }
 
+  const activeSection = sectionIndexRange(items, activeId);
+  const overSection = sectionIndexRange(items, overId);
+  const sameSection =
+    activeSection &&
+    overSection &&
+    activeSection.start === overSection.start &&
+    activeSection.end === overSection.end;
+
+  // Keep section isolation: only swap slots within the same band.
+  if (!sameSection) {
+    return moved;
+  }
+
   const layoutA = {
     colStart: active.colStart,
     colSpan: active.colSpan,
     rowSpan: active.rowSpan ?? 1,
+    rowStart: active.rowStart,
   };
   const layoutB = {
     colStart: over.colStart,
     colSpan: over.colSpan,
     rowSpan: over.rowSpan ?? 1,
+    rowStart: over.rowStart,
   };
 
   return moved.map((item) => {
