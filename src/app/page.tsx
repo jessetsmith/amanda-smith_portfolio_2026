@@ -1,11 +1,12 @@
+import { connection } from "next/server";
 import { IntroBand } from "@/components/IntroBand";
 import { HomepageGrid } from "@/components/grid/HomepageGrid";
-import homepageGrid from "@/data/homepage-grid.json";
-import type { GridItem } from "@/types/grid";
+import { readGridItems } from "@/lib/grid-store";
 
-const items = homepageGrid as GridItem[];
+export default async function Home() {
+  await connection();
+  const items = await readGridItems();
 
-export default function Home() {
   return (
     <main className="flex flex-1 flex-col">
       <IntroBand />

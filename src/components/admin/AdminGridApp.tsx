@@ -1,0 +1,608 @@
+"use client";
+
+import { useCallback, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  type DragEndEvent,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import type { CellFill, GridItem, GridItemKind } from "@/types/grid";
+import { GRID_COLUMNS } from "@/types/grid";
+import {
+  createGridItem,
+  duplicateGridItem,
+  normalizeGridItems,
+} from "@/lib/grid-normalize";
+import { HomepageGrid } from "@/components/grid/HomepageGrid";
+import { IntroBand } from "@/components/IntroBand";
+
+const KINDS: GridItemKind[] = [
+  "titleRow",
+  "colorCell",
+  "mediaCell",
+  "textCell",
+  "projectCell",
+];
+
+const FILLS: CellFill[] = ["rust", "ochre", "sage", "tan", "paper", "ink"];
+
+type SaveState = "idle" | "saving" | "saved" | "error";
+
+interface AdminGridAppProps {
+  initialItems: GridItem[];
+}
+
+export function AdminGridApp({ initialItems }: AdminGridAppProps) {
+  const router = useRouter();
+  const [items, setItems] = useState(() => normalizeGridItems(initialItems));
+  const [selectedId, setSelectedId] = useState<string | null>(
+    initialItems[0]?.id ?? null,
+  );
+  const [addKind, setAddKind] = useState<GridItemKind>("textCell");
+  const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [previewKey, setPreviewKey] = useState(0);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+  );
+
+  const selected = useMemo(
+    () => items.find((item) => item.id === selectedId) ?? null,
+    [items, selectedId],
+  );
+
+  const persist = useCallback(async (next: GridItem[]) => {
+    setSaveState("saving");
+    try {
+      const res = await fetch("/api/homepage-grid", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: next }),
+      });
+      if (!res.ok) throw new Error("save failed");
+      const data = (await res.json()) as { items: GridItem[] };
+      setItems(normalizeGridItems(data.items));
+      setSaveState("saved");
+      setPreviewKey((k) => k + 1);
+    } catch {
+      setSaveState("error");
+    }
+  }, []);
+
+  const updateItems = useCallback(
+    (updater: (prev: GridItem[]) => GridItem[]) => {
+      setItems((prev) => {
+        const next = normalizeGridItems(updater(prev));
+        if (saveTimer.current) clearTimeout(saveTimer.current);
+        saveTimer.current = setTimeout(() => {
+          void persist(next);
+        }, 400);
+        return next;
+      });
+    },
+    [persist],
+  );
+
+  function onDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    updateItems((prev) => {
+      const oldIndex = prev.findIndex((item) => item.id === active.id);
+      const newIndex = prev.findIndex((item) => item.id === over.id);
+      if (oldIndex < 0 || newIndex < 0) return prev;
+      return arrayMove(prev, oldIndex, newIndex);
+    });
+  }
+
+  function patchSelected(patch: Partial<GridItem>) {
+    if (!selectedId) return;
+    updateItems((prev) =>
+      prev.map((item) =>
+        item.id === selectedId ? ({ ...item, ...patch } as GridItem) : item,
+      ),
+    );
+  }
+
+  function addItem() {
+    updateItems((prev) => {
+      const created = createGridItem(addKind, prev.length + 1);
+      setSelectedId(created.id);
+      return [...prev, created];
+    });
+  }
+
+  function duplicateSelected() {
+    if (!selected) return;
+    updateItems((prev) => {
+      const index = prev.findIndex((item) => item.id === selected.id);
+      const copy = duplicateGridItem(selected, index + 2);
+      setSelectedId(copy.id);
+      const next = [...prev];
+      next.splice(index + 1, 0, copy);
+      return next;
+    });
+  }
+
+  function removeSelected() {
+    if (!selected) return;
+    updateItems((prev) => {
+      const next = prev.filter((item) => item.id !== selected.id);
+      setSelectedId(next[0]?.id ?? null);
+      return next;
+    });
+  }
+
+  async function resetToSeed() {
+    if (!confirm("Reset grid to seed fixtures? Local edits will be wiped.")) {
+      return;
+    }
+    setSaveState("saving");
+    const res = await fetch("/api/homepage-grid", { method: "DELETE" });
+    if (!res.ok) {
+      setSaveState("error");
+      return;
+    }
+    const data = (await res.json()) as { items: GridItem[] };
+    const next = normalizeGridItems(data.items);
+    setItems(next);
+    setSelectedId(next[0]?.id ?? null);
+    setSaveState("saved");
+    setPreviewKey((k) => k + 1);
+  }
+
+  async function logout() {
+    await fetch("/api/admin/logout", { method: "POST" });
+    router.replace("/admin/login");
+    router.refresh();
+  }
+
+  const statusLabel =
+    saveState === "saving"
+      ? "Saving…"
+      : saveState === "saved"
+        ? "Saved to .data/"
+        : saveState === "error"
+          ? "Save failed"
+          : "Ready";
+
+  return (
+    <div className="flex min-h-full flex-1 flex-col">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-ink/15 px-4 py-3 sm:px-6">
+        <div>
+          <p className="font-mono text-[0.65rem] tracking-[0.2em] text-rust uppercase">
+            Portfolio 2026
+          </p>
+          <h1 className="font-display text-xl tracking-tight text-ink">
+            Grid admin
+          </h1>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-mono text-[0.65rem] tracking-[0.12em] text-ink/50 uppercase">
+            {statusLabel}
+          </span>
+          <a
+            href="/"
+            target="_blank"
+            rel="noreferrer"
+            className="border border-ink/20 px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-ink uppercase"
+          >
+            Open public
+          </a>
+          <button
+            type="button"
+            onClick={() => void resetToSeed()}
+            className="border border-ink/20 px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-ink uppercase"
+          >
+            Reset seed
+          </button>
+          <button
+            type="button"
+            onClick={() => void logout()}
+            className="bg-ink px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-paper uppercase"
+          >
+            Log out
+          </button>
+        </div>
+      </header>
+
+      <div className="grid flex-1 lg:grid-cols-[minmax(20rem,26rem)_minmax(0,1fr)]">
+        <aside className="border-b border-ink/15 lg:border-r lg:border-b-0">
+          <div className="flex items-center gap-2 border-b border-ink/10 px-4 py-3">
+            <select
+              value={addKind}
+              onChange={(e) => setAddKind(e.target.value as GridItemKind)}
+              className="flex-1 border border-ink/20 bg-paper px-2 py-1.5 font-mono text-xs"
+            >
+              {KINDS.map((kind) => (
+                <option key={kind} value={kind}>
+                  {kind}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={addItem}
+              className="bg-rust px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-paper uppercase"
+            >
+              Add
+            </button>
+          </div>
+
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={onDragEnd}
+          >
+            <SortableContext
+              items={items.map((item) => item.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <ul className="max-h-[40vh] overflow-y-auto lg:max-h-[calc(100vh-12rem)]">
+                {items.map((item) => (
+                  <SortableRow
+                    key={item.id}
+                    item={item}
+                    active={item.id === selectedId}
+                    onSelect={() => setSelectedId(item.id)}
+                  />
+                ))}
+              </ul>
+            </SortableContext>
+          </DndContext>
+
+          {selected ? (
+            <ItemFields
+              item={selected}
+              onChange={patchSelected}
+              onDuplicate={duplicateSelected}
+              onRemove={removeSelected}
+            />
+          ) : (
+            <p className="p-4 text-sm text-ink/50">Select a cell to edit.</p>
+          )}
+        </aside>
+
+        <section className="min-w-0 bg-paper/40">
+          <div className="flex items-center justify-between border-b border-ink/10 px-4 py-3">
+            <p className="font-mono text-[0.65rem] tracking-[0.18em] text-ink/50 uppercase">
+              Live preview
+            </p>
+            <p className="text-xs text-ink/45">
+              Same 4-col grid as public · edits save to{" "}
+              <code className="font-mono">.data/homepage-grid.json</code>
+            </p>
+          </div>
+          <div className="admin-preview max-h-[calc(100vh-7rem)] overflow-auto p-3 sm:p-4">
+            <div className="origin-top scale-[0.72] sm:scale-[0.8] md:scale-[0.85]">
+              <IntroBand />
+              <HomepageGrid key={previewKey} items={items} />
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function SortableRow({
+  item,
+  active,
+  onSelect,
+}: {
+  item: GridItem;
+  active: boolean;
+  onSelect: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const label =
+    item.kind === "titleRow"
+      ? item.label
+      : item.kind === "textCell"
+        ? item.headline
+        : item.kind === "projectCell"
+          ? item.title
+          : item.kind === "colorCell"
+            ? item.label || item.fill
+            : item.caption || "Media";
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-stretch border-b border-ink/10 ${
+        active ? "bg-tan/35" : "bg-transparent"
+      } ${isDragging ? "opacity-70" : ""}`}
+    >
+      <button
+        type="button"
+        className="cursor-grab px-2 font-mono text-ink/40 active:cursor-grabbing"
+        aria-label="Drag to reorder"
+        {...attributes}
+        {...listeners}
+      >
+        ::
+      </button>
+      <button
+        type="button"
+        onClick={onSelect}
+        className="min-w-0 flex-1 px-2 py-2.5 text-left"
+      >
+        <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
+          {item.kind} · c{item.colStart}/{item.colSpan} · r{item.rowSpan ?? 1}
+        </p>
+        <p className="truncate text-sm text-ink">{label}</p>
+      </button>
+    </li>
+  );
+}
+
+function ItemFields({
+  item,
+  onChange,
+  onDuplicate,
+  onRemove,
+}: {
+  item: GridItem;
+  onChange: (patch: Partial<GridItem>) => void;
+  onDuplicate: () => void;
+  onRemove: () => void;
+}) {
+  const maxSpan = GRID_COLUMNS - item.colStart + 1;
+
+  return (
+    <div className="space-y-3 border-t border-ink/15 p-4">
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={onDuplicate}
+          className="border border-ink/20 px-2 py-1 font-mono text-[0.6rem] tracking-[0.12em] uppercase"
+        >
+          Duplicate
+        </button>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="border border-rust/40 px-2 py-1 font-mono text-[0.6rem] tracking-[0.12em] text-rust uppercase"
+        >
+          Remove
+        </button>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2">
+        <NumberField
+          label="colStart"
+          value={item.colStart}
+          min={1}
+          max={GRID_COLUMNS}
+          onChange={(colStart) => {
+            const colSpan = Math.min(item.colSpan, GRID_COLUMNS - colStart + 1);
+            onChange({ colStart, colSpan } as Partial<GridItem>);
+          }}
+          disabled={item.kind === "titleRow"}
+        />
+        <NumberField
+          label="colSpan"
+          value={item.colSpan}
+          min={1}
+          max={maxSpan}
+          onChange={(colSpan) => onChange({ colSpan } as Partial<GridItem>)}
+          disabled={item.kind === "titleRow"}
+        />
+        <NumberField
+          label="rowSpan"
+          value={item.rowSpan ?? 1}
+          min={1}
+          max={4}
+          onChange={(rowSpan) => onChange({ rowSpan } as Partial<GridItem>)}
+        />
+      </div>
+
+      {item.kind === "titleRow" ? (
+        <TextField
+          label="Label"
+          value={item.label}
+          onChange={(label) => onChange({ label } as Partial<GridItem>)}
+        />
+      ) : null}
+
+      {item.kind === "colorCell" ? (
+        <>
+          <SelectField
+            label="Fill"
+            value={item.fill}
+            options={FILLS}
+            onChange={(fill) =>
+              onChange({ fill: fill as CellFill } as Partial<GridItem>)
+            }
+          />
+          <TextField
+            label="Label"
+            value={item.label ?? ""}
+            onChange={(label) => onChange({ label } as Partial<GridItem>)}
+          />
+        </>
+      ) : null}
+
+      {item.kind === "mediaCell" ? (
+        <>
+          <TextField
+            label="Caption"
+            value={item.caption ?? ""}
+            onChange={(caption) => onChange({ caption } as Partial<GridItem>)}
+          />
+          <SelectField
+            label="Tone"
+            value={item.placeholderTone ?? "warm"}
+            options={["warm", "cool", "ink"]}
+            onChange={(placeholderTone) =>
+              onChange({ placeholderTone } as Partial<GridItem>)
+            }
+          />
+        </>
+      ) : null}
+
+      {item.kind === "textCell" ? (
+        <>
+          <TextField
+            label="Meta"
+            value={item.meta ?? ""}
+            onChange={(meta) => onChange({ meta } as Partial<GridItem>)}
+          />
+          <TextField
+            label="Headline"
+            value={item.headline}
+            onChange={(headline) => onChange({ headline } as Partial<GridItem>)}
+          />
+          <TextAreaField
+            label="Excerpt"
+            value={item.excerpt ?? ""}
+            onChange={(excerpt) => onChange({ excerpt } as Partial<GridItem>)}
+          />
+        </>
+      ) : null}
+
+      {item.kind === "projectCell" ? (
+        <>
+          <TextField
+            label="Title"
+            value={item.title}
+            onChange={(title) => onChange({ title } as Partial<GridItem>)}
+          />
+          <TextField
+            label="Year"
+            value={item.year ?? ""}
+            onChange={(year) => onChange({ year } as Partial<GridItem>)}
+          />
+          <TextAreaField
+            label="Summary"
+            value={item.summary ?? ""}
+            onChange={(summary) => onChange({ summary } as Partial<GridItem>)}
+          />
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+function NumberField({
+  label,
+  value,
+  min,
+  max,
+  onChange,
+  disabled,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (value: number) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <label className="block text-[0.65rem] tracking-[0.08em] text-ink/55 uppercase">
+      {label}
+      <input
+        type="number"
+        min={min}
+        max={max}
+        disabled={disabled}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="mt-1 w-full border border-ink/20 bg-paper px-2 py-1.5 font-mono text-sm text-ink disabled:opacity-40"
+      />
+    </label>
+  );
+}
+
+function TextField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="block text-[0.65rem] tracking-[0.08em] text-ink/55 uppercase">
+      {label}
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-1 w-full border border-ink/20 bg-paper px-2 py-1.5 text-sm text-ink"
+      />
+    </label>
+  );
+}
+
+function TextAreaField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="block text-[0.65rem] tracking-[0.08em] text-ink/55 uppercase">
+      {label}
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        rows={3}
+        className="mt-1 w-full border border-ink/20 bg-paper px-2 py-1.5 text-sm text-ink"
+      />
+    </label>
+  );
+}
+
+function SelectField({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="block text-[0.65rem] tracking-[0.08em] text-ink/55 uppercase">
+      {label}
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-1 w-full border border-ink/20 bg-paper px-2 py-1.5 font-mono text-sm text-ink"
+      >
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
