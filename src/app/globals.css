@@ -243,52 +243,54 @@ select:disabled,
 }
 
 /* Public linked cards — calm hover expand + subtle Open cue */
-a.grid-cell-link {
-  cursor: pointer;
-  text-decoration: none;
-  color: inherit;
-}
+@layer components {
+  a.grid-cell-link {
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+  }
 
-a.grid-cell-link.is-inview {
-  transition:
-    opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-}
+  a.grid-cell-link.is-inview {
+    transition:
+      opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
 
-a.grid-cell-link.is-inview:hover,
-a.grid-cell-link.is-inview:focus-visible {
-  z-index: 4;
-  transform: translateY(0) scale(1.025);
-  outline: none;
-}
-
-a.grid-cell-link:focus-visible {
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-rust) 55%, transparent);
-}
-
-.card-open {
-  margin-top: auto;
-  padding-top: 0.35rem;
-  font-size: 0.58rem;
-  letter-spacing: 0.16em;
-  opacity: 0.55;
-  transition: opacity 0.3s ease, color 0.3s ease;
-}
-
-.card-open__arrow {
-  margin-left: 0.35em;
-}
-
-a.grid-cell-link:hover .card-open,
-a.grid-cell-link:focus-visible .card-open {
-  opacity: 0.95;
-  color: var(--color-rust);
-}
-
-@media (prefers-reduced-motion: reduce) {
   a.grid-cell-link.is-inview:hover,
   a.grid-cell-link.is-inview:focus-visible {
-    transform: translateY(0);
+    z-index: 4;
+    transform: translateY(0) scale(1.025);
+    outline: none;
+  }
+
+  a.grid-cell-link:focus-visible {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-rust) 55%, transparent);
+  }
+
+  .card-open {
+    margin-top: auto;
+    padding-top: 0.35rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.16em;
+    opacity: 0.55;
+    transition: opacity 0.3s ease, color 0.3s ease;
+  }
+
+  .card-open__arrow {
+    margin-left: 0.35em;
+  }
+
+  a.grid-cell-link:hover .card-open,
+  a.grid-cell-link:focus-visible .card-open {
+    opacity: 0.95;
+    color: var(--color-rust);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    a.grid-cell-link.is-inview:hover,
+    a.grid-cell-link.is-inview:focus-visible {
+      transform: translateY(0);
+    }
   }
 }
 
