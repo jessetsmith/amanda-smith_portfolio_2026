@@ -22,6 +22,12 @@ export const project = defineType({
     }),
     defineField({ name: "year", type: "string" }),
     defineField({
+      name: "url",
+      type: "url",
+      title: "External URL",
+      description: "Original project / exhibition page (used when linked from the grid).",
+    }),
+    defineField({
       name: "collaborators",
       type: "array",
       of: [{ type: "string" }],

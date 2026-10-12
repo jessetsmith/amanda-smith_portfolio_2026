@@ -164,6 +164,13 @@ export const gridItem = defineType({
     defineField({ name: "caption", type: "string" }),
     defineField({ name: "description", type: "text" }),
     defineField({
+      name: "href",
+      type: "url",
+      title: "Link URL",
+      description:
+        "Original resource (opens in a new tab on the public grid). Leave empty for non-linked cells.",
+    }),
+    defineField({
       name: "projectRef",
       type: "reference",
       to: [{ type: "project" }],

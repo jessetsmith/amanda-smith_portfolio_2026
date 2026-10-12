@@ -21,7 +21,8 @@
     "excerpt": "Stories that reflect personal, cultural, and universal experience — bridging written and visual storytelling to invite empathy, healing, and connection.",
     "imageSrc": "/media/migrated/teatroRelazioniStreetThumnail.png",
     "imageAlt": "Teatro delle Relazioni street installation",
-    "placeholderTone": "warm"
+    "placeholderTone": "warm",
+    "href": "https://bittersweetwoman.com/"
   },
   {
     "id": "color-rust-1",
@@ -46,7 +47,8 @@
     "excerpt": "Language as a site of inquiry rather than resolution — examining how memory, trauma, and interior life are shaped by social conditions and cultural form.",
     "imageSrc": "/media/migrated/bwAboutThumnail.png",
     "imageAlt": "Bittersweet Woman writing practice",
-    "placeholderTone": "cool"
+    "placeholderTone": "cool",
+    "href": "https://bittersweetwoman.com/"
   },
   {
     "id": "text-visual",
@@ -86,7 +88,8 @@
     "summary": "Binational PhotoVoice exhibition with Andrew Julo — wellness, belonging, and resilience through movement and shared space, made with nursing students from the University of Arizona, Universidad de Sonora, and IIIES.",
     "imageSrc": "/media/migrated/AmandaExhibition2025.jpeg",
     "imageAlt": "Echos of Migration exhibition view",
-    "placeholderTone": "cool"
+    "placeholderTone": "cool",
+    "href": "https://cfa.arizona.edu/happening/a-photovoice-exhibit-opening-reception/"
   },
   {
     "id": "color-sage-1",
@@ -112,7 +115,8 @@
     "summary": "Community as belonging and as artistic production — encounter, staged proximity, and shared authorship.",
     "imageSrc": "/media/migrated/FPS-IED_Teatro-delle-relazioni_crop1.jpg",
     "imageAlt": "Teatro delle Relazioni exhibition",
-    "placeholderTone": "ink"
+    "placeholderTone": "ink",
+    "href": "https://www.palazzostrozzi.org/teatro-delle-relazioni/"
   },
   {
     "id": "media-photovoice",
@@ -127,7 +131,8 @@
     "description": "Dora Rodriguez reception and PhotoVoice exhibit — participatory imagery as advocacy and storytelling.",
     "imageSrc": "/media/migrated/DORA-RODRIGUEZ-RECEPTION-AND-PHOTOVOICE-EXHIBIT1-scaled.jpg",
     "imageAlt": "PhotoVoice exhibit opening reception",
-    "placeholderTone": "warm"
+    "placeholderTone": "warm",
+    "href": "https://cfa.arizona.edu/happening/a-photovoice-exhibit-opening-reception/"
   },
   {
     "id": "project-stodulky",
@@ -143,7 +148,8 @@
     "summary": "Community art proposal bridging Czech, Russian, and Ukrainian residents through shared art experiences.",
     "imageSrc": "/media/migrated/SpojmeStodůlky.jpeg",
     "imageAlt": "Connecting Stodůlky project visual",
-    "placeholderTone": "warm"
+    "placeholderTone": "warm",
+    "href": "https://drive.google.com/file/d/1b-MwA33TGeyOXDBezn6YdhegHbhqlCwn/view"
   },
   {
     "id": "project-vita",
@@ -159,7 +165,8 @@
     "summary": "Featured artist in a virtual exhibition presenting selected works from the Vita d’Arte practice.",
     "imageSrc": "/media/migrated/ExhibitionFeature-VitadArte.jpeg",
     "imageAlt": "Vita d’Arte exhibition feature",
-    "placeholderTone": "cool"
+    "placeholderTone": "cool",
+    "href": "https://drive.google.com/file/d/1zJ18DD-WgW283-EqtP7GfpQstftKxMGm/view"
   },
   {
     "id": "project-portfolio-sample",
@@ -209,7 +216,8 @@
     "description": "Symbolism, abstraction, and figuration — challenging conventional artistic boundaries through visual synthesis. Critical writing across Musée Magazine reviews.",
     "imageSrc": "/media/migrated/Schema-WorldAsDiagram.jpeg",
     "imageAlt": "Schema: World as Diagram",
-    "placeholderTone": "cool"
+    "placeholderTone": "cool",
+    "href": "https://museemagazine.com/culture/2023/6/13/schema-world-as-diagram"
   },
   {
     "id": "color-ink-1",
@@ -234,7 +242,8 @@
     "description": "Cubist reimaginings through collage, photograph, and hand manipulation.",
     "imageSrc": "/media/migrated/ExhibitionReview-VikMuniz.jpeg",
     "imageAlt": "Exhibition review: Vik Muniz",
-    "placeholderTone": "warm"
+    "placeholderTone": "warm",
+    "href": "https://museemagazine.com/culture/2023/5/10/exhibition-review-vik-muniz-fotocubismo"
   },
   {
     "id": "media-wiley",
@@ -249,7 +258,8 @@
     "description": "Portraits that challenge traditional representations of power — classical form meeting the African diaspora.",
     "imageSrc": "/media/migrated/ExhibitionReview-KehindeWiley.jpeg",
     "imageAlt": "Exhibition review: Kehinde Wiley",
-    "placeholderTone": "warm"
+    "placeholderTone": "warm",
+    "href": "https://museemagazine.com/culture/2023/5/9/exhibtion-review-kehinde-wiley"
   },
   {
     "id": "media-gosta",
@@ -264,7 +274,8 @@
     "description": "Deborah Bell Photographs.",
     "imageSrc": "/media/migrated/ExhbitionReview-GostaPeterson.jpeg",
     "imageAlt": "Exhibition review: Gösta Peterson",
-    "placeholderTone": "cool"
+    "placeholderTone": "cool",
+    "href": "https://museemagazine.com/culture/2023/4/19/exhbition-review-gsta-peterson-deborah-bell-photographs"
   },
   {
     "id": "media-expo",
@@ -279,7 +290,8 @@
     "description": "Fair notes including Southern Guild debut.",
     "imageSrc": "/media/migrated/ExhibitonReview-ExpoChicago.jpeg",
     "imageAlt": "Exhibition review: Expo Chicago 2023",
-    "placeholderTone": "ink"
+    "placeholderTone": "ink",
+    "href": "https://museemagazine.com/culture/2023/4/11/exhibiton-review-expo-chicago-2023"
   },
   {
     "id": "media-azuma",
@@ -294,7 +306,8 @@
     "description": "Botanical arrangements with AMKK studio.",
     "imageSrc": "/media/migrated/ExhibitionReview-AzumaMakoto.jpeg",
     "imageAlt": "Exhibition review: Azuma Makoto",
-    "placeholderTone": "cool"
+    "placeholderTone": "cool",
+    "href": "https://museemagazine.com/culture/2023/3/10/exhibition-review-azuma-makoto-frozen-flowers"
   },
   {
     "id": "media-chelbin",
@@ -309,7 +322,8 @@
     "description": "Prison portraits and complex gaze.",
     "imageSrc": "/media/migrated/ExhibitionReview-MichalChelbin.jpeg",
     "imageAlt": "Exhibition review: Michal Chelbin",
-    "placeholderTone": "ink"
+    "placeholderTone": "ink",
+    "href": "https://museemagazine.com/culture/2023/3/29/exhibition-review-michal-chelbin-sailboats-and-swans"
   },
   {
     "id": "title-ventures",
@@ -334,7 +348,8 @@
     "summary": "Author platform for memoir, poetry, and criticism within a broader ethical and aesthetic framework — personal experience held in an ethical and aesthetic frame.",
     "imageSrc": "/media/migrated/bittersweetWomanSite.png",
     "imageAlt": "Bittersweet Woman site",
-    "placeholderTone": "warm"
+    "placeholderTone": "warm",
+    "href": "https://bittersweetwoman.com/"
   },
   {
     "id": "color-tan-1",
@@ -360,7 +375,8 @@
     "summary": "Essays on resilience, creative recovery, and architectures of care — trauma-informed design, storytelling, and the practice of noticing.",
     "imageSrc": "/media/migrated/bwSubstack.png",
     "imageAlt": "Remaining Bittersweet Substack",
-    "placeholderTone": "cool"
+    "placeholderTone": "cool",
+    "href": "https://substack.com/@remainingbittersweet"
   },
   {
     "id": "project-dolce",
@@ -376,7 +392,8 @@
     "summary": "DolceAmara captures moments where joy and pain coexist — a delicate dance of contrasts.",
     "imageSrc": "/media/migrated/dolceAmara.jpeg",
     "imageAlt": "Dolce Amara visual venture",
-    "placeholderTone": "ink"
+    "placeholderTone": "ink",
+    "href": "https://store.bittersweetwoman.com/"
   },
   {
     "id": "title-research",
@@ -400,7 +417,8 @@
     "excerpt": "Digital archive of field observations, media documentation, academic analysis, and theoretical frameworks on designing spaces for healing and connection.",
     "imageSrc": "/media/migrated/research_resilience.png",
     "imageAlt": "Research archive — resilience",
-    "placeholderTone": "cool"
+    "placeholderTone": "cool",
+    "href": "https://research.bittersweetwoman.com/"
   },
   {
     "id": "color-sage-2",
@@ -425,7 +443,8 @@
     "description": "Documentation from qualitative research and trauma-informed curatorial inquiry.",
     "imageSrc": "/media/migrated/research_bus.png",
     "imageAlt": "Research field documentation",
-    "placeholderTone": "warm"
+    "placeholderTone": "warm",
+    "href": "https://research.bittersweetwoman.com/"
   },
   {
     "id": "media-romantic",

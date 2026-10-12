@@ -46,6 +46,13 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
       ...(featured ? { featured: true as const } : {}),
     };
 
+    const href =
+      typeof row.href === "string" && row.href.trim()
+        ? row.href.trim()
+        : typeof (projectRef as { url?: string } | undefined)?.url === "string"
+          ? (projectRef as { url?: string }).url
+          : undefined;
+
     if (kind === "projectCell") {
       return {
         ...base,
@@ -55,6 +62,7 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
         subtitle: row.subtitle as string | undefined,
         year: (row.year as string) || projectRef?.year,
         summary: (row.summary as string) || projectRef?.summary,
+        href,
         imageSrc: row.imageSrc as string | undefined,
         imageAlt: row.imageAlt as string | undefined,
         placeholderTone:
@@ -78,6 +86,7 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
         kind: "colorCell" as const,
         fill: (row.fill as GridItem["fill"]) || "rust",
         label: row.label as string | undefined,
+        href,
       };
     }
     if (kind === "mediaCell") {
@@ -88,6 +97,7 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
         title: row.title as string | undefined,
         caption: (row.caption as string) || "Media",
         description: row.description as string | undefined,
+        href,
         imageSrc: row.imageSrc as string | undefined,
         imageAlt: row.imageAlt as string | undefined,
         placeholderTone:
@@ -107,6 +117,7 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
       headline: String(row.headline || "Headline"),
       subtitle: row.subtitle as string | undefined,
       excerpt: row.excerpt as string | undefined,
+      href,
       imageSrc: row.imageSrc as string | undefined,
       imageAlt: row.imageAlt as string | undefined,
       placeholderTone:

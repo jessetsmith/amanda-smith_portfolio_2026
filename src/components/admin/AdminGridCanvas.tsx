@@ -388,6 +388,7 @@ function AdminSortableCell({
       <GridCell
         item={item}
         omitPlacement
+        enableLinks={false}
         /* is-inview: public grid reveals via IntersectionObserver; admin has none */
         className="admin-sortable-cell__body is-inview"
       />

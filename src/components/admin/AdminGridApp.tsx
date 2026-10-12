@@ -1180,6 +1180,13 @@ function ContentTab({
         Content · {item.kind}
       </p>
       <p className="text-sm text-ink">{itemContentPreview(item)}</p>
+      {"href" in item && item.href ? (
+        <p className="break-all font-mono text-[0.6rem] tracking-[0.08em] text-ink/50">
+          Link · {item.href}
+        </p>
+      ) : item.kind !== "blankCell" && item.kind !== "titleRow" ? (
+        <p className="text-xs text-ink/40">No link URL yet</p>
+      ) : null}
       {item.kind === "blankCell" ? (
         <p className="text-xs text-ink/45">
           Empty spacer — drop/resize target inside the section band. Compact to
@@ -1414,6 +1421,11 @@ function ContentEditModal({
                 value={draft.label ?? ""}
                 onChange={(label) => patchDraft({ label } as Partial<GridItem>)}
               />
+              <TextField
+                label="Link URL"
+                value={draft.href ?? ""}
+                onChange={(href) => patchDraft({ href } as Partial<GridItem>)}
+              />
             </>
           ) : null}
 
@@ -1456,6 +1468,11 @@ function ContentEditModal({
                 onChange={(description) =>
                   patchDraft({ description } as Partial<GridItem>)
                 }
+              />
+              <TextField
+                label="Link URL"
+                value={draft.href ?? ""}
+                onChange={(href) => patchDraft({ href } as Partial<GridItem>)}
               />
             </>
           ) : null}
@@ -1501,6 +1518,11 @@ function ContentEditModal({
                 onChange={(excerpt) =>
                   patchDraft({ excerpt } as Partial<GridItem>)
                 }
+              />
+              <TextField
+                label="Link URL"
+                value={draft.href ?? ""}
+                onChange={(href) => patchDraft({ href } as Partial<GridItem>)}
               />
             </>
           ) : null}
@@ -1549,6 +1571,11 @@ function ContentEditModal({
                 onChange={(summary) =>
                   patchDraft({ summary } as Partial<GridItem>)
                 }
+              />
+              <TextField
+                label="Link URL"
+                value={draft.href ?? ""}
+                onChange={(href) => patchDraft({ href } as Partial<GridItem>)}
               />
             </>
           ) : null}

@@ -93,6 +93,7 @@ export function normalizeGridItem(item: GridItem, order: number): GridItem {
         title?: string;
         caption?: string;
         description?: string;
+        href?: string;
         imageSrc?: string;
         imageAlt?: string;
         placeholderTone?: PlaceholderTone;
@@ -104,6 +105,7 @@ export function normalizeGridItem(item: GridItem, order: number): GridItem {
         title: str(row.title),
         caption: str(row.caption) || "Media",
         description: str(row.description),
+        href: str(row.href),
         imageSrc: str(row.imageSrc),
         imageAlt: str(row.imageAlt),
         placeholderTone: tone(row.placeholderTone, "warm"),
@@ -147,6 +149,7 @@ export function normalizeGridItem(item: GridItem, order: number): GridItem {
         headline?: string;
         subtitle?: string;
         excerpt?: string;
+        href?: string;
         imageSrc?: string;
         imageAlt?: string;
         placeholderTone?: PlaceholderTone;
@@ -158,6 +161,7 @@ export function normalizeGridItem(item: GridItem, order: number): GridItem {
         headline: str(row.headline) || "Headline",
         subtitle: str(row.subtitle),
         excerpt: str(row.excerpt),
+        href: str(row.href),
         imageSrc: str(row.imageSrc),
         imageAlt: str(row.imageAlt),
         placeholderTone: tone(row.placeholderTone, "warm"),

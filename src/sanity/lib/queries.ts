@@ -23,6 +23,7 @@ export const homepageQuery = `*[_type == "homepage" && _id == "homepage"][0]{
     summary,
     caption,
     description,
+    href,
     imageSrc,
     imageAlt,
     placeholderTone,
@@ -31,7 +32,8 @@ export const homepageQuery = `*[_type == "homepage" && _id == "homepage"][0]{
       title,
       "slug": slug.current,
       summary,
-      year
+      year,
+      url
     }
   }
 }`;

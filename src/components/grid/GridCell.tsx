@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, ElementType, ReactNode } from "react";
 import type { GridItem, PlaceholderTone } from "@/types/grid";
 import { fillClass, gridPlacementStyle } from "@/lib/grid";
 
@@ -6,6 +6,11 @@ interface GridCellProps {
   item: GridItem;
   /** When true, skip CSS grid placement (parent owns placement — used by admin DnD). */
   omitPlacement?: boolean;
+  /**
+   * Public homepage: wrap linked cells as external anchors.
+   * Admin canvas keeps this false so select/drag/edit never navigate.
+   */
+  enableLinks?: boolean;
   className?: string;
   style?: CSSProperties;
 }
@@ -60,9 +65,72 @@ function contentCardClass(item: GridItem, kindClass: string): string {
   return `grid-cell relative content-card ${kindClass}${featured}`;
 }
 
+function itemHref(item: GridItem): string | undefined {
+  if (!("href" in item)) return undefined;
+  const href = item.href?.trim();
+  return href || undefined;
+}
+
+function OpenCue() {
+  return (
+    <span className="card-open font-mono tracking-[0.16em] text-ink/45 uppercase">
+      Open
+      <span className="card-open__arrow" aria-hidden>
+        ↗
+      </span>
+    </span>
+  );
+}
+
+function CellShell({
+  item,
+  enableLinks,
+  className,
+  style,
+  children,
+  kindClass,
+  as = "article",
+}: {
+  item: GridItem;
+  enableLinks: boolean;
+  className: string;
+  style: CSSProperties;
+  children: ReactNode;
+  kindClass: string;
+  as?: ElementType;
+}) {
+  const href = enableLinks ? itemHref(item) : undefined;
+  const linked = Boolean(href);
+  const Comp: ElementType = linked ? "a" : as;
+  const linkProps = linked
+    ? {
+        href,
+        target: "_blank",
+        rel: "noopener noreferrer",
+      }
+    : {};
+
+  return (
+    <Comp
+      className={`${kindClass}${linked ? " grid-cell-link" : ""} ${className}`.trim()}
+      style={style}
+      data-kind={item.kind}
+      data-featured={
+        "featured" in item && item.featured ? "true" : undefined
+      }
+      data-linked={linked ? "true" : undefined}
+      {...linkProps}
+    >
+      {children}
+      {linked ? <OpenCue /> : null}
+    </Comp>
+  );
+}
+
 export function GridCell({
   item,
   omitPlacement = false,
+  enableLinks = true,
   className = "",
   style: styleOverride,
 }: GridCellProps) {
@@ -87,12 +155,26 @@ export function GridCell({
         </div>
       );
 
-    case "colorCell":
+    case "colorCell": {
+      const href = enableLinks ? itemHref(item) : undefined;
+      const linked = Boolean(href);
+      const Comp: ElementType = linked ? "a" : "div";
+      const linkProps = linked
+        ? {
+            href,
+            target: "_blank",
+            rel: "noopener noreferrer",
+          }
+        : {};
       return (
-        <div
-          className={`${base} ${fillClass(item.fill)} color-cell flex flex-col justify-between p-6 sm:p-8`}
+        <Comp
+          className={`${base} ${fillClass(item.fill)} color-cell flex flex-col justify-between p-6 sm:p-8${
+            linked ? " grid-cell-link" : ""
+          }`}
           style={style}
           data-kind={item.kind}
+          data-linked={linked ? "true" : undefined}
+          {...linkProps}
         >
           {item.label ? (
             <span className="font-mono text-[0.65rem] tracking-[0.18em] uppercase opacity-80">
@@ -102,8 +184,10 @@ export function GridCell({
           ) : (
             <span className="sr-only">Color cell</span>
           )}
-        </div>
+          {linked ? <OpenCue /> : null}
+        </Comp>
       );
+    }
 
     case "blankCell":
       return (
@@ -117,11 +201,12 @@ export function GridCell({
 
     case "mediaCell":
       return (
-        <article
-          className={`${contentCardClass(item, "media-cell")} ${className}`.trim()}
+        <CellShell
+          item={item}
+          enableLinks={enableLinks}
+          className={className}
           style={style}
-          data-kind={item.kind}
-          data-featured={item.featured ? "true" : undefined}
+          kindClass={contentCardClass(item, "media-cell")}
         >
           <p className="card-meta font-mono tracking-[0.18em] text-ink uppercase">
             <MetaDot />
@@ -131,9 +216,7 @@ export function GridCell({
             ) : null}
           </p>
           {item.title ? (
-            <h2 className="card-title font-display text-ink">
-              {item.title}
-            </h2>
+            <h2 className="card-title font-display text-ink">{item.title}</h2>
           ) : null}
           <CardImage
             src={item.imageSrc}
@@ -146,16 +229,17 @@ export function GridCell({
               {item.description}
             </p>
           ) : null}
-        </article>
+        </CellShell>
       );
 
     case "textCell":
       return (
-        <article
-          className={`${contentCardClass(item, "text-cell")} ${className}`.trim()}
+        <CellShell
+          item={item}
+          enableLinks={enableLinks}
+          className={className}
           style={style}
-          data-kind={item.kind}
-          data-featured={item.featured ? "true" : undefined}
+          kindClass={contentCardClass(item, "text-cell")}
         >
           {item.meta ? (
             <p className="card-meta font-mono tracking-[0.18em] text-ink uppercase">
@@ -181,16 +265,17 @@ export function GridCell({
           {item.excerpt ? (
             <p className="card-desc leading-relaxed text-ink/70">{item.excerpt}</p>
           ) : null}
-        </article>
+        </CellShell>
       );
 
     case "projectCell":
       return (
-        <article
-          className={`${contentCardClass(item, "project-cell")} ${className}`.trim()}
+        <CellShell
+          item={item}
+          enableLinks={enableLinks}
+          className={className}
           style={style}
-          data-kind={item.kind}
-          data-featured={item.featured ? "true" : undefined}
+          kindClass={contentCardClass(item, "project-cell")}
         >
           <div className="card-meta flex items-baseline justify-between gap-3">
             <p className="font-mono tracking-[0.18em] text-ink uppercase">
@@ -221,7 +306,7 @@ export function GridCell({
           {item.summary ? (
             <p className="card-desc leading-relaxed text-ink/65">{item.summary}</p>
           ) : null}
-        </article>
+        </CellShell>
       );
   }
 }

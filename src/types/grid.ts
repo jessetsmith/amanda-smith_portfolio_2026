@@ -65,6 +65,8 @@ export interface MediaCellItem extends GridItemBase {
   title?: string;
   caption?: string;
   description?: string;
+  /** Original resource URL (public click-through). */
+  href?: string;
   imageSrc?: string;
   imageAlt?: string;
   placeholderTone?: PlaceholderTone;
@@ -76,6 +78,8 @@ export interface TextCellItem extends GridItemBase {
   headline: string;
   subtitle?: string;
   excerpt?: string;
+  /** Original resource URL (public click-through). */
+  href?: string;
   imageSrc?: string;
   imageAlt?: string;
   placeholderTone?: PlaceholderTone;
