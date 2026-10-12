@@ -587,11 +587,16 @@ select:disabled,
 
 /* Localized atmospheric haze behind the display name only */
 .intro-mask__title-region {
-  --title-haze-opacity: 0.88;
+  --haze-x: 50%;
+  --haze-y: 50%;
+  --haze-spot: 0px;
   position: relative;
   isolation: isolate;
   display: block;
   max-width: 14ch;
+  /* Match display size so haze em-padding tracks the letter band */
+  font-size: clamp(3.75rem, 13vw, 9rem);
+  line-height: 0.9;
   pointer-events: auto;
   outline: none;
   transform: translateY(calc(var(--intro-progress) * -18vh));
@@ -600,50 +605,73 @@ select:disabled,
 .intro-mask__title-haze {
   position: absolute;
   z-index: 0;
-  /* Soft rectangle covering the full title-band (letters + padding), not a pinpoint glow */
+  /* Soft rectangle covering the full title-band (letters + padding) */
   inset: -0.22em -0.4em -0.28em -0.35em;
   border-radius: 0.2em;
   background:
     linear-gradient(
       112deg,
-      color-mix(in srgb, var(--color-rust) 88%, var(--color-ink)) 0%,
-      color-mix(in srgb, var(--color-ink) 72%, var(--color-rust)) 48%,
-      color-mix(in srgb, var(--color-sage) 42%, var(--color-ink)) 100%
+      color-mix(in srgb, var(--color-rust) 42%, var(--color-paper)) 0%,
+      color-mix(in srgb, var(--color-tan) 58%, var(--color-paper)) 45%,
+      color-mix(in srgb, var(--color-sage) 38%, var(--color-paper)) 100%
     );
   box-shadow:
-    0 0 2.5em 1.25em color-mix(in srgb, var(--color-rust) 45%, transparent),
-    0 0 4em 1.75em color-mix(in srgb, var(--color-ink) 28%, transparent);
-  filter: blur(22px) saturate(1.12);
-  opacity: var(--title-haze-opacity);
+    0 0 2.25em 1.1em color-mix(in srgb, var(--color-rust) 28%, transparent),
+    0 0 3.5em 1.5em color-mix(in srgb, var(--color-tan) 22%, transparent);
+  filter: blur(20px) saturate(1.05);
+  opacity: 0.82;
   transform: translateZ(0);
   pointer-events: none;
-  transition: opacity 0.65s ease;
+  /* Cursor spotlight: clear only a small radial around the pointer */
+  -webkit-mask-image: radial-gradient(
+    circle var(--haze-spot) at var(--haze-x) var(--haze-y),
+    transparent 0%,
+    transparent 38%,
+    rgba(0, 0, 0, 0.55) 68%,
+    #000 100%
+  );
+  mask-image: radial-gradient(
+    circle var(--haze-spot) at var(--haze-x) var(--haze-y),
+    transparent 0%,
+    transparent 38%,
+    rgba(0, 0, 0, 0.55) 68%,
+    #000 100%
+  );
+  transition:
+    -webkit-mask-size 0.35s ease,
+    mask-size 0.35s ease;
 }
 
-.intro-mask__title-region:hover,
-.intro-mask__title-region:focus-within {
-  --title-haze-opacity: 0.28;
-}
-
-@media (hover: none) {
-  .intro-mask__title-region:hover {
-    --title-haze-opacity: 0.88;
-  }
-}
-
-/* Accessible readable twin of the punch title */
-.intro-mask__title-readable {
+/* Solid name + outline paint above the haze */
+.intro-mask__title-fill {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   margin: 0;
   max-width: 14ch;
   font-family: var(--font-display);
-  font-size: clamp(3.75rem, 13vw, 9rem);
+  font-size: 1em;
   font-weight: var(--weight-display);
-  line-height: 0.9;
+  line-height: inherit;
+  letter-spacing: var(--tracking-display);
+  color: var(--color-ink);
+}
+
+/* Outline twin above haze, slightly offset under the solid fill */
+.intro-mask__title-readable {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  margin: 0;
+  max-width: 14ch;
+  font-family: var(--font-display);
+  font-size: 1em;
+  font-weight: var(--weight-display);
+  line-height: inherit;
   letter-spacing: var(--tracking-display);
   color: transparent;
-  -webkit-text-stroke: 1px color-mix(in srgb, var(--color-paper) 55%, transparent);
+  -webkit-text-stroke: 1px color-mix(in srgb, var(--color-paper) 70%, transparent);
+  transform: translate(0.03em, 0.1em);
 }
 
 .intro-mask__support {
@@ -1240,3 +1268,4 @@ select:disabled,
     opacity: 1;
   }
 }
+
