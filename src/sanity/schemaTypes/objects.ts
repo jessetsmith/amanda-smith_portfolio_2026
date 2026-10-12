@@ -76,6 +76,13 @@ export const gridItem = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: "id",
+      type: "string",
+      title: "Stable id",
+      description: "Client id mirrored from admin (falls back to _key).",
+      hidden: true,
+    }),
+    defineField({
       name: "order",
       type: "number",
       initialValue: 1,
