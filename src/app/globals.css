@@ -259,7 +259,7 @@ select:disabled,
   a.grid-cell-link.is-inview:hover,
   a.grid-cell-link.is-inview:focus-visible {
     z-index: 4;
-    transform: translateY(0) scale(1.025);
+    transform: translateY(0) scale(0.98);
     outline: none;
   }
 
