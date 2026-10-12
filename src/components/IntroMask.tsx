@@ -16,6 +16,7 @@ export function IntroMask({
   posterSrc,
 }: IntroMaskProps) {
   const sectionRef = useRef<HTMLElement>(null);
+  const hazeRef = useRef<HTMLSpanElement>(null);
   const titleRegionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,21 +42,19 @@ export function IntroMask({
   }, []);
 
   const setSpotlight = (xPx: number, yPx: number, spot: string) => {
-    const region = titleRegionRef.current;
-    if (!region) return;
-    region.style.setProperty("--haze-x", `${xPx}px`);
-    region.style.setProperty("--haze-y", `${yPx}px`);
-    region.style.setProperty("--haze-spot", spot);
+    const haze = hazeRef.current;
+    if (!haze) return;
+    haze.style.setProperty("--haze-x", `${xPx}px`);
+    haze.style.setProperty("--haze-y", `${yPx}px`);
+    haze.style.setProperty("--haze-spot", spot);
   };
 
   const clearSpotlight = () => {
     setSpotlight(0, 0, "0px");
   };
 
-  const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    const haze = titleRegionRef.current?.querySelector<HTMLElement>(
-      ".intro-mask__title-haze",
-    );
+  const onPointerMove = (event: PointerEvent<HTMLElement>) => {
+    const haze = hazeRef.current;
     if (!haze) return;
     const rect = haze.getBoundingClientRect();
     setSpotlight(
@@ -66,9 +65,7 @@ export function IntroMask({
   };
 
   const onFocus = () => {
-    const haze = titleRegionRef.current?.querySelector<HTMLElement>(
-      ".intro-mask__title-haze",
-    );
+    const haze = hazeRef.current;
     if (!haze) return;
     setSpotlight(haze.clientWidth / 2, haze.clientHeight / 2, "7.5rem");
   };
@@ -84,7 +81,7 @@ export function IntroMask({
           </p>
         </div>
 
-        {/* Isolated stack: destination-out title cuts video → under-layer */}
+        {/* Video + cloud haze + destination-out solid name (one solid layer) */}
         <div className="intro-mask__punch">
           <video
             className="intro-mask__video"
@@ -95,12 +92,26 @@ export function IntroMask({
             poster={posterSrc}
             src={videoSrc}
           />
+          <span
+            ref={hazeRef}
+            className="intro-mask__title-haze"
+            aria-hidden
+            onPointerMove={onPointerMove}
+            onPointerLeave={clearSpotlight}
+          >
+            <span className="intro-mask__haze-cloud intro-mask__haze-cloud--a" />
+            <span className="intro-mask__haze-cloud intro-mask__haze-cloud--b" />
+            <span className="intro-mask__haze-cloud intro-mask__haze-cloud--c" />
+            <span className="intro-mask__haze-cloud intro-mask__haze-cloud--d" />
+            <span className="intro-mask__haze-cloud intro-mask__haze-cloud--e" />
+          </span>
           <h1 className="intro-mask__title" aria-hidden>
             {maskText}
           </h1>
         </div>
 
         <div className="intro-mask__content">
+          {/* Outline-only twin (transparent fill + white stroke), stacked/offset */}
           <div
             ref={titleRegionRef}
             className="intro-mask__title-region"
@@ -111,16 +122,6 @@ export function IntroMask({
             onBlur={clearSpotlight}
             onFocus={onFocus}
           >
-            <span className="intro-mask__title-haze" aria-hidden>
-              <span className="intro-mask__haze-cloud intro-mask__haze-cloud--a" />
-              <span className="intro-mask__haze-cloud intro-mask__haze-cloud--b" />
-              <span className="intro-mask__haze-cloud intro-mask__haze-cloud--c" />
-              <span className="intro-mask__haze-cloud intro-mask__haze-cloud--d" />
-              <span className="intro-mask__haze-cloud intro-mask__haze-cloud--e" />
-            </span>
-            <p className="intro-mask__title-fill" aria-hidden>
-              {maskText}
-            </p>
             <p className="intro-mask__title-readable" aria-hidden>
               {maskText}
             </p>
