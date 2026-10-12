@@ -606,8 +606,8 @@ select:disabled,
     --haze-spot: 0px;
     position: absolute;
     z-index: 1;
-    /* Bound to full punch/sticky title section (soft edge falloff via mask) */
-    inset: 0;
+    /* Bound to full punch/sticky title section + slight overflow */
+    inset: -6%;
     width: auto;
     height: auto;
     pointer-events: auto;
