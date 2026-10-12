@@ -111,7 +111,13 @@ export function IntroMask({
             onBlur={clearSpotlight}
             onFocus={onFocus}
           >
-            <span className="intro-mask__title-haze" aria-hidden />
+            <span className="intro-mask__title-haze" aria-hidden>
+              <span className="intro-mask__haze-cloud intro-mask__haze-cloud--a" />
+              <span className="intro-mask__haze-cloud intro-mask__haze-cloud--b" />
+              <span className="intro-mask__haze-cloud intro-mask__haze-cloud--c" />
+              <span className="intro-mask__haze-cloud intro-mask__haze-cloud--d" />
+              <span className="intro-mask__haze-cloud intro-mask__haze-cloud--e" />
+            </span>
             <p className="intro-mask__title-fill" aria-hidden>
               {maskText}
             </p>
