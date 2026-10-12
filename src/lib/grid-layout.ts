@@ -87,6 +87,10 @@ function makeBlank(colStart: number, colSpan: number, rowSpan = 1): BlankCellIte
  * Pack items with section isolation: each titleRow band is packed on its own,
  * and the next section always starts on a row below the previous section’s
  * furthest cell. That prevents foreign-section items from filling holes.
+ *
+ * Absolute `rowStart` values are remapped relative to each section’s own
+ * minimum so stale Sanity anchors (e.g. Projects at row 11 after Practice
+ * ends at 4) cannot open empty mega-bands between sections.
  */
 export function packGridSectioned(items: GridItem[]): Map<string, GridGeom> {
   const placed = new Map<string, GridGeom>();
@@ -95,6 +99,11 @@ export function packGridSectioned(items: GridItem[]): Map<string, GridGeom> {
   for (const range of iterSections(items)) {
     const section = items.slice(range.start, range.end + 1);
     const occ = new Set<string>();
+    const preferredRows = section
+      .map((item) => item.rowStart)
+      .filter((row): row is number => typeof row === "number" && row >= 1);
+    const localOrigin =
+      preferredRows.length > 0 ? Math.min(...preferredRows) : null;
 
     function fits(col: number, row: number, w: number, h: number): boolean {
       for (let r = row; r < row + h; r += 1) {
@@ -115,13 +124,13 @@ export function packGridSectioned(items: GridItem[]): Map<string, GridGeom> {
     let sectionMaxEnd = sectionMinRow - 1;
     for (const item of section) {
       const { col, w, h } = itemSize(item);
-      // Prefer an explicit rowStart when it still fits (vacancy blanks).
-      const preferred =
-        typeof item.rowStart === "number" && item.rowStart >= sectionMinRow
-          ? item.rowStart
-          : null;
+      let preferred: number | null = null;
+      if (typeof item.rowStart === "number" && localOrigin !== null) {
+        preferred = sectionMinRow + (item.rowStart - localOrigin);
+        if (preferred < sectionMinRow) preferred = sectionMinRow;
+      }
       let row = sectionMinRow;
-      if (preferred && fits(col, preferred, w, h)) {
+      if (preferred !== null && fits(col, preferred, w, h)) {
         row = preferred;
       } else {
         while (!fits(col, row, w, h)) row += 1;
@@ -253,9 +262,25 @@ export function assignSectionRows(items: GridItem[]): GridItem[] {
 
 /**
  * Rebuild vacancy spacers from content bbox (+ optional sectionRows), then lock rows.
+ *
+ * Clears absolute `rowStart` before packing so stale Sanity anchors cannot open
+ * empty bands between sections. Relative in-section placement is restored by
+ * `assignSectionRows` after a dense pack. Runaway `sectionRows` are dropped.
  */
 export function finalizeGridLayout(items: GridItem[]): GridItem[] {
-  const locked = assignSectionRows(fillSectionVacancies(items));
+  const sanitized = stripBlankCells(items).map((item) => {
+    const next = { ...item } as GridItem;
+    delete (next as { rowStart?: number }).rowStart;
+
+    if (next.kind === "titleRow") {
+      const raw = next.sectionRows;
+      if (typeof raw === "number" && (raw > MAX_SECTION_ROWS || raw > 12)) {
+        delete (next as TitleRowItem).sectionRows;
+      }
+    }
+    return next;
+  });
+  const locked = assignSectionRows(fillSectionVacancies(sanitized));
   return locked.map((item, index) => ({ ...item, order: index + 1 }));
 }
 
