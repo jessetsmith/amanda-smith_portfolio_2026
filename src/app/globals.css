@@ -585,9 +585,65 @@ select:disabled,
   }
 }
 
+/* Localized atmospheric haze behind the display name only */
+.intro-mask__title-region {
+  --title-haze-opacity: 0.55;
+  position: relative;
+  isolation: isolate;
+  display: block;
+  max-width: 14ch;
+  pointer-events: auto;
+  outline: none;
+  transform: translateY(calc(var(--intro-progress) * -18vh));
+}
+
+.intro-mask__title-haze {
+  position: absolute;
+  z-index: 0;
+  left: -12%;
+  right: -18%;
+  top: -18%;
+  bottom: -22%;
+  border-radius: 48% 52% 45% 55%;
+  background:
+    radial-gradient(
+      70% 65% at 35% 40%,
+      color-mix(in srgb, var(--color-rust) 72%, transparent) 0%,
+      transparent 68%
+    ),
+    radial-gradient(
+      55% 60% at 70% 55%,
+      color-mix(in srgb, var(--color-sage) 55%, transparent) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      80% 70% at 50% 50%,
+      color-mix(in srgb, var(--color-ink) 40%, transparent) 0%,
+      transparent 72%
+    );
+  filter: blur(28px);
+  opacity: var(--title-haze-opacity);
+  transform: translateZ(0);
+  pointer-events: none;
+  transition: opacity 0.65s ease;
+}
+
+.intro-mask__title-region:hover,
+.intro-mask__title-region:focus-within {
+  --title-haze-opacity: 0.2;
+}
+
+@media (hover: none) {
+  .intro-mask__title-region:hover {
+    --title-haze-opacity: 0.55;
+  }
+}
+
 /* Accessible readable twin of the punch title */
 .intro-mask__title-readable {
-  margin-top: 0;
+  position: relative;
+  z-index: 1;
+  margin: 0;
   max-width: 14ch;
   font-family: var(--font-display);
   font-size: clamp(3.75rem, 13vw, 9rem);
@@ -596,7 +652,6 @@ select:disabled,
   letter-spacing: var(--tracking-display);
   color: transparent;
   -webkit-text-stroke: 1px color-mix(in srgb, var(--color-paper) 55%, transparent);
-  transform: translateY(calc(var(--intro-progress) * -18vh));
 }
 
 .intro-mask__support {
@@ -1168,6 +1223,7 @@ select:disabled,
   .intro-band .intro-frame,
   .intro-mask__video,
   .intro-mask__title,
+  .intro-mask__title-haze,
   .intro-mask__under-copy,
   .hazy-nav__bar,
   .hazy-nav__menu,

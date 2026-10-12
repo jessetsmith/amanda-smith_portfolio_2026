@@ -67,7 +67,16 @@ export function IntroMask({
         </div>
 
         <div className="intro-mask__content">
-          <p className="intro-mask__title-readable">{maskText}</p>
+          <div
+            className="intro-mask__title-region"
+            tabIndex={0}
+            aria-label={maskText}
+          >
+            <span className="intro-mask__title-haze" aria-hidden />
+            <p className="intro-mask__title-readable" aria-hidden>
+              {maskText}
+            </p>
+          </div>
           <p className="intro-mask__support">{support}</p>
         </div>
       </div>
