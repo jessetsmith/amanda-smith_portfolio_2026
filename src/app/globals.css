@@ -603,104 +603,111 @@ select:disabled,
 }
 
 /* Cloud group behind the name — formless blobs, not a box */
-.intro-mask__title-haze {
-  position: absolute;
-  z-index: 0;
-  inset: -0.55em -0.7em -0.6em -0.65em;
-  pointer-events: none;
-  transform: translateZ(0);
-  /* Cursor spotlight: clear only a small radial around the pointer */
-  -webkit-mask-image: radial-gradient(
-    circle var(--haze-spot) at var(--haze-x) var(--haze-y),
-    transparent 0%,
-    transparent 38%,
-    rgba(0, 0, 0, 0.55) 68%,
-    #000 100%
-  );
-  mask-image: radial-gradient(
-    circle var(--haze-spot) at var(--haze-x) var(--haze-y),
-    transparent 0%,
-    transparent 38%,
-    rgba(0, 0, 0, 0.55) 68%,
-    #000 100%
-  );
-}
+@layer components {
+  .intro-mask__title-haze {
+    position: absolute;
+    z-index: 0;
+    inset: -0.55em -0.7em -0.6em -0.65em;
+    pointer-events: none;
+    transform: translateZ(0);
+    background: none;
+    border-radius: 0;
+    box-shadow: none;
+    filter: none;
+    opacity: 1;
+    /* Cursor spotlight: clear only a small radial around the pointer */
+    -webkit-mask-image: radial-gradient(
+      circle var(--haze-spot) at var(--haze-x) var(--haze-y),
+      transparent 0%,
+      transparent 38%,
+      rgba(0, 0, 0, 0.55) 68%,
+      #000 100%
+    );
+    mask-image: radial-gradient(
+      circle var(--haze-spot) at var(--haze-x) var(--haze-y),
+      transparent 0%,
+      transparent 38%,
+      rgba(0, 0, 0, 0.55) 68%,
+      #000 100%
+    );
+  }
 
-.intro-mask__haze-cloud {
-  position: absolute;
-  display: block;
-  border-radius: 50%;
-  filter: blur(42px) saturate(1.04);
-  opacity: 0.9;
-  pointer-events: none;
-}
+  .intro-mask__haze-cloud {
+    position: absolute;
+    display: block;
+    border-radius: 50%;
+    filter: blur(42px) saturate(1.04);
+    opacity: 0.9;
+    pointer-events: none;
+  }
 
-.intro-mask__haze-cloud--a {
-  left: -8%;
-  top: -6%;
-  width: 72%;
-  height: 95%;
-  background: radial-gradient(
-    ellipse 70% 65% at 50% 50%,
-    color-mix(in srgb, var(--color-rust) 48%, var(--color-paper)) 0%,
-    color-mix(in srgb, var(--color-rust) 22%, transparent) 55%,
-    transparent 72%
-  );
-}
+  .intro-mask__haze-cloud--a {
+    left: -8%;
+    top: -6%;
+    width: 72%;
+    height: 95%;
+    background: radial-gradient(
+      ellipse 70% 65% at 50% 50%,
+      color-mix(in srgb, var(--color-rust) 48%, var(--color-paper)) 0%,
+      color-mix(in srgb, var(--color-rust) 22%, transparent) 55%,
+      transparent 72%
+    );
+  }
 
-.intro-mask__haze-cloud--b {
-  right: -10%;
-  top: 8%;
-  width: 68%;
-  height: 80%;
-  background: radial-gradient(
-    ellipse 65% 70% at 45% 50%,
-    color-mix(in srgb, var(--color-tan) 62%, var(--color-paper)) 0%,
-    color-mix(in srgb, var(--color-tan) 28%, transparent) 58%,
-    transparent 74%
-  );
-}
+  .intro-mask__haze-cloud--b {
+    right: -10%;
+    top: 8%;
+    width: 68%;
+    height: 80%;
+    background: radial-gradient(
+      ellipse 65% 70% at 45% 50%,
+      color-mix(in srgb, var(--color-tan) 62%, var(--color-paper)) 0%,
+      color-mix(in srgb, var(--color-tan) 28%, transparent) 58%,
+      transparent 74%
+    );
+  }
 
-.intro-mask__haze-cloud--c {
-  left: 18%;
-  bottom: -18%;
-  width: 78%;
-  height: 70%;
-  background: radial-gradient(
-    ellipse 75% 60% at 50% 40%,
-    color-mix(in srgb, var(--color-sage) 44%, var(--color-paper)) 0%,
-    color-mix(in srgb, var(--color-sage) 20%, transparent) 56%,
-    transparent 73%
-  );
-}
+  .intro-mask__haze-cloud--c {
+    left: 18%;
+    bottom: -18%;
+    width: 78%;
+    height: 70%;
+    background: radial-gradient(
+      ellipse 75% 60% at 50% 40%,
+      color-mix(in srgb, var(--color-sage) 44%, var(--color-paper)) 0%,
+      color-mix(in srgb, var(--color-sage) 20%, transparent) 56%,
+      transparent 73%
+    );
+  }
 
-.intro-mask__haze-cloud--d {
-  left: 28%;
-  top: -12%;
-  width: 55%;
-  height: 58%;
-  background: radial-gradient(
-    circle at 50% 50%,
-    color-mix(in srgb, var(--color-paper) 70%, var(--color-tan)) 0%,
-    color-mix(in srgb, var(--color-rust) 18%, transparent) 52%,
-    transparent 70%
-  );
-  opacity: 0.75;
-}
+  .intro-mask__haze-cloud--d {
+    left: 28%;
+    top: -12%;
+    width: 55%;
+    height: 58%;
+    background: radial-gradient(
+      circle at 50% 50%,
+      color-mix(in srgb, var(--color-paper) 70%, var(--color-tan)) 0%,
+      color-mix(in srgb, var(--color-rust) 18%, transparent) 52%,
+      transparent 70%
+    );
+    opacity: 0.75;
+  }
 
-.intro-mask__haze-cloud--e {
-  left: -4%;
-  top: 28%;
-  width: 48%;
-  height: 62%;
-  border-radius: 60% 40% 55% 45%;
-  background: radial-gradient(
-    ellipse 60% 75% at 55% 45%,
-    color-mix(in srgb, var(--color-ochre) 35%, var(--color-paper)) 0%,
-    transparent 68%
-  );
-  opacity: 0.7;
-  filter: blur(48px) saturate(1.02);
+  .intro-mask__haze-cloud--e {
+    left: -4%;
+    top: 28%;
+    width: 48%;
+    height: 62%;
+    border-radius: 60% 40% 55% 45%;
+    background: radial-gradient(
+      ellipse 60% 75% at 55% 45%,
+      color-mix(in srgb, var(--color-ochre) 35%, var(--color-paper)) 0%,
+      transparent 68%
+    );
+    opacity: 0.7;
+    filter: blur(48px) saturate(1.02);
+  }
 }
 
 /* Solid name + outline paint above the haze */
