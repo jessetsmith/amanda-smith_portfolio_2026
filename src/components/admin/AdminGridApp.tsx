@@ -844,23 +844,9 @@ export function AdminGridApp({
           </aside>
 
           <section className="admin-shell__preview flex min-h-0 min-w-0 flex-col bg-paper/40">
-            <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-ink/10 px-4 py-3">
-              <div className="min-w-0">
-                <p className="font-mono text-[0.65rem] tracking-[0.18em] text-ink/50 uppercase">
-                  Live preview · draft until Save
-                </p>
-                <p className="text-xs text-ink/45">
-                  Edits stay local until{" "}
-                  <span className="font-mono uppercase">Save</span> publishes to{" "}
-                  <code className="font-mono">
-                    {source === "sanity"
-                      ? "Sanity homepage.gridItems"
-                      : ".data/ (fallback)"}
-                  </code>
-                </p>
-              </div>
-              <div className="flex shrink-0 flex-col items-end gap-1">
-                <div className="flex flex-wrap items-center justify-end gap-2">
+            <div className="flex shrink-0 flex-col gap-2 border-b border-ink/10 px-4 py-3">
+              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                <div className="flex flex-wrap items-center gap-3">
                   <button
                     type="button"
                     onClick={undo}
@@ -924,27 +910,27 @@ export function AdminGridApp({
                   >
                     Discard
                   </button>
-                  <button
-                    type="button"
-                    onClick={saveDraft}
-                    disabled={!isDirty || saveState === "saving"}
-                    title="Publish draft to the public site"
-                    className="bg-rust px-4 py-2 font-mono text-[0.7rem] tracking-[0.16em] text-paper uppercase disabled:cursor-not-allowed disabled:bg-ink/20 disabled:text-paper/70"
-                  >
-                    {saveState === "saving" ? "Saving…" : "Save"}
-                  </button>
                 </div>
-                <p
-                  className={`font-mono text-[0.55rem] tracking-[0.12em] uppercase ${
-                    isDirty || saveState === "error"
-                      ? "text-rust"
-                      : "text-ink/40"
-                  }`}
+                <button
+                  type="button"
+                  onClick={saveDraft}
+                  disabled={!isDirty || saveState === "saving"}
+                  title="Publish draft to the public site"
+                  className="min-w-[7.5rem] bg-rust px-5 py-2.5 font-mono text-[0.75rem] tracking-[0.16em] text-paper uppercase disabled:cursor-not-allowed disabled:bg-ink/20 disabled:text-paper/70"
                 >
-                  {statusLabel}
-                  {selected ? ` · ${itemContentPreview(selected)}` : ""}
-                </p>
+                  {saveState === "saving" ? "Saving…" : "Save"}
+                </button>
               </div>
+              <p
+                className={`font-mono text-[0.55rem] tracking-[0.12em] uppercase ${
+                  isDirty || saveState === "error"
+                    ? "text-rust"
+                    : "text-ink/40"
+                }`}
+              >
+                {statusLabel}
+                {selected ? ` · ${itemContentPreview(selected)}` : ""}
+              </p>
             </div>
             <div
               className="admin-preview min-h-0 flex-1 overflow-auto p-3 sm:p-4"

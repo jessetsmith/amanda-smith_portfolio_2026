@@ -1,5 +1,6 @@
 import type { CellFill, GridItem } from "@/types/grid";
 import { GRID_COLUMNS } from "@/types/grid";
+import { finalizeGridLayout } from "@/lib/grid-layout";
 import type { CSSProperties } from "react";
 
 const FILL_CLASS: Record<CellFill, string> = {
@@ -51,7 +52,10 @@ export function sortGridItems(items: GridItem[]): GridItem[] {
 
 /**
  * Drop titleRows marked `hidden` and every item in their band until the next
- * titleRow. Used for the public homepage; admin keeps the full draft.
+ * titleRow, then re-pack so remaining bands sit contiguously from row 1.
+ * Stale absolute `rowStart` values from the full admin grid must not leak onto
+ * the public page (they open giant empty gaps above/between sections).
+ * Admin keeps the full draft and does not use this helper.
  */
 export function filterPublicGridItems(items: GridItem[]): GridItem[] {
   const out: GridItem[] = [];
@@ -65,5 +69,6 @@ export function filterPublicGridItems(items: GridItem[]): GridItem[] {
     }
     out.push(item);
   }
-  return out;
+  // Strip blanks + clear rowStart + refill vacancies + reassign contiguous rows.
+  return finalizeGridLayout(out);
 }
