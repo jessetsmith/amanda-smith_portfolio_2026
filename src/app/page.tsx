@@ -17,7 +17,6 @@ export default async function Home() {
       <HazyNav brand={site.siteTitle} items={site.nav} />
       <main className="flex flex-1 flex-col">
         <IntroMask
-          brand={site.siteTitle}
           maskText={home.maskText}
           support={home.support}
           videoSrc={home.videoSrc}

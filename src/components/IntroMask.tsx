@@ -3,7 +3,6 @@
 import { useEffect, useRef } from "react";
 
 interface IntroMaskProps {
-  brand: string;
   maskText: string;
   support: string;
   videoSrc: string;
@@ -11,7 +10,6 @@ interface IntroMaskProps {
 }
 
 export function IntroMask({
-  brand,
   maskText,
   support,
   videoSrc,
@@ -69,7 +67,6 @@ export function IntroMask({
         </div>
 
         <div className="intro-mask__content">
-          <p className="intro-mask__brand">{brand}</p>
           <p className="intro-mask__title-readable">{maskText}</p>
           <p className="intro-mask__support">{support}</p>
         </div>
