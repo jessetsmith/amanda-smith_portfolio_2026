@@ -881,10 +881,23 @@ select:disabled,
   top: 0;
 }
 
-.admin-sortable-cell.is-right-edge .admin-resize-handle--s,
-.admin-sortable-cell.is-right-edge .admin-resize-handle--n {
+/* Clear side corners when both horizontal handles are present (center cells) */
+.admin-sortable-cell:not(.is-left-edge):not(.is-right-edge) .admin-resize-handle--s,
+.admin-sortable-cell:not(.is-left-edge):not(.is-right-edge) .admin-resize-handle--n {
+  left: 1.1rem;
+  right: 1.1rem;
+}
+
+.admin-sortable-cell.is-right-edge:not(.is-left-edge) .admin-resize-handle--s,
+.admin-sortable-cell.is-right-edge:not(.is-left-edge) .admin-resize-handle--n {
   left: 1.1rem;
   right: 0.5rem;
+}
+
+.admin-sortable-cell.is-left-edge:not(.is-right-edge) .admin-resize-handle--s,
+.admin-sortable-cell.is-left-edge:not(.is-right-edge) .admin-resize-handle--n {
+  left: 0.5rem;
+  right: 1.1rem;
 }
 
 .admin-resize-handle--s::after,

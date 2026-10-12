@@ -51,8 +51,8 @@ export function AdminGridCanvas({
 }: AdminGridCanvasProps) {
   const sorted = sortGridItems(items);
   const packed = useMemo(() => packGridSectioned(items), [items]);
-  const sectionMaxRow = useMemo(() => {
-    const maxBySection = new Map<string, number>();
+  const sectionRowBounds = useMemo(() => {
+    const bounds = new Map<string, { min: number; max: number }>();
     for (const item of items) {
       const geom = packed.get(item.id);
       if (!geom) continue;
@@ -66,9 +66,17 @@ export function AdminGridCanvas({
         }
       }
       const end = geom.row + geom.h - 1;
-      maxBySection.set(titleId, Math.max(maxBySection.get(titleId) ?? 0, end));
+      const prev = bounds.get(titleId);
+      if (!prev) {
+        bounds.set(titleId, { min: geom.row, max: end });
+      } else {
+        bounds.set(titleId, {
+          min: Math.min(prev.min, geom.row),
+          max: Math.max(prev.max, end),
+        });
+      }
     }
-    return maxBySection;
+    return bounds;
   }, [items, packed]);
 
   return (
@@ -85,6 +93,7 @@ export function AdminGridCanvas({
           {sorted.map((item) => {
             const geom = packed.get(item.id);
             const colEnd = item.colStart + item.colSpan - 1;
+            const atLeftEdge = item.kind === "titleRow" || item.colStart <= 1;
             const atRightEdge =
               item.kind === "titleRow" || colEnd >= GRID_COLUMNS;
             let titleId = "__preamble__";
@@ -95,16 +104,23 @@ export function AdminGridCanvas({
                 break;
               }
             }
-            const bandMax = sectionMaxRow.get(titleId) ?? 0;
+            const band = sectionRowBounds.get(titleId);
             const rowEnd = geom ? geom.row + geom.h - 1 : 0;
-            const atBottomEdge = Boolean(geom && rowEnd >= bandMax && bandMax > 0);
+            const atTopEdge = Boolean(
+              geom && band && geom.row <= band.min,
+            );
+            const atBottomEdge = Boolean(
+              geom && band && rowEnd >= band.max && band.max > 0,
+            );
 
             return (
               <AdminSortableCell
                 key={item.id}
                 item={item}
                 selected={item.id === selectedId}
+                atLeftEdge={atLeftEdge}
                 atRightEdge={atRightEdge}
+                atTopEdge={atTopEdge}
                 atBottomEdge={atBottomEdge}
                 packedRow={geom?.row ?? item.rowStart ?? 1}
                 onSelect={() => onSelect(item.id)}
@@ -129,7 +145,9 @@ function clamp(n: number, min: number, max: number): number {
 function AdminSortableCell({
   item,
   selected,
+  atLeftEdge,
   atRightEdge,
+  atTopEdge,
   atBottomEdge,
   packedRow,
   onSelect,
@@ -139,7 +157,9 @@ function AdminSortableCell({
 }: {
   item: GridItem;
   selected: boolean;
+  atLeftEdge: boolean;
   atRightEdge: boolean;
+  atTopEdge: boolean;
   atBottomEdge: boolean;
   packedRow: number;
   onSelect: () => void;
@@ -187,10 +207,16 @@ function AdminSortableCell({
   };
 
   const canResizeCols = item.kind !== "titleRow";
-  // Prefer opposite-side handles when flush against the grid/section edge.
-  const hEdge: "e" | "w" = atRightEdge ? "w" : "e";
-  const vEdge: "s" | "n" = atBottomEdge ? "n" : "s";
-  const cornerEdge = `${vEdge === "n" ? "n" : "s"}${hEdge}` as ResizeEdge;
+  // Center: all sides. On an outer boundary: omit the crushed side only.
+  const showE = canResizeCols && !atRightEdge;
+  const showW = canResizeCols && !atLeftEdge;
+  const showS = !atBottomEdge;
+  const showN = !atTopEdge;
+  const showSE = showE && showS;
+  const showSW = showW && showS;
+  const showNE = showE && showN;
+  const showNW = showW && showN;
+  const gripLeft = atRightEdge && !atLeftEdge;
 
   function beginResize(
     edge: ResizeEdge,
@@ -335,7 +361,9 @@ function AdminSortableCell({
       className={`admin-sortable-cell${selected ? " is-selected" : ""}${
         isDragging ? " is-dragging" : ""
       }${resizing ? " is-resizing" : ""}${
-        atRightEdge ? " is-right-edge" : ""
+        atLeftEdge ? " is-left-edge" : ""
+      }${atRightEdge ? " is-right-edge" : ""}${
+        atTopEdge ? " is-top-edge" : ""
       }${atBottomEdge ? " is-bottom-edge" : ""}`}
       data-kind={item.kind}
       data-dnd-id={gridDndId(item.id)}
@@ -345,7 +373,7 @@ function AdminSortableCell({
       <button
         type="button"
         className={`admin-sortable-cell__grip${
-          atRightEdge ? " admin-sortable-cell__grip--left" : ""
+          gripLeft ? " admin-sortable-cell__grip--left" : ""
         }`}
         aria-label="Drag to reorder"
         onClick={(event) => {
@@ -365,30 +393,75 @@ function AdminSortableCell({
       />
       {selected && !isDragging ? (
         <>
-          {canResizeCols ? (
+          {showE ? (
             <button
               type="button"
-              aria-label={hEdge === "w" ? "Resize width from left" : "Resize width"}
-              className={`admin-resize-handle admin-resize-handle--${hEdge}`}
-              onPointerDown={(event) => beginResize(hEdge, event)}
+              aria-label="Resize width from right"
+              className="admin-resize-handle admin-resize-handle--e"
+              onPointerDown={(event) => beginResize("e", event)}
               onClick={(event) => event.stopPropagation()}
             />
           ) : null}
-          <button
-            type="button"
-            aria-label={
-              vEdge === "n" ? "Resize height from top" : "Resize height"
-            }
-            className={`admin-resize-handle admin-resize-handle--${vEdge}`}
-            onPointerDown={(event) => beginResize(vEdge, event)}
-            onClick={(event) => event.stopPropagation()}
-          />
-          {canResizeCols ? (
+          {showW ? (
             <button
               type="button"
-              aria-label="Resize width and height"
-              className={`admin-resize-handle admin-resize-handle--${cornerEdge}`}
-              onPointerDown={(event) => beginResize(cornerEdge, event)}
+              aria-label="Resize width from left"
+              className="admin-resize-handle admin-resize-handle--w"
+              onPointerDown={(event) => beginResize("w", event)}
+              onClick={(event) => event.stopPropagation()}
+            />
+          ) : null}
+          {showS ? (
+            <button
+              type="button"
+              aria-label="Resize height from bottom"
+              className="admin-resize-handle admin-resize-handle--s"
+              onPointerDown={(event) => beginResize("s", event)}
+              onClick={(event) => event.stopPropagation()}
+            />
+          ) : null}
+          {showN ? (
+            <button
+              type="button"
+              aria-label="Resize height from top"
+              className="admin-resize-handle admin-resize-handle--n"
+              onPointerDown={(event) => beginResize("n", event)}
+              onClick={(event) => event.stopPropagation()}
+            />
+          ) : null}
+          {showSE ? (
+            <button
+              type="button"
+              aria-label="Resize from bottom-right"
+              className="admin-resize-handle admin-resize-handle--se"
+              onPointerDown={(event) => beginResize("se", event)}
+              onClick={(event) => event.stopPropagation()}
+            />
+          ) : null}
+          {showSW ? (
+            <button
+              type="button"
+              aria-label="Resize from bottom-left"
+              className="admin-resize-handle admin-resize-handle--sw"
+              onPointerDown={(event) => beginResize("sw", event)}
+              onClick={(event) => event.stopPropagation()}
+            />
+          ) : null}
+          {showNE ? (
+            <button
+              type="button"
+              aria-label="Resize from top-right"
+              className="admin-resize-handle admin-resize-handle--ne"
+              onPointerDown={(event) => beginResize("ne", event)}
+              onClick={(event) => event.stopPropagation()}
+            />
+          ) : null}
+          {showNW ? (
+            <button
+              type="button"
+              aria-label="Resize from top-left"
+              className="admin-resize-handle admin-resize-handle--nw"
+              onPointerDown={(event) => beginResize("nw", event)}
               onClick={(event) => event.stopPropagation()}
             />
           ) : null}
