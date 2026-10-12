@@ -604,6 +604,7 @@ select:disabled,
     --haze-x: 50%;
     --haze-y: 50%;
     --haze-spot: 0px;
+    --haze-fill: section;
     position: absolute;
     z-index: 1;
     /* Bound to full punch/sticky title section + slight overflow */
