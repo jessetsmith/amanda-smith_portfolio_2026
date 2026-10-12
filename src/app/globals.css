@@ -834,16 +834,25 @@ select:disabled,
   touch-action: none;
 }
 
-.admin-resize-handle--e {
+.admin-resize-handle--e,
+.admin-resize-handle--w {
   top: 1.75rem;
-  right: 0;
   bottom: 1.1rem;
   width: 14px;
   cursor: ew-resize;
   background: color-mix(in srgb, var(--color-rust) 55%, transparent);
 }
 
-.admin-resize-handle--e::after {
+.admin-resize-handle--e {
+  right: 0;
+}
+
+.admin-resize-handle--w {
+  left: 0;
+}
+
+.admin-resize-handle--e::after,
+.admin-resize-handle--w::after {
   content: "";
   position: absolute;
   top: 50%;
@@ -855,16 +864,31 @@ select:disabled,
   border-radius: 1px;
 }
 
-.admin-resize-handle--s {
+.admin-resize-handle--s,
+.admin-resize-handle--n {
   left: 0.5rem;
   right: 1.1rem;
-  bottom: 0;
   height: 14px;
   cursor: ns-resize;
   background: color-mix(in srgb, var(--color-rust) 55%, transparent);
 }
 
-.admin-resize-handle--s::after {
+.admin-resize-handle--s {
+  bottom: 0;
+}
+
+.admin-resize-handle--n {
+  top: 0;
+}
+
+.admin-sortable-cell.is-right-edge .admin-resize-handle--s,
+.admin-sortable-cell.is-right-edge .admin-resize-handle--n {
+  left: 1.1rem;
+  right: 0.5rem;
+}
+
+.admin-resize-handle--s::after,
+.admin-resize-handle--n::after {
   content: "";
   position: absolute;
   top: 50%;
@@ -876,15 +900,39 @@ select:disabled,
   border-radius: 1px;
 }
 
-.admin-resize-handle--se {
-  right: 0;
-  bottom: 0;
+.admin-resize-handle--se,
+.admin-resize-handle--sw,
+.admin-resize-handle--ne,
+.admin-resize-handle--nw {
   width: 18px;
   height: 18px;
-  cursor: nwse-resize;
   border: 2px solid var(--color-rust);
   background: var(--color-paper);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-paper) 80%, transparent);
+}
+
+.admin-resize-handle--se {
+  right: 0;
+  bottom: 0;
+  cursor: nwse-resize;
+}
+
+.admin-resize-handle--sw {
+  left: 0;
+  bottom: 0;
+  cursor: nesw-resize;
+}
+
+.admin-resize-handle--ne {
+  right: 0;
+  top: 0;
+  cursor: nesw-resize;
+}
+
+.admin-resize-handle--nw {
+  left: 0;
+  top: 0;
+  cursor: nwse-resize;
 }
 
 .admin-resize-badge {
@@ -901,6 +949,11 @@ select:disabled,
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--color-rust);
+}
+
+.admin-resize-badge--top {
+  top: 1.15rem;
+  bottom: auto;
 }
 
 .admin-sortable-cell__grip {
@@ -924,6 +977,16 @@ select:disabled,
   cursor: grab;
   pointer-events: auto;
   touch-action: none;
+}
+
+.admin-sortable-cell__grip--left {
+  right: auto;
+  left: 0.45rem;
+}
+
+/* Keep grip clear of the NW corner handle when both edges flip */
+.admin-sortable-cell.is-right-edge.is-bottom-edge .admin-sortable-cell__grip--left {
+  top: 1.4rem;
 }
 
 .admin-sortable-cell__grip:active {

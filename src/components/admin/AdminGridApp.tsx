@@ -344,7 +344,9 @@ export function AdminGridApp({
 
   function resizeItem(
     id: string,
-    patch: Partial<Pick<GridItem, "colStart" | "colSpan" | "rowSpan">>,
+    patch: Partial<
+      Pick<GridItem, "colStart" | "colSpan" | "rowSpan" | "rowStart">
+    >,
     options?: { recordHistory?: boolean },
   ) {
     commitItems((prev) => applyGridResize(prev, id, patch), {
@@ -792,7 +794,9 @@ function ItemFields({
 }: {
   item: GridItem;
   onResize: (
-    patch: Partial<Pick<GridItem, "colStart" | "colSpan" | "rowSpan">>,
+    patch: Partial<
+      Pick<GridItem, "colStart" | "colSpan" | "rowSpan" | "rowStart">
+    >,
   ) => void;
   onFeaturedChange: (featured: boolean) => void;
   onDuplicate: () => void;

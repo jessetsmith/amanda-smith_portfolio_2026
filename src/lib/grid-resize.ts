@@ -134,7 +134,9 @@ function finalize(items: GridItem[]): GridItem[] {
 export function applyGridResize(
   items: GridItem[],
   id: string,
-  patch: Partial<Pick<GridItem, "colStart" | "colSpan" | "rowSpan">>,
+  patch: Partial<
+    Pick<GridItem, "colStart" | "colSpan" | "rowSpan" | "rowStart">
+  >,
 ): GridItem[] {
   const idx = items.findIndex((item) => item.id === id);
   if (idx < 0) return items;
@@ -169,36 +171,69 @@ export function applyGridResize(
   const oldC = item.colStart;
   const oldW = item.colSpan;
   const oldH = item.rowSpan ?? 1;
+  const oldR = geom.row;
   const newC = clamp(patch.colStart ?? oldC, 1, GRID_COLUMNS);
   const maxSpan = GRID_COLUMNS - newC + 1;
   const newW = clamp(patch.colSpan ?? oldW, 1, maxSpan);
   const newH = clamp(patch.rowSpan ?? oldH, 1, 4);
+  const newR =
+    typeof patch.rowStart === "number" && patch.rowStart >= 1
+      ? Math.floor(patch.rowStart)
+      : oldR;
 
-  if (newC === oldC && newW === oldW && newH === oldH) return items;
+  if (
+    newC === oldC &&
+    newW === oldW &&
+    newH === oldH &&
+    newR === oldR
+  ) {
+    return items;
+  }
 
   let next = items.map((row) =>
     row.id === id
-      ? ({ ...row, colStart: newC, colSpan: newW, rowSpan: newH } as GridItem)
+      ? ({
+          ...row,
+          colStart: newC,
+          colSpan: newW,
+          rowSpan: newH,
+          rowStart: newR,
+        } as GridItem)
       : row,
   );
 
-  const neu: GridGeom = { col: newC, row: geom.row, w: newW, h: newH };
+  const neu: GridGeom = { col: newC, row: newR, w: newW, h: newH };
 
-  // Grow: eat blanks in this section only — never steal from later sections.
-  if (newW > oldW || newH > oldH || newC !== oldC) {
+  // Grow / shift: eat blanks in this section only.
+  if (
+    newW > oldW ||
+    newH > oldH ||
+    newC !== oldC ||
+    newR !== oldR
+  ) {
     next = consumeBlanksInSection(next, packed, neu, range);
   }
 
-  // Shrink: park empty spacers in vacated cells (same section, after item).
+  // Shrink / shift: park spacers in vacated cells (same section, after item).
   const blanks: BlankCellItem[] = [];
-  if (newW < oldW) {
-    blanks.push(makeBlank(newC + newW, oldC + oldW - (newC + newW), oldH));
-  }
-  if (newH < oldH) {
-    blanks.push(makeBlank(newC, newW, oldH - newH));
+  if (newW < oldW && newC === oldC) {
+    // Shrunk from the right
+    blanks.push(makeBlank(newC + newW, oldW - newW, oldH));
   }
   if (newC > oldC) {
+    // Shrunk or shifted from the left — vacate old left columns
     blanks.push(makeBlank(oldC, newC - oldC, oldH));
+  }
+  if (newR > oldR) {
+    // Shrunk or shifted from the top
+    const topBlank = makeBlank(oldC, oldW, newR - oldR);
+    topBlank.rowStart = oldR;
+    blanks.push(topBlank);
+  } else if (newH < oldH && newR === oldR) {
+    // Shrunk from the bottom
+    const bottomBlank = makeBlank(newC, newW, oldH - newH);
+    bottomBlank.rowStart = newR + newH;
+    blanks.push(bottomBlank);
   }
 
   next = insertBlanksAfter(next, idx, blanks);
