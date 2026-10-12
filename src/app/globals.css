@@ -778,48 +778,80 @@ select:disabled,
   padding-top: 1.5rem;
 }
 
-/* —— Admin shell (viewport-locked) —— */
+/* Admin shell (viewport-locked) */
 .admin-shell {
   background: var(--color-paper);
 }
 
-.admin-sidebar__tabs {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  border-bottom: 1px solid color-mix(in srgb, var(--color-ink) 12%, transparent);
-  background: color-mix(in srgb, var(--color-paper) 92%, white);
+@layer components {
+  .admin-sidebar__tabs {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    flex-shrink: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-ink) 14%, transparent);
+    background: color-mix(in srgb, var(--color-paper) 88%, var(--color-tan));
+    padding: 0 0.5rem;
+  }
+
+  .admin-sidebar__tab {
+    appearance: none;
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    padding: 0.85rem 0.35rem 0.7rem;
+    font-family: var(--font-meta);
+    font-weight: var(--weight-meta-strong);
+    font-size: 0.62rem;
+    line-height: 1.2;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-align: center;
+    white-space: nowrap;
+    color: color-mix(in srgb, var(--color-ink) 42%, transparent);
+    cursor: pointer;
+    transition: color 0.15s ease, background-color 0.15s ease;
+  }
+
+  .admin-sidebar__tab + .admin-sidebar__tab::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 28%;
+    bottom: 28%;
+    width: 1px;
+    background: color-mix(in srgb, var(--color-ink) 14%, transparent);
+  }
+
+  .admin-sidebar__tab:hover {
+    color: var(--color-ink);
+    background: color-mix(in srgb, var(--color-tan) 22%, transparent);
+  }
+
+  .admin-sidebar__tab.is-active {
+    color: var(--color-rust);
+    background: color-mix(in srgb, var(--color-tan) 18%, transparent);
+    box-shadow: inset 0 -1.5px 0 var(--color-rust);
+  }
+
+  .admin-sidebar__tab:focus {
+    outline: none;
+  }
+
+  .admin-sidebar__tab:focus-visible {
+    color: var(--color-rust);
+    background: color-mix(in srgb, var(--color-tan) 28%, transparent);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-rust) 45%, transparent),
+      inset 0 -1.5px 0 var(--color-rust);
+  }
 }
 
-.admin-sidebar__tab {
-  appearance: none;
-  border: 0;
-  border-right: 1px solid color-mix(in srgb, var(--color-ink) 10%, transparent);
-  background: transparent;
-  padding: 0.7rem 0.35rem;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 0.58rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--color-ink) 45%, transparent);
-  cursor: pointer;
-}
-
-.admin-sidebar__tab:last-child {
-  border-right: 0;
-}
-
-.admin-sidebar__tab:hover {
-  color: var(--color-ink);
-  background: color-mix(in srgb, var(--color-tan) 28%, transparent);
-}
-
-.admin-sidebar__tab.is-active {
-  color: var(--color-rust);
-  background: color-mix(in srgb, var(--color-tan) 40%, transparent);
-  box-shadow: inset 0 -2px 0 var(--color-rust);
-}
-
-/* —— Admin canvas DnD —— */
+/* Admin canvas DnD */
 .admin-preview__stage {
   width: 100%;
   max-width: 72rem;
@@ -1170,5 +1202,3 @@ select:disabled,
     opacity: 1;
   }
 }
-
-

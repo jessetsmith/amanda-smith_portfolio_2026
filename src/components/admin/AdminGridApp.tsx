@@ -622,23 +622,50 @@ export function AdminGridApp({
               className="admin-sidebar__tabs shrink-0"
               role="tablist"
               aria-label="Grid editing panels"
+              onKeyDown={(event) => {
+                const keys = ["ArrowLeft", "ArrowRight", "Home", "End"];
+                if (!keys.includes(event.key)) return;
+                event.preventDefault();
+                const i = SIDEBAR_TABS.findIndex((t) => t.id === sidebarTab);
+                let next = i;
+                if (event.key === "ArrowRight") {
+                  next = (i + 1) % SIDEBAR_TABS.length;
+                } else if (event.key === "ArrowLeft") {
+                  next =
+                    (i - 1 + SIDEBAR_TABS.length) % SIDEBAR_TABS.length;
+                } else if (event.key === "Home") {
+                  next = 0;
+                } else if (event.key === "End") {
+                  next = SIDEBAR_TABS.length - 1;
+                }
+                const tab = SIDEBAR_TABS[next];
+                if (!tab) return;
+                setSidebarTab(tab.id);
+                requestAnimationFrame(() => {
+                  document.getElementById(`admin-tab-${tab.id}`)?.focus();
+                });
+              }}
             >
-              {SIDEBAR_TABS.map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={sidebarTab === tab.id}
-                  id={`admin-tab-${tab.id}`}
-                  aria-controls={`admin-panel-${tab.id}`}
-                  onClick={() => setSidebarTab(tab.id)}
-                  className={`admin-sidebar__tab${
-                    sidebarTab === tab.id ? " is-active" : ""
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+              {SIDEBAR_TABS.map((tab) => {
+                const active = sidebarTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    tabIndex={active ? 0 : -1}
+                    id={`admin-tab-${tab.id}`}
+                    aria-controls={`admin-panel-${tab.id}`}
+                    onClick={() => setSidebarTab(tab.id)}
+                    className={`admin-sidebar__tab font-mono text-[0.62rem] tracking-[0.14em] uppercase${
+                      active ? " is-active" : ""
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
             </div>
 
             <div className="admin-sidebar__panels min-h-0 flex-1 overflow-hidden">
