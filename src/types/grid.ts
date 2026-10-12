@@ -44,6 +44,11 @@ export interface GridItemBase {
 export interface TitleRowItem extends GridItemBase {
   kind: "titleRow";
   label: string;
+  /**
+   * Explicit section band height in rows (title + content). When set, vacancy
+   * blanks fill up to this height; when omitted, the band hugs content.
+   */
+  sectionRows?: number;
 }
 
 export interface ColorCellItem extends GridItemBase {

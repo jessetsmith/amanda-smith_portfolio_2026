@@ -62,10 +62,14 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
       };
     }
     if (kind === "titleRow") {
+      const sectionRowsNum = Number(row.sectionRows);
       return {
         ...base,
         kind: "titleRow" as const,
         label: String(row.label || "Section"),
+        ...(Number.isFinite(sectionRowsNum) && sectionRowsNum >= 1
+          ? { sectionRows: Math.floor(sectionRowsNum) }
+          : {}),
       };
     }
     if (kind === "colorCell") {

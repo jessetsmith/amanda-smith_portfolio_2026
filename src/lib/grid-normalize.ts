@@ -61,12 +61,19 @@ export function normalizeGridItem(item: GridItem, order: number): GridItem {
   };
 
   switch (kind) {
-    case "titleRow":
+    case "titleRow": {
+      const sectionRowsRaw = (item as { sectionRows?: number }).sectionRows;
+      const sectionRows =
+        typeof sectionRowsRaw === "number" && sectionRowsRaw >= 1
+          ? Math.min(24, Math.floor(sectionRowsRaw))
+          : undefined;
       return {
         ...base,
         kind: "titleRow",
         label: str((item as { label?: string }).label) || "Section",
+        ...(sectionRows ? { sectionRows } : {}),
       };
+    }
     case "colorCell": {
       const fill =
         "fill" in item && FILLS.includes(item.fill as CellFill)

@@ -36,6 +36,15 @@ import { duplicateGridItem, normalizeGridItems } from "@/lib/grid-normalize";
 import { reorderGridItems } from "@/lib/grid-reorder";
 import { applyGridResize } from "@/lib/grid-resize";
 import {
+  compactAllSections,
+  compactSection,
+  measureSectionBand,
+  MAX_SECTION_ROWS,
+  packGridSectioned,
+  sectionIndexRange,
+  setSectionRowCount,
+} from "@/lib/grid-layout";
+import {
   addGridItem,
   contentSectionOf,
   listContentSections,
@@ -194,9 +203,14 @@ export function AdminGridApp({
     return items.find((item) => item.id === activeDragId) ?? null;
   }, [activeDragId, items]);
 
-  const listSortableIds = useMemo(
-    () => items.map((item) => listDndId(item.id)),
+  /** Sidebar omits vacancy spacers — they clutter the list without aiding edit. */
+  const listItems = useMemo(
+    () => items.filter((item) => item.kind !== "blankCell"),
     [items],
+  );
+  const listSortableIds = useMemo(
+    () => listItems.map((item) => listDndId(item.id)),
+    [listItems],
   );
   const gridSortableIds = useMemo(
     () => items.map((item) => gridDndId(item.id)),
@@ -576,7 +590,7 @@ export function AdminGridApp({
               strategy={verticalListSortingStrategy}
             >
               <ul className="max-h-[36vh] overflow-y-auto lg:max-h-[calc(100vh-14rem)]">
-                {items.map((item) => (
+                {listItems.map((item) => (
                   <SortableRow
                     key={item.id}
                     item={item}
@@ -590,6 +604,7 @@ export function AdminGridApp({
             {selected ? (
               <ItemFields
                 item={selected}
+                items={items}
                 onResize={(patch) =>
                   resizeItem(selected.id, patch, { recordHistory: true })
                 }
@@ -612,6 +627,12 @@ export function AdminGridApp({
                         : row,
                     );
                   });
+                }}
+                onSectionRowsChange={(rows) => {
+                  updateItems((prev) => setSectionRowCount(prev, selected.id, rows));
+                }}
+                onCompactSection={() => {
+                  updateItems((prev) => compactSection(prev, selected.id));
                 }}
                 onDuplicate={duplicateSelected}
                 onRemove={removeSelected}
@@ -666,6 +687,16 @@ export function AdminGridApp({
                     className="border border-ink/20 px-4 py-2 font-mono text-[0.7rem] tracking-[0.16em] text-ink uppercase disabled:cursor-not-allowed disabled:opacity-35"
                   >
                     Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateItems((prev) => compactAllSections(prev))
+                    }
+                    title="Trim blank rows in every section — content defines height"
+                    className="border border-ink/20 px-3 py-2 font-mono text-[0.65rem] tracking-[0.14em] text-ink uppercase"
+                  >
+                    Compact all
                   </button>
                   <button
                     type="button"
@@ -849,22 +880,31 @@ function itemContentPreview(item: GridItem): string {
 
 function ItemFields({
   item,
+  items,
   onResize,
   onFeaturedChange,
+  onSectionRowsChange,
+  onCompactSection,
   onDuplicate,
   onRemove,
 }: {
   item: GridItem;
+  items: GridItem[];
   onResize: (
     patch: Partial<
       Pick<GridItem, "colStart" | "colSpan" | "rowSpan" | "rowStart">
     >,
   ) => void;
   onFeaturedChange: (featured: boolean) => void;
+  onSectionRowsChange: (rows: number) => void;
+  onCompactSection: () => void;
   onDuplicate: () => void;
   onRemove: () => void;
 }) {
   const maxSpan = GRID_COLUMNS - item.colStart + 1;
+  const range = sectionIndexRange(items, item.id);
+  const packed = packGridSectioned(items);
+  const band = range ? measureSectionBand(items, range, packed) : null;
 
   return (
     <div className="space-y-3 border-t border-ink/15 p-4">
@@ -883,7 +923,34 @@ function ItemFields({
         >
           Remove
         </button>
+        <button
+          type="button"
+          onClick={onCompactSection}
+          className="border border-ink/20 px-2 py-1 font-mono text-[0.6rem] tracking-[0.12em] uppercase"
+          title="Trim trailing blank rows in this section"
+        >
+          Compact section
+        </button>
       </div>
+
+      {band ? (
+        <div className="space-y-2">
+          <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
+            Section size · {band.sectionRows} rows (content {band.contentHeight})
+          </p>
+          <NumberField
+            label="Section rows"
+            value={band.sectionRows}
+            min={band.contentHeight}
+            max={MAX_SECTION_ROWS}
+            onChange={onSectionRowsChange}
+          />
+          <p className="text-xs text-ink/45">
+            Grow adds empty target rows; shrink removes trailing blanks. Cannot
+            go below content height.
+          </p>
+        </div>
+      ) : null}
 
       <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
         Placement · {item.kind}
@@ -939,8 +1006,8 @@ function ItemFields({
         <p className="truncate text-sm text-ink">{itemContentPreview(item)}</p>
         {item.kind === "blankCell" ? (
           <p className="text-xs text-ink/45">
-            Empty spacer — holds vacated space in this section. Resize or remove
-            it.
+            Empty spacer — drop/resize target inside the section band. Compact
+            to trim unused rows.
           </p>
         ) : (
           <p className="text-xs text-ink/45">

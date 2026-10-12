@@ -2,6 +2,7 @@ import {
   GRID_COLUMNS,
   type BlankCellItem,
   type GridItem,
+  type TitleRowItem,
 } from "@/types/grid";
 
 export type GridGeom = {
@@ -11,8 +12,11 @@ export type GridGeom = {
   h: number;
 };
 
+/** Soft cap on explicit section band height (rows). */
+export const MAX_SECTION_ROWS = 24;
+
 function clamp(n: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, n));
+  return Math.min(max, Math.max(min, Number.isFinite(n) ? n : min));
 }
 
 export function itemSize(item: GridItem): { col: number; w: number; h: number } {
@@ -60,6 +64,10 @@ export function iterSections(
     ranges.push({ start, end: i - 1 });
   }
   return ranges;
+}
+
+export function stripBlankCells(items: GridItem[]): GridItem[] {
+  return items.filter((item) => item.kind !== "blankCell");
 }
 
 function makeBlank(colStart: number, colSpan: number, rowSpan = 1): BlankCellItem {
@@ -128,32 +136,81 @@ export function packGridSectioned(items: GridItem[]): Map<string, GridGeom> {
   return placed;
 }
 
+export type SectionBandMetrics = {
+  titleId: string | null;
+  rowMin: number;
+  rowMax: number;
+  contentRowMax: number;
+  contentHeight: number;
+  sectionRows: number;
+  explicitRows: number | null;
+};
+
+/** Content-only band metrics (blanks ignored so they can’t inflate the section). */
+export function measureSectionBand(
+  items: GridItem[],
+  range: { start: number; end: number },
+  packed: Map<string, GridGeom>,
+): SectionBandMetrics | null {
+  const section = items.slice(range.start, range.end + 1);
+  if (section.length === 0) return null;
+
+  const title = section[0].kind === "titleRow" ? section[0] : null;
+  const content = section.filter((item) => item.kind !== "blankCell");
+  const geoms = content
+    .map((item) => packed.get(item.id))
+    .filter((g): g is GridGeom => Boolean(g));
+  if (geoms.length === 0) return null;
+
+  const rowMin = Math.min(...geoms.map((g) => g.row));
+  const contentRowMax = Math.max(...geoms.map((g) => g.row + g.h - 1));
+  const contentHeight = contentRowMax - rowMin + 1;
+  const explicitRaw =
+    title && typeof title.sectionRows === "number" ? title.sectionRows : null;
+  const explicitRows =
+    explicitRaw !== null
+      ? clamp(explicitRaw, contentHeight, MAX_SECTION_ROWS)
+      : null;
+  const rowMax =
+    explicitRows !== null
+      ? rowMin + explicitRows - 1
+      : contentRowMax;
+
+  return {
+    titleId: title?.id ?? null,
+    rowMin,
+    rowMax,
+    contentRowMax,
+    contentHeight,
+    sectionRows: rowMax - rowMin + 1,
+    explicitRows,
+  };
+}
+
 /**
- * Insert unlabeled blankCell spacers for every unoccupied cell in each
- * section band so empty columns are real resize/drop targets.
+ * Insert unlabeled blankCell spacers for unoccupied cells inside the section’s
+ * content bounding box (or explicit sectionRows). Never inflate from old blanks.
  */
 export function fillSectionVacancies(items: GridItem[]): GridItem[] {
   if (items.length === 0) return items;
 
-  const packed = packGridSectioned(items);
-  const next = [...items];
-  // Insert from the end so earlier section indices stay stable.
+  // Drop prior spacers — they must not define the band height.
+  const base = stripBlankCells(items);
+  const packed = packGridSectioned(base);
+  const next = [...base];
   const ranges = iterSections(next);
 
   for (let s = ranges.length - 1; s >= 0; s -= 1) {
-    const { start, end } = ranges[s];
-    const section = next.slice(start, end + 1);
-    if (section.length === 0) continue;
+    const range = ranges[s];
+    const metrics = measureSectionBand(next, range, packed);
+    if (!metrics) continue;
 
-    const geoms = section
-      .map((item) => packed.get(item.id))
-      .filter((g): g is GridGeom => Boolean(g));
-    if (geoms.length === 0) continue;
-
-    const rowMin = Math.min(...geoms.map((g) => g.row));
-    const rowMax = Math.max(...geoms.map((g) => g.row + g.h - 1));
+    const section = next.slice(range.start, range.end + 1);
     const occ = new Set<string>();
-    for (const g of geoms) {
+    for (const item of section) {
+      if (item.kind === "blankCell") continue;
+      const g = packed.get(item.id);
+      if (!g) continue;
       for (let r = g.row; r < g.row + g.h; r += 1) {
         for (let c = g.col; c < g.col + g.w; c += 1) {
           occ.add(`${c},${r}`);
@@ -162,7 +219,7 @@ export function fillSectionVacancies(items: GridItem[]): GridItem[] {
     }
 
     const blanks: BlankCellItem[] = [];
-    for (let row = rowMin; row <= rowMax; row += 1) {
+    for (let row = metrics.rowMin; row <= metrics.rowMax; row += 1) {
       let col = 1;
       while (col <= GRID_COLUMNS) {
         if (occ.has(`${col},${row}`)) {
@@ -178,8 +235,7 @@ export function fillSectionVacancies(items: GridItem[]): GridItem[] {
     }
 
     if (blanks.length === 0) continue;
-    // Park spacers at the end of the section (before the next titleRow).
-    next.splice(end + 1, 0, ...blanks);
+    next.splice(range.end + 1, 0, ...blanks);
   }
 
   return next;
@@ -196,10 +252,76 @@ export function assignSectionRows(items: GridItem[]): GridItem[] {
 }
 
 /**
- * Fill empty cells with spacers, then lock explicit rowStarts.
- * Idempotent once a section band is fully occupied.
+ * Rebuild vacancy spacers from content bbox (+ optional sectionRows), then lock rows.
  */
 export function finalizeGridLayout(items: GridItem[]): GridItem[] {
   const locked = assignSectionRows(fillSectionVacancies(items));
   return locked.map((item, index) => ({ ...item, order: index + 1 }));
+}
+
+/** Set explicit section band height (rows). Clamped to content height…MAX. */
+export function setSectionRowCount(
+  items: GridItem[],
+  itemId: string,
+  rows: number,
+): GridItem[] {
+  const range = sectionIndexRange(items, itemId);
+  if (!range) return items;
+
+  const base = stripBlankCells(items);
+  // Range may shrink after stripping blanks — resolve via title/content id.
+  const range2 = sectionIndexRange(base, itemId);
+  if (!range2) return items;
+
+  const packed = packGridSectioned(base);
+  const metrics = measureSectionBand(base, range2, packed);
+  if (!metrics) return items;
+
+  const target = clamp(Math.floor(rows), metrics.contentHeight, MAX_SECTION_ROWS);
+  const head = base[range2.start];
+
+  if (head.kind === "titleRow") {
+    return base.map((item): GridItem => {
+      if (item.id !== head.id || item.kind !== "titleRow") return item;
+      return {
+        ...item,
+        sectionRows: target,
+      };
+    });
+  }
+
+  // Preamble without titleRow — invent nothing; only pack content bbox.
+  return base;
+}
+
+/** Collapse trailing empties: clear explicit height and drop blanks. */
+export function compactSection(items: GridItem[], itemId: string): GridItem[] {
+  const range = sectionIndexRange(items, itemId);
+  if (!range) return items;
+
+  const base = stripBlankCells(items);
+  const range2 = sectionIndexRange(base, itemId);
+  if (!range2) return items;
+
+  const head = base[range2.start];
+  if (head.kind !== "titleRow") return base;
+
+  return base.map((item) => {
+    if (item.id !== head.id) return item;
+    const { sectionRows: _drop, ...rest } = item as TitleRowItem & {
+      sectionRows?: number;
+    };
+    return { ...rest, kind: "titleRow" as const } as TitleRowItem;
+  });
+}
+
+/** Compact every section band. */
+export function compactAllSections(items: GridItem[]): GridItem[] {
+  return stripBlankCells(items).map((item) => {
+    if (item.kind !== "titleRow") return item;
+    const { sectionRows: _drop, ...rest } = item as TitleRowItem & {
+      sectionRows?: number;
+    };
+    return { ...rest, kind: "titleRow" as const } as TitleRowItem;
+  });
 }

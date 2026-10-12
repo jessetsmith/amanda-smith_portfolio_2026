@@ -114,6 +114,14 @@ export const gridItem = defineType({
       validation: (Rule) => Rule.min(1).max(4),
     }),
     defineField({
+      name: "sectionRows",
+      type: "number",
+      title: "Section rows",
+      description:
+        "Title-row only: explicit section band height. Omit to hug content.",
+      validation: (Rule) => Rule.min(1).max(24),
+    }),
+    defineField({
       name: "featured",
       type: "boolean",
       title: "Featured lead",
