@@ -221,6 +221,32 @@ select:disabled,
     );
 }
 
+/* Admin: section hidden from public — keep editable, dim the band */
+.admin-sortable-cell.is-section-hidden {
+  opacity: 0.42;
+}
+
+.admin-sortable-cell.is-section-hidden.is-selected {
+  opacity: 0.72;
+}
+
+.admin-section-hidden-badge {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.55rem;
+  z-index: 3;
+  pointer-events: none;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--color-ink) 35%, transparent);
+  background: color-mix(in srgb, var(--color-paper) 88%, white);
+  font-family: var(--font-meta);
+  font-size: 0.55rem;
+  font-weight: var(--weight-meta);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
 .grid-cell {
   box-sizing: border-box;
   position: relative;

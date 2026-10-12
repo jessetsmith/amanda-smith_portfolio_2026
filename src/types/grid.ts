@@ -49,6 +49,8 @@ export interface TitleRowItem extends GridItemBase {
    * blanks fill up to this height; when omitted, the band hugs content.
    */
   sectionRows?: number;
+  /** When true, public homepage omits this titleRow and its band. Admin still shows it. */
+  hidden?: boolean;
 }
 
 export interface ColorCellItem extends GridItemBase {

@@ -11,6 +11,7 @@ export const homepageQuery = `*[_type == "homepage" && _id == "homepage"][0]{
     rowStart,
     rowSpan,
     sectionRows,
+    hidden,
     featured,
     fill,
     label,

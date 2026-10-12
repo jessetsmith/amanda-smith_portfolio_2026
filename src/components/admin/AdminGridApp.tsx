@@ -30,12 +30,18 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { CellFill, GridItem, GridItemKind } from "@/types/grid";
+import type {
+  CellFill,
+  GridItem,
+  GridItemKind,
+  TitleRowItem,
+} from "@/types/grid";
 import { GRID_COLUMNS } from "@/types/grid";
 import { duplicateGridItem, normalizeGridItems } from "@/lib/grid-normalize";
 import { reorderGridItems } from "@/lib/grid-reorder";
 import { applyGridResize } from "@/lib/grid-resize";
 import {
+  clearItemToBlank,
   compactAllSections,
   compactSection,
   measureSectionBand,
@@ -462,12 +468,47 @@ export function AdminGridApp({
     });
   }
 
+  function clearSelectedToBlank() {
+    if (!selected) return;
+    if (selected.kind === "titleRow" || selected.kind === "blankCell") return;
+    updateItems((prev) => {
+      const next = clearItemToBlank(prev, selected.id);
+      setSelectedId((current) =>
+        current && next.some((item) => item.id === current)
+          ? current
+          : (next.find((item) => item.kind !== "blankCell")?.id ?? null),
+      );
+      return next;
+    });
+  }
+
   function removeSelected() {
     if (!selected) return;
+    if (selected.kind === "titleRow") return;
     updateItems((prev) => {
       const next = prev.filter((item) => item.id !== selected.id);
-      setSelectedId(next[0]?.id ?? null);
+      setSelectedId(
+        next.find((item) => item.kind !== "blankCell")?.id ?? null,
+      );
       return next;
+    });
+  }
+
+  function setSectionHidden(hidden: boolean) {
+    if (!selected) return;
+    updateItems((prev) => {
+      const range = sectionIndexRange(prev, selected.id);
+      if (!range) return prev;
+      const head = prev[range.start];
+      if (head?.kind !== "titleRow") return prev;
+      return prev.map((item): GridItem => {
+        if (item.id !== head.id || item.kind !== "titleRow") return item;
+        if (hidden) return { ...item, hidden: true };
+        const { hidden: _drop, ...rest } = item as TitleRowItem & {
+          hidden?: boolean;
+        };
+        return { ...rest, kind: "titleRow" as const };
+      });
     });
   }
 
@@ -556,10 +597,19 @@ export function AdminGridApp({
         onCompactSection: () => {
           updateItems((prev) => compactSection(prev, selected.id));
         },
+        onSectionHiddenChange: setSectionHidden,
         onDuplicate: duplicateSelected,
+        onClearToBlank: clearSelectedToBlank,
         onRemove: removeSelected,
       }
     : null;
+
+  const canClearSelected = Boolean(
+    selected && selected.kind !== "titleRow" && selected.kind !== "blankCell",
+  );
+  const canRemoveSelected = Boolean(
+    selected && selected.kind !== "titleRow",
+  );
 
   return (
     <div className="admin-shell flex h-dvh max-h-dvh flex-col overflow-hidden">
@@ -736,6 +786,9 @@ export function AdminGridApp({
                       items={items}
                       onSectionRowsChange={selectedHandlers.onSectionRowsChange}
                       onCompactSection={selectedHandlers.onCompactSection}
+                      onSectionHiddenChange={
+                        selectedHandlers.onSectionHiddenChange
+                      }
                     />
                   ) : (
                     <p className="text-sm text-ink/50">
@@ -833,6 +886,24 @@ export function AdminGridApp({
                     className="border border-ink/20 px-4 py-2 font-mono text-[0.7rem] tracking-[0.16em] text-ink uppercase disabled:cursor-not-allowed disabled:opacity-35"
                   >
                     Edit
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!canClearSelected}
+                    onClick={clearSelectedToBlank}
+                    title="Clear content — keep the cell as an unlabeled blank (section size stays)"
+                    className="border border-ink/20 px-3 py-2 font-mono text-[0.65rem] tracking-[0.14em] text-ink uppercase disabled:cursor-not-allowed disabled:opacity-35"
+                  >
+                    Clear / Blank
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!canRemoveSelected}
+                    onClick={removeSelected}
+                    title="Remove block and refill vacancy (section may shrink if not pinned)"
+                    className="border border-rust/35 px-3 py-2 font-mono text-[0.65rem] tracking-[0.14em] text-rust uppercase disabled:cursor-not-allowed disabled:opacity-35"
+                  >
+                    Remove
                   </button>
                   <button
                     type="button"
@@ -971,7 +1042,7 @@ function SortableRow({
 
   const label =
     item.kind === "titleRow"
-      ? item.label
+      ? `${item.label}${item.hidden ? " · Hidden" : ""}`
       : item.kind === "textCell"
         ? item.headline
         : item.kind === "projectCell"
@@ -1029,11 +1100,13 @@ function SectionTab({
   items,
   onSectionRowsChange,
   onCompactSection,
+  onSectionHiddenChange,
 }: {
   item: GridItem;
   items: GridItem[];
   onSectionRowsChange: (rows: number) => void;
   onCompactSection: () => void;
+  onSectionHiddenChange: (hidden: boolean) => void;
 }) {
   const range = sectionIndexRange(items, item.id);
   const packed = packGridSectioned(items);
@@ -1041,12 +1114,40 @@ function SectionTab({
   const head = range ? items[range.start] : null;
   const sectionLabel =
     head?.kind === "titleRow" ? head.label || "Section" : "Section";
+  const isHidden =
+    head?.kind === "titleRow" ? Boolean(head.hidden) : false;
+  const canHide = head?.kind === "titleRow";
 
   return (
     <div className="space-y-3">
       <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
         {sectionLabel}
+        {isHidden ? " · Hidden" : ""}
       </p>
+      {canHide ? (
+        <label className="flex cursor-pointer items-start justify-between gap-3 border border-ink/12 px-3 py-2.5">
+          <span className="min-w-0">
+            <span className="block font-mono text-[0.6rem] tracking-[0.14em] text-ink uppercase">
+              Hide from public
+            </span>
+            <span className="mt-1 block text-xs text-ink/45">
+              {isHidden
+                ? "Hidden on the public site · still visible here (dimmed)"
+                : "Section stays on the public homepage until you Save"}
+            </span>
+          </span>
+          <input
+            type="checkbox"
+            className="mt-1 size-4 accent-[var(--color-rust)]"
+            checked={isHidden}
+            onChange={(event) => onSectionHiddenChange(event.target.checked)}
+          />
+        </label>
+      ) : (
+        <p className="text-xs text-ink/45">
+          Add a title row to hide this band from the public site.
+        </p>
+      )}
       {band ? (
         <div className="space-y-2">
           <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">

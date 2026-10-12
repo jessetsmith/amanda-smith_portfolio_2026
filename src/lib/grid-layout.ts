@@ -340,6 +340,35 @@ export function compactSection(items: GridItem[], itemId: string): GridItem[] {
   });
 }
 
+/**
+ * Clear a content block while keeping the section footprint: pin sectionRows
+ * to the current band height, then remove the item so vacancy blanks refill
+ * the hole. Title rows and existing blanks are left unchanged.
+ */
+export function clearItemToBlank(items: GridItem[], itemId: string): GridItem[] {
+  const target = items.find((item) => item.id === itemId);
+  if (!target || target.kind === "titleRow" || target.kind === "blankCell") {
+    return items;
+  }
+
+  const range = sectionIndexRange(items, itemId);
+  let next = items;
+  if (range) {
+    const packed = packGridSectioned(items);
+    const metrics = measureSectionBand(items, range, packed);
+    const head = items[range.start];
+    if (metrics && head?.kind === "titleRow") {
+      const pinned = Math.max(metrics.sectionRows, metrics.contentHeight);
+      next = next.map((item): GridItem => {
+        if (item.id !== head.id || item.kind !== "titleRow") return item;
+        return { ...item, sectionRows: pinned };
+      });
+    }
+  }
+
+  return next.filter((item) => item.id !== itemId);
+}
+
 /** Compact every section band. */
 export function compactAllSections(items: GridItem[]): GridItem[] {
   return stripBlankCells(items).map((item) => {

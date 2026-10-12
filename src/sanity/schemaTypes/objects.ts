@@ -122,6 +122,14 @@ export const gridItem = defineType({
       validation: (Rule) => Rule.min(1).max(24),
     }),
     defineField({
+      name: "hidden",
+      type: "boolean",
+      title: "Hidden from public",
+      description:
+        "Title-row only: hide this section (title + band) on the public site. Still visible in admin.",
+      initialValue: false,
+    }),
+    defineField({
       name: "featured",
       type: "boolean",
       title: "Featured lead",
@@ -183,11 +191,18 @@ export const gridItem = defineType({
       headline: "headline",
       label: "label",
       featured: "featured",
+      hidden: "hidden",
     },
-    prepare({ kind, title, headline, label, featured }) {
+    prepare({ kind, title, headline, label, featured, hidden }) {
+      const flags = [
+        featured ? "featured lead" : null,
+        hidden ? "hidden" : null,
+      ]
+        .filter(Boolean)
+        .join(" · ");
       return {
         title: title || headline || label || kind,
-        subtitle: featured ? `${kind} · featured lead` : kind,
+        subtitle: flags ? `${kind} · ${flags}` : kind,
       };
     },
   },

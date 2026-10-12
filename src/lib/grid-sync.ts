@@ -71,6 +71,7 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
     }
     if (kind === "titleRow") {
       const sectionRowsNum = Number(row.sectionRows);
+      const hidden = Boolean(row.hidden);
       return {
         ...base,
         kind: "titleRow" as const,
@@ -78,6 +79,7 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
         ...(Number.isFinite(sectionRowsNum) && sectionRowsNum >= 1
           ? { sectionRows: Math.floor(sectionRowsNum) }
           : {}),
+        ...(hidden ? { hidden: true as const } : {}),
       };
     }
     if (kind === "colorCell") {

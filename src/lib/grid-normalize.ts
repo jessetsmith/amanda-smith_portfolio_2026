@@ -67,11 +67,13 @@ export function normalizeGridItem(item: GridItem, order: number): GridItem {
         typeof sectionRowsRaw === "number" && sectionRowsRaw >= 1
           ? Math.min(24, Math.floor(sectionRowsRaw))
           : undefined;
+      const hidden = Boolean((item as { hidden?: boolean }).hidden);
       return {
         ...base,
         kind: "titleRow",
         label: str((item as { label?: string }).label) || "Section",
         ...(sectionRows ? { sectionRows } : {}),
+        ...(hidden ? { hidden: true as const } : {}),
       };
     }
     case "colorCell": {

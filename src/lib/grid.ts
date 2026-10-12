@@ -48,3 +48,22 @@ export function gridPlacementStyle(item: GridItem): CSSProperties {
 export function sortGridItems(items: GridItem[]): GridItem[] {
   return [...items].sort((a, b) => a.order - b.order);
 }
+
+/**
+ * Drop titleRows marked `hidden` and every item in their band until the next
+ * titleRow. Used for the public homepage; admin keeps the full draft.
+ */
+export function filterPublicGridItems(items: GridItem[]): GridItem[] {
+  const out: GridItem[] = [];
+  let skipBand = false;
+  for (const item of sortGridItems(items)) {
+    if (item.kind === "titleRow") {
+      skipBand = Boolean(item.hidden);
+      if (skipBand) continue;
+    } else if (skipBand) {
+      continue;
+    }
+    out.push(item);
+  }
+  return out;
+}

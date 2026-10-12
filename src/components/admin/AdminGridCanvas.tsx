@@ -97,10 +97,13 @@ export function AdminGridCanvas({
             const atRightEdge =
               item.kind === "titleRow" || colEnd >= GRID_COLUMNS;
             let titleId = "__preamble__";
+            let sectionHidden = false;
             const idx = items.findIndex((row) => row.id === item.id);
             for (let i = idx; i >= 0; i -= 1) {
-              if (items[i].kind === "titleRow") {
-                titleId = items[i].id;
+              const row = items[i];
+              if (row.kind === "titleRow") {
+                titleId = row.id;
+                sectionHidden = Boolean(row.hidden);
                 break;
               }
             }
@@ -118,6 +121,7 @@ export function AdminGridCanvas({
                 key={item.id}
                 item={item}
                 selected={item.id === selectedId}
+                sectionHidden={sectionHidden}
                 atLeftEdge={atLeftEdge}
                 atRightEdge={atRightEdge}
                 atTopEdge={atTopEdge}
@@ -145,6 +149,7 @@ function clamp(n: number, min: number, max: number): number {
 function AdminSortableCell({
   item,
   selected,
+  sectionHidden,
   atLeftEdge,
   atRightEdge,
   atTopEdge,
@@ -157,6 +162,7 @@ function AdminSortableCell({
 }: {
   item: GridItem;
   selected: boolean;
+  sectionHidden: boolean;
   atLeftEdge: boolean;
   atRightEdge: boolean;
   atTopEdge: boolean;
@@ -361,11 +367,14 @@ function AdminSortableCell({
       className={`admin-sortable-cell${selected ? " is-selected" : ""}${
         isDragging ? " is-dragging" : ""
       }${resizing ? " is-resizing" : ""}${
-        atLeftEdge ? " is-left-edge" : ""
-      }${atRightEdge ? " is-right-edge" : ""}${
-        atTopEdge ? " is-top-edge" : ""
-      }${atBottomEdge ? " is-bottom-edge" : ""}`}
+        sectionHidden ? " is-section-hidden" : ""
+      }${atLeftEdge ? " is-left-edge" : ""}${
+        atRightEdge ? " is-right-edge" : ""
+      }${atTopEdge ? " is-top-edge" : ""}${
+        atBottomEdge ? " is-bottom-edge" : ""
+      }`}
       data-kind={item.kind}
+      data-section-hidden={sectionHidden ? "true" : undefined}
       data-dnd-id={gridDndId(item.id)}
       onClick={() => onSelect()}
     >
@@ -385,6 +394,11 @@ function AdminSortableCell({
       >
         ⋮⋮
       </button>
+      {sectionHidden && item.kind === "titleRow" ? (
+        <span className="admin-section-hidden-badge" aria-hidden>
+          Hidden
+        </span>
+      ) : null}
       <GridCell
         item={item}
         omitPlacement

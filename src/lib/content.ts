@@ -1,3 +1,4 @@
+import { filterPublicGridItems } from "@/lib/grid";
 import { readGridItems } from "@/lib/grid-store";
 import { loadGridItems, mapSanityGridItems } from "@/lib/grid-sync";
 import { client } from "@/sanity/lib/client";
@@ -20,11 +21,15 @@ export async function getHomepageContent(): Promise<HomepageContent> {
       "Exhibitions, research, and writing — arranged as one connected grid.",
     videoSrc: "/media/intro.mp4",
     posterSrc: undefined,
-    gridItems: grid.items,
+    gridItems: filterPublicGridItems(grid.items),
   };
 
   if (!isSanityConfigured() || !client) {
-    return { ...defaults, source: "fixture", gridItems: await readGridItems() };
+    return {
+      ...defaults,
+      source: "fixture",
+      gridItems: filterPublicGridItems(await readGridItems()),
+    };
   }
 
   try {
@@ -42,7 +47,7 @@ export async function getHomepageContent(): Promise<HomepageContent> {
       support: data.introSupport || defaults.support,
       videoSrc: data.introVideoUrl || defaults.videoSrc,
       posterSrc: data.introPosterUrl || defaults.posterSrc,
-      gridItems: sanityGrid ?? grid.items,
+      gridItems: filterPublicGridItems(sanityGrid ?? grid.items),
     };
   } catch {
     return defaults;
