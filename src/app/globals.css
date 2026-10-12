@@ -606,10 +606,11 @@ select:disabled,
     --haze-spot: 0px;
     position: absolute;
     z-index: 1;
-    left: 0;
-    bottom: 14%;
-    width: min(96vw, 22rem);
-    height: clamp(9rem, 34vh, 18rem);
+    left: -6%;
+    bottom: 4%;
+    /* Large title-band cloud — much wider/taller than the letter box, still not full-page */
+    width: min(92vw, 52rem);
+    height: clamp(16rem, 52vh, 30rem);
     pointer-events: auto;
     transform: translateY(calc(var(--intro-progress) * -18vh));
     background: none;
@@ -624,12 +625,12 @@ select:disabled,
     */
     -webkit-mask-image:
       radial-gradient(
-        ellipse 78% 70% at 46% 52%,
+        ellipse 88% 78% at 42% 55%,
         #000 0%,
-        #000 22%,
-        rgba(0, 0, 0, 0.55) 48%,
-        rgba(0, 0, 0, 0.15) 64%,
-        transparent 78%
+        #000 30%,
+        rgba(0, 0, 0, 0.55) 55%,
+        rgba(0, 0, 0, 0.12) 72%,
+        transparent 86%
       ),
       radial-gradient(
         circle var(--haze-spot) at var(--haze-x) var(--haze-y),
@@ -640,12 +641,12 @@ select:disabled,
     -webkit-mask-composite: source-in;
     mask-image:
       radial-gradient(
-        ellipse 78% 70% at 46% 52%,
+        ellipse 88% 78% at 42% 55%,
         #000 0%,
-        #000 22%,
-        rgba(0, 0, 0, 0.55) 48%,
-        rgba(0, 0, 0, 0.15) 64%,
-        transparent 78%
+        #000 30%,
+        rgba(0, 0, 0, 0.55) 55%,
+        rgba(0, 0, 0, 0.12) 72%,
+        transparent 86%
       ),
       radial-gradient(
         circle var(--haze-spot) at var(--haze-x) var(--haze-y),
@@ -660,78 +661,78 @@ select:disabled,
     position: absolute;
     display: block;
     border-radius: 50%;
-    filter: blur(56px) saturate(1.03);
-    opacity: 0.88;
+    filter: blur(64px) saturate(1.03);
+    opacity: 0.9;
     pointer-events: none;
   }
 
   .intro-mask__haze-cloud--a {
-    left: -18%;
-    top: -20%;
-    width: 88%;
-    height: 110%;
+    left: -28%;
+    top: -30%;
+    width: 110%;
+    height: 125%;
     background: radial-gradient(
-      ellipse 72% 68% at 50% 50%,
+      ellipse 78% 72% at 50% 50%,
       color-mix(in srgb, var(--color-rust) 46%, var(--color-paper)) 0%,
-      color-mix(in srgb, var(--color-rust) 18%, transparent) 48%,
-      transparent 76%
-    );
-  }
-
-  .intro-mask__haze-cloud--b {
-    right: -22%;
-    top: -8%;
-    width: 82%;
-    height: 100%;
-    background: radial-gradient(
-      ellipse 68% 74% at 42% 48%,
-      color-mix(in srgb, var(--color-tan) 58%, var(--color-paper)) 0%,
-      color-mix(in srgb, var(--color-tan) 22%, transparent) 50%,
+      color-mix(in srgb, var(--color-rust) 18%, transparent) 50%,
       transparent 78%
     );
   }
 
-  .intro-mask__haze-cloud--c {
-    left: 8%;
-    bottom: -28%;
-    width: 95%;
-    height: 88%;
+  .intro-mask__haze-cloud--b {
+    right: -32%;
+    top: -16%;
+    width: 105%;
+    height: 118%;
     background: radial-gradient(
-      ellipse 80% 62% at 50% 38%,
+      ellipse 74% 80% at 40% 48%,
+      color-mix(in srgb, var(--color-tan) 58%, var(--color-paper)) 0%,
+      color-mix(in srgb, var(--color-tan) 22%, transparent) 52%,
+      transparent 80%
+    );
+  }
+
+  .intro-mask__haze-cloud--c {
+    left: -4%;
+    bottom: -36%;
+    width: 118%;
+    height: 105%;
+    background: radial-gradient(
+      ellipse 86% 68% at 48% 36%,
       color-mix(in srgb, var(--color-sage) 40%, var(--color-paper)) 0%,
-      color-mix(in srgb, var(--color-sage) 16%, transparent) 50%,
-      transparent 76%
+      color-mix(in srgb, var(--color-sage) 16%, transparent) 52%,
+      transparent 78%
     );
   }
 
   .intro-mask__haze-cloud--d {
-    left: 20%;
-    top: -28%;
-    width: 70%;
-    height: 78%;
+    left: 8%;
+    top: -36%;
+    width: 95%;
+    height: 100%;
     background: radial-gradient(
       circle at 50% 50%,
       color-mix(in srgb, var(--color-paper) 72%, var(--color-tan)) 0%,
-      color-mix(in srgb, var(--color-rust) 14%, transparent) 46%,
-      transparent 74%
+      color-mix(in srgb, var(--color-rust) 14%, transparent) 48%,
+      transparent 76%
     );
-    opacity: 0.7;
-    filter: blur(64px) saturate(1.02);
+    opacity: 0.72;
+    filter: blur(72px) saturate(1.02);
   }
 
   .intro-mask__haze-cloud--e {
-    left: -12%;
-    top: 18%;
-    width: 64%;
-    height: 85%;
+    left: -20%;
+    top: 8%;
+    width: 85%;
+    height: 110%;
     border-radius: 62% 38% 58% 42%;
     background: radial-gradient(
-      ellipse 62% 78% at 55% 45%,
+      ellipse 68% 82% at 55% 45%,
       color-mix(in srgb, var(--color-ochre) 32%, var(--color-paper)) 0%,
-      transparent 72%
+      transparent 74%
     );
-    opacity: 0.65;
-    filter: blur(60px) saturate(1.02);
+    opacity: 0.68;
+    filter: blur(70px) saturate(1.02);
   }
 }
 
