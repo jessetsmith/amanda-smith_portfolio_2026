@@ -121,6 +121,14 @@ const FILLS: CellFill[] = ["rust", "ochre", "sage", "tan", "paper", "ink"];
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 type DataSource = "sanity" | "fixture";
+type SidebarTab = "blocks" | "section" | "placement" | "content";
+
+const SIDEBAR_TABS: { id: SidebarTab; label: string }[] = [
+  { id: "blocks", label: "Blocks" },
+  { id: "section", label: "Section" },
+  { id: "placement", label: "Placement" },
+  { id: "content", label: "Content" },
+];
 
 interface AdminGridAppProps {
   initialItems: GridItem[];
@@ -167,6 +175,7 @@ export function AdminGridApp({
   const [source, setSource] = useState<DataSource>(initialSource);
   const [previewKey, setPreviewKey] = useState(0);
   const [contentOpen, setContentOpen] = useState(false);
+  const [sidebarTab, setSidebarTab] = useState<SidebarTab>("blocks");
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [historyTick, setHistoryTick] = useState(0);
   const [dirtyTick, setDirtyTick] = useState(0);
@@ -197,6 +206,20 @@ export function AdminGridApp({
   useEffect(() => {
     setContentOpen(false);
   }, [selectedId]);
+
+  // Lock the document to the admin viewport — scroll lives in sidebar/preview panes.
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtml = html.style.overflow;
+    const prevBody = body.style.overflow;
+    html.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    return () => {
+      html.style.overflow = prevHtml;
+      body.style.overflow = prevBody;
+    };
+  }, []);
 
   const activeDragItem = useMemo(() => {
     if (!activeDragId) return null;
@@ -500,9 +523,47 @@ export function AdminGridApp({
               ? "Draft · Sanity"
               : "Draft · fixture";
 
+  const selectedHandlers = selected
+    ? {
+        onResize: (
+          patch: Partial<
+            Pick<GridItem, "colStart" | "colSpan" | "rowSpan" | "rowStart">
+          >,
+        ) => resizeItem(selected.id, patch, { recordHistory: true }),
+        onFeaturedChange: (featured: boolean) => {
+          updateItems((prev) => {
+            const current = prev.find((row) => row.id === selected.id);
+            if (!current) return prev;
+            const colStart =
+              featured && current.colStart > 3 ? 3 : current.colStart;
+            const resized = applyGridResize(prev, selected.id, {
+              colStart,
+              colSpan: featured ? 2 : 1,
+            });
+            return resized.map((row) =>
+              row.id === selected.id
+                ? ({
+                    ...row,
+                    featured: featured || undefined,
+                  } as GridItem)
+                : row,
+            );
+          });
+        },
+        onSectionRowsChange: (rows: number) => {
+          updateItems((prev) => setSectionRowCount(prev, selected.id, rows));
+        },
+        onCompactSection: () => {
+          updateItems((prev) => compactSection(prev, selected.id));
+        },
+        onDuplicate: duplicateSelected,
+        onRemove: removeSelected,
+      }
+    : null;
+
   return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-ink/15 px-4 py-3 sm:px-6">
+    <div className="admin-shell flex h-dvh max-h-dvh flex-col overflow-hidden">
+      <header className="admin-shell__header flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-ink/15 px-4 py-3 sm:px-6">
         <div>
           <p className="font-mono text-[0.65rem] tracking-[0.2em] text-rust uppercase">
             Portfolio 2026
@@ -555,97 +616,155 @@ export function AdminGridApp({
         onDragEnd={onDragEnd}
         onDragCancel={onDragCancel}
       >
-        <div className="grid flex-1 lg:grid-cols-[minmax(20rem,26rem)_minmax(0,1fr)]">
-          <aside className="border-b border-ink/15 lg:border-r lg:border-b-0">
-            <div className="space-y-1.5 border-b border-ink/10 px-4 py-3">
-              <div className="flex items-center gap-2">
-                <select
-                  value={addKind}
-                  onChange={(e) => setAddKind(e.target.value as GridItemKind)}
-                  className="flex-1 border border-ink/20 bg-paper px-2 py-1.5 font-mono text-xs"
-                >
-                  {KINDS.map((kind) => (
-                    <option key={kind} value={kind}>
-                      {kind}
-                    </option>
-                  ))}
-                </select>
+        <div className="admin-shell__body grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)] lg:grid-cols-[minmax(18rem,22rem)_minmax(0,1fr)] lg:grid-rows-1">
+          <aside className="admin-sidebar flex min-h-0 flex-col border-b border-ink/15 lg:border-r lg:border-b-0">
+            <div
+              className="admin-sidebar__tabs shrink-0"
+              role="tablist"
+              aria-label="Grid editing panels"
+            >
+              {SIDEBAR_TABS.map((tab) => (
                 <button
+                  key={tab.id}
                   type="button"
-                  onClick={addItem}
-                  className="bg-rust px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-paper uppercase"
+                  role="tab"
+                  aria-selected={sidebarTab === tab.id}
+                  id={`admin-tab-${tab.id}`}
+                  aria-controls={`admin-panel-${tab.id}`}
+                  onClick={() => setSidebarTab(tab.id)}
+                  className={`admin-sidebar__tab${
+                    sidebarTab === tab.id ? " is-active" : ""
+                  }`}
                 >
-                  Add
+                  {tab.label}
                 </button>
-              </div>
-              <p className="font-mono text-[0.55rem] tracking-[0.1em] text-ink/40 uppercase">
-                {selectedId
-                  ? "Fills the selected cell in place"
-                  : "No selection · new section at bottom"}
-              </p>
+              ))}
             </div>
 
-            <SortableContext
-              items={listSortableIds}
-              strategy={verticalListSortingStrategy}
-            >
-              <ul className="max-h-[36vh] overflow-y-auto lg:max-h-[calc(100vh-14rem)]">
-                {listItems.map((item) => (
-                  <SortableRow
-                    key={item.id}
-                    item={item}
-                    active={item.id === selectedId}
-                    onSelect={() => setSelectedId(item.id)}
-                  />
-                ))}
-              </ul>
-            </SortableContext>
+            <div className="admin-sidebar__panels min-h-0 flex-1 overflow-hidden">
+              {sidebarTab === "blocks" ? (
+                <div
+                  id="admin-panel-blocks"
+                  role="tabpanel"
+                  aria-labelledby="admin-tab-blocks"
+                  className="flex h-full min-h-0 flex-col"
+                >
+                  <div className="space-y-1.5 shrink-0 border-b border-ink/10 px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={addKind}
+                        onChange={(e) =>
+                          setAddKind(e.target.value as GridItemKind)
+                        }
+                        className="flex-1 border border-ink/20 bg-paper px-2 py-1.5 font-mono text-xs"
+                      >
+                        {KINDS.map((kind) => (
+                          <option key={kind} value={kind}>
+                            {kind}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={addItem}
+                        className="bg-rust px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-paper uppercase"
+                      >
+                        Add
+                      </button>
+                    </div>
+                    <p className="font-mono text-[0.55rem] tracking-[0.1em] text-ink/40 uppercase">
+                      {selectedId
+                        ? "Fills the selected cell in place"
+                        : "No selection · new section at bottom"}
+                    </p>
+                  </div>
+                  <SortableContext
+                    items={listSortableIds}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <ul className="min-h-0 flex-1 overflow-y-auto">
+                      {listItems.map((item) => (
+                        <SortableRow
+                          key={item.id}
+                          item={item}
+                          active={item.id === selectedId}
+                          onSelect={() => setSelectedId(item.id)}
+                        />
+                      ))}
+                    </ul>
+                  </SortableContext>
+                </div>
+              ) : null}
 
-            {selected ? (
-              <ItemFields
-                item={selected}
-                items={items}
-                onResize={(patch) =>
-                  resizeItem(selected.id, patch, { recordHistory: true })
-                }
-                onFeaturedChange={(featured) => {
-                  updateItems((prev) => {
-                    const current = prev.find((row) => row.id === selected.id);
-                    if (!current) return prev;
-                    const colStart =
-                      featured && current.colStart > 3 ? 3 : current.colStart;
-                    const resized = applyGridResize(prev, selected.id, {
-                      colStart,
-                      colSpan: featured ? 2 : 1,
-                    });
-                    return resized.map((row) =>
-                      row.id === selected.id
-                        ? ({
-                            ...row,
-                            featured: featured || undefined,
-                          } as GridItem)
-                        : row,
-                    );
-                  });
-                }}
-                onSectionRowsChange={(rows) => {
-                  updateItems((prev) => setSectionRowCount(prev, selected.id, rows));
-                }}
-                onCompactSection={() => {
-                  updateItems((prev) => compactSection(prev, selected.id));
-                }}
-                onDuplicate={duplicateSelected}
-                onRemove={removeSelected}
-              />
-            ) : (
-              <p className="p-4 text-sm text-ink/50">
-                Select or drag a cell in the preview to edit.
-              </p>
-            )}
+              {sidebarTab === "section" ? (
+                <div
+                  id="admin-panel-section"
+                  role="tabpanel"
+                  aria-labelledby="admin-tab-section"
+                  className="h-full min-h-0 overflow-y-auto p-4"
+                >
+                  {selected && selectedHandlers ? (
+                    <SectionTab
+                      item={selected}
+                      items={items}
+                      onSectionRowsChange={selectedHandlers.onSectionRowsChange}
+                      onCompactSection={selectedHandlers.onCompactSection}
+                    />
+                  ) : (
+                    <p className="text-sm text-ink/50">
+                      Select a block to edit its section size.
+                    </p>
+                  )}
+                </div>
+              ) : null}
+
+              {sidebarTab === "placement" ? (
+                <div
+                  id="admin-panel-placement"
+                  role="tabpanel"
+                  aria-labelledby="admin-tab-placement"
+                  className="h-full min-h-0 overflow-y-auto p-4"
+                >
+                  {selected && selectedHandlers ? (
+                    <PlacementTab
+                      item={selected}
+                      onResize={selectedHandlers.onResize}
+                      onFeaturedChange={selectedHandlers.onFeaturedChange}
+                      onDuplicate={selectedHandlers.onDuplicate}
+                      onRemove={selectedHandlers.onRemove}
+                    />
+                  ) : (
+                    <p className="text-sm text-ink/50">
+                      Select a block to edit placement.
+                    </p>
+                  )}
+                </div>
+              ) : null}
+
+              {sidebarTab === "content" ? (
+                <div
+                  id="admin-panel-content"
+                  role="tabpanel"
+                  aria-labelledby="admin-tab-content"
+                  className="h-full min-h-0 overflow-y-auto p-4"
+                >
+                  {selected ? (
+                    <ContentTab
+                      item={selected}
+                      onOpenEdit={() => setContentOpen(true)}
+                    />
+                  ) : (
+                    <p className="text-sm text-ink/50">
+                      Select a block to view content summary.
+                    </p>
+                  )}
+                </div>
+              ) : null}
+            </div>
           </aside>
 
-          <section className="min-w-0 bg-paper/40">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink/10 px-4 py-3">
+          <section className="admin-shell__preview flex min-h-0 min-w-0 flex-col bg-paper/40">
+            <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-ink/10 px-4 py-3">
               <div className="min-w-0">
                 <p className="font-mono text-[0.65rem] tracking-[0.18em] text-ink/50 uppercase">
                   Live preview · draft until Save
@@ -730,7 +849,7 @@ export function AdminGridApp({
               </div>
             </div>
             <div
-              className="admin-preview max-h-[calc(100vh-7rem)] overflow-auto p-3 sm:p-4"
+              className="admin-preview min-h-0 flex-1 overflow-auto p-3 sm:p-4"
               onMouseDown={(event) => {
                 if (event.target === event.currentTarget) setSelectedId(null);
               }}
@@ -878,61 +997,29 @@ function itemContentPreview(item: GridItem): string {
   return item.title || item.caption || "Media";
 }
 
-function ItemFields({
+function SectionTab({
   item,
   items,
-  onResize,
-  onFeaturedChange,
   onSectionRowsChange,
   onCompactSection,
-  onDuplicate,
-  onRemove,
 }: {
   item: GridItem;
   items: GridItem[];
-  onResize: (
-    patch: Partial<
-      Pick<GridItem, "colStart" | "colSpan" | "rowSpan" | "rowStart">
-    >,
-  ) => void;
-  onFeaturedChange: (featured: boolean) => void;
   onSectionRowsChange: (rows: number) => void;
   onCompactSection: () => void;
-  onDuplicate: () => void;
-  onRemove: () => void;
 }) {
-  const maxSpan = GRID_COLUMNS - item.colStart + 1;
   const range = sectionIndexRange(items, item.id);
   const packed = packGridSectioned(items);
   const band = range ? measureSectionBand(items, range, packed) : null;
+  const head = range ? items[range.start] : null;
+  const sectionLabel =
+    head?.kind === "titleRow" ? head.label || "Section" : "Section";
 
   return (
-    <div className="space-y-3 border-t border-ink/15 p-4">
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={onDuplicate}
-          className="border border-ink/20 px-2 py-1 font-mono text-[0.6rem] tracking-[0.12em] uppercase"
-        >
-          Duplicate
-        </button>
-        <button
-          type="button"
-          onClick={onRemove}
-          className="border border-rust/40 px-2 py-1 font-mono text-[0.6rem] tracking-[0.12em] text-rust uppercase"
-        >
-          Remove
-        </button>
-        <button
-          type="button"
-          onClick={onCompactSection}
-          className="border border-ink/20 px-2 py-1 font-mono text-[0.6rem] tracking-[0.12em] uppercase"
-          title="Trim trailing blank rows in this section"
-        >
-          Compact section
-        </button>
-      </div>
-
+    <div className="space-y-3">
+      <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
+        {sectionLabel}
+      </p>
       {band ? (
         <div className="space-y-2">
           <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
@@ -950,7 +1037,58 @@ function ItemFields({
             go below content height.
           </p>
         </div>
-      ) : null}
+      ) : (
+        <p className="text-sm text-ink/50">No section metrics for this block.</p>
+      )}
+      <button
+        type="button"
+        onClick={onCompactSection}
+        className="border border-ink/20 px-2 py-1.5 font-mono text-[0.6rem] tracking-[0.12em] uppercase"
+        title="Trim trailing blank rows in this section"
+      >
+        Compact section
+      </button>
+    </div>
+  );
+}
+
+function PlacementTab({
+  item,
+  onResize,
+  onFeaturedChange,
+  onDuplicate,
+  onRemove,
+}: {
+  item: GridItem;
+  onResize: (
+    patch: Partial<
+      Pick<GridItem, "colStart" | "colSpan" | "rowSpan" | "rowStart">
+    >,
+  ) => void;
+  onFeaturedChange: (featured: boolean) => void;
+  onDuplicate: () => void;
+  onRemove: () => void;
+}) {
+  const maxSpan = GRID_COLUMNS - item.colStart + 1;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={onDuplicate}
+          className="border border-ink/20 px-2 py-1 font-mono text-[0.6rem] tracking-[0.12em] uppercase"
+        >
+          Duplicate
+        </button>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="border border-rust/40 px-2 py-1 font-mono text-[0.6rem] tracking-[0.12em] text-rust uppercase"
+        >
+          Remove
+        </button>
+      </div>
 
       <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
         Placement · {item.kind}
@@ -998,24 +1136,43 @@ function ItemFields({
           Featured lead · span 2
         </label>
       ) : null}
+    </div>
+  );
+}
 
-      <div className="space-y-1">
-        <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
-          Content
+function ContentTab({
+  item,
+  onOpenEdit,
+}: {
+  item: GridItem;
+  onOpenEdit: () => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
+        Content · {item.kind}
+      </p>
+      <p className="text-sm text-ink">{itemContentPreview(item)}</p>
+      {item.kind === "blankCell" ? (
+        <p className="text-xs text-ink/45">
+          Empty spacer — drop/resize target inside the section band. Compact to
+          trim unused rows.
         </p>
-        <p className="truncate text-sm text-ink">{itemContentPreview(item)}</p>
-        {item.kind === "blankCell" ? (
-          <p className="text-xs text-ink/45">
-            Empty spacer — drop/resize target inside the section band. Compact
-            to trim unused rows.
-          </p>
-        ) : (
+      ) : (
+        <>
           <p className="text-xs text-ink/45">
             Use <span className="font-mono uppercase">Edit</span> in the preview
-            bar to change inner content.
+            bar (or below) to change inner content.
           </p>
-        )}
-      </div>
+          <button
+            type="button"
+            onClick={onOpenEdit}
+            className="bg-rust px-3 py-2 font-mono text-[0.65rem] tracking-[0.14em] text-paper uppercase"
+          >
+            Edit content
+          </button>
+        </>
+      )}
     </div>
   );
 }
