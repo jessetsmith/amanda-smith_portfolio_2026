@@ -124,6 +124,26 @@ function cloneItems(items: GridItem[]): GridItem[] {
   return structuredClone(normalizeGridItems(items));
 }
 
+/** Stable compare for dirty detection (ignore ephemeral blank id churn if equal layout). */
+function gridSignature(items: GridItem[]): string {
+  return JSON.stringify(
+    normalizeGridItems(items).map((item) => {
+      const { id, order, ...rest } = item;
+      // Keep id for content cells; blanks are keyed by placement only.
+      if (item.kind === "blankCell") {
+        return {
+          kind: "blankCell",
+          colStart: item.colStart,
+          colSpan: item.colSpan,
+          rowSpan: item.rowSpan ?? 1,
+          rowStart: item.rowStart ?? null,
+        };
+      }
+      return { id, order, ...rest };
+    }),
+  );
+}
+
 export function AdminGridApp({
   initialItems,
   initialSource = "fixture",
@@ -140,9 +160,10 @@ export function AdminGridApp({
   const [contentOpen, setContentOpen] = useState(false);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [historyTick, setHistoryTick] = useState(0);
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [dirtyTick, setDirtyTick] = useState(0);
   const itemsRef = useRef(items);
   itemsRef.current = items;
+  const savedItemsRef = useRef(cloneItems(initialItems));
   const pastRef = useRef<GridItem[][]>([]);
   const futureRef = useRef<GridItem[][]>([]);
   const resizeHistoryArmed = useRef(true);
@@ -150,6 +171,10 @@ export function AdminGridApp({
   const canUndo = pastRef.current.length > 0;
   const canRedo = futureRef.current.length > 0;
   void historyTick;
+  const isDirty = useMemo(() => {
+    void dirtyTick;
+    return gridSignature(items) !== gridSignature(savedItemsRef.current);
+  }, [items, dirtyTick]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -191,24 +216,18 @@ export function AdminGridApp({
         items: GridItem[];
         source?: DataSource;
       };
-      // Keep the optimistic client layout — re-setItems / router.refresh()
-      // remount churn was flashing blocks back to the pre-drop slot.
+      // Keep optimistic draft layout; mark this snapshot as last published.
+      const published = normalizeGridItems(data.items ?? next);
+      savedItemsRef.current = cloneItems(published);
       if (data.source) setSource(data.source);
       setSaveState("saved");
+      setDirtyTick((tick) => tick + 1);
+      // Soft-refresh RSC so Open public / hard navigation sees new data.
+      router.refresh();
     } catch {
       setSaveState("error");
     }
-  }, []);
-
-  const schedulePersist = useCallback(
-    (next: GridItem[]) => {
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-      saveTimer.current = setTimeout(() => {
-        void persist(next);
-      }, 400);
-    },
-    [persist],
-  );
+  }, [router]);
 
   const pushHistory = useCallback((snapshot: GridItem[]) => {
     pastRef.current = [...pastRef.current, cloneItems(snapshot)].slice(
@@ -230,11 +249,31 @@ export function AdminGridApp({
       }
       itemsRef.current = next;
       setItems(next);
-      schedulePersist(next);
+      setSaveState("idle");
+      setDirtyTick((tick) => tick + 1);
       return next;
     },
-    [pushHistory, schedulePersist],
+    [pushHistory],
   );
+
+  const saveDraft = useCallback(() => {
+    void persist(itemsRef.current);
+  }, [persist]);
+
+  const discardDraft = useCallback(() => {
+    const previous = cloneItems(savedItemsRef.current);
+    pushHistory(itemsRef.current);
+    itemsRef.current = previous;
+    setItems(previous);
+    setSelectedId((current) =>
+      current && previous.some((item) => item.id === current)
+        ? current
+        : (previous[0]?.id ?? null),
+    );
+    setPreviewKey((key) => key + 1);
+    setSaveState("idle");
+    setDirtyTick((tick) => tick + 1);
+  }, [pushHistory]);
 
   const updateItems = useCallback(
     (updater: (prev: GridItem[]) => GridItem[]) => {
@@ -261,8 +300,9 @@ export function AdminGridApp({
     );
     setHistoryTick((tick) => tick + 1);
     setPreviewKey((key) => key + 1);
-    schedulePersist(previous);
-  }, [schedulePersist]);
+    setSaveState("idle");
+    setDirtyTick((tick) => tick + 1);
+  }, []);
 
   const redo = useCallback(() => {
     const future = futureRef.current;
@@ -282,8 +322,9 @@ export function AdminGridApp({
     );
     setHistoryTick((tick) => tick + 1);
     setPreviewKey((key) => key + 1);
-    schedulePersist(next);
-  }, [schedulePersist]);
+    setSaveState("idle");
+    setDirtyTick((tick) => tick + 1);
+  }, []);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -396,7 +437,7 @@ export function AdminGridApp({
   async function resetToSeed() {
     if (
       !confirm(
-        "Reset grid to seed fixtures and write to Sanity (or .data fallback)?",
+        "Reset grid to seed fixtures and publish to Sanity (or .data fallback)?",
       )
     ) {
       return;
@@ -414,10 +455,12 @@ export function AdminGridApp({
     };
     const next = normalizeGridItems(data.items);
     itemsRef.current = next;
+    savedItemsRef.current = cloneItems(next);
     setItems(next);
     setSelectedId(next[0]?.id ?? null);
     if (data.source) setSource(data.source);
     setSaveState("saved");
+    setDirtyTick((tick) => tick + 1);
     setPreviewKey((k) => k + 1);
     router.refresh();
   }
@@ -430,16 +473,18 @@ export function AdminGridApp({
 
   const statusLabel =
     saveState === "saving"
-      ? "Saving…"
-      : saveState === "saved"
-        ? source === "sanity"
-          ? "Saved to Sanity"
-          : "Saved to .data (fallback)"
-        : saveState === "error"
-          ? "Save failed"
-          : source === "sanity"
-            ? "Ready · Sanity"
-            : "Ready · fixture";
+      ? "Publishing…"
+      : saveState === "error"
+        ? "Save failed"
+        : isDirty
+          ? "Unsaved changes"
+          : saveState === "saved"
+            ? source === "sanity"
+              ? "Published · Sanity"
+              : "Published · .data"
+            : source === "sanity"
+              ? "Draft · Sanity"
+              : "Draft · fixture";
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
@@ -582,13 +627,11 @@ export function AdminGridApp({
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink/10 px-4 py-3">
               <div className="min-w-0">
                 <p className="font-mono text-[0.65rem] tracking-[0.18em] text-ink/50 uppercase">
-                  Live preview · grip reorder · edge resize
+                  Live preview · draft until Save
                 </p>
                 <p className="text-xs text-ink/45">
-                  Use <code className="font-mono">⋮⋮</code> to reorder · drag
-                  rust edge handles for{" "}
-                  <code className="font-mono">colSpan</code>/
-                  <code className="font-mono">rowSpan</code> · saves to{" "}
+                  Edits stay local until{" "}
+                  <span className="font-mono uppercase">Save</span> publishes to{" "}
                   <code className="font-mono">
                     {source === "sanity"
                       ? "Sanity homepage.gridItems"
@@ -620,20 +663,39 @@ export function AdminGridApp({
                     type="button"
                     disabled={!selected}
                     onClick={() => setContentOpen(true)}
-                    className="bg-rust px-4 py-2 font-mono text-[0.7rem] tracking-[0.16em] text-paper uppercase disabled:cursor-not-allowed disabled:bg-ink/20 disabled:text-paper/70"
+                    className="border border-ink/20 px-4 py-2 font-mono text-[0.7rem] tracking-[0.16em] text-ink uppercase disabled:cursor-not-allowed disabled:opacity-35"
                   >
                     Edit
                   </button>
+                  <button
+                    type="button"
+                    onClick={discardDraft}
+                    disabled={!isDirty || saveState === "saving"}
+                    title="Revert draft to last saved publish"
+                    className="border border-ink/20 px-3 py-2 font-mono text-[0.65rem] tracking-[0.14em] text-ink uppercase disabled:cursor-not-allowed disabled:opacity-35"
+                  >
+                    Discard
+                  </button>
+                  <button
+                    type="button"
+                    onClick={saveDraft}
+                    disabled={!isDirty || saveState === "saving"}
+                    title="Publish draft to the public site"
+                    className="bg-rust px-4 py-2 font-mono text-[0.7rem] tracking-[0.16em] text-paper uppercase disabled:cursor-not-allowed disabled:bg-ink/20 disabled:text-paper/70"
+                  >
+                    {saveState === "saving" ? "Saving…" : "Save"}
+                  </button>
                 </div>
-                {!selected ? (
-                  <p className="font-mono text-[0.55rem] tracking-[0.12em] text-ink/40 uppercase">
-                    Select a block first
-                  </p>
-                ) : (
-                  <p className="max-w-[18rem] truncate font-mono text-[0.55rem] tracking-[0.1em] text-ink/45 uppercase">
-                    {itemContentPreview(selected)}
-                  </p>
-                )}
+                <p
+                  className={`font-mono text-[0.55rem] tracking-[0.12em] uppercase ${
+                    isDirty || saveState === "error"
+                      ? "text-rust"
+                      : "text-ink/40"
+                  }`}
+                >
+                  {statusLabel}
+                  {selected ? ` · ${itemContentPreview(selected)}` : ""}
+                </p>
               </div>
             </div>
             <div

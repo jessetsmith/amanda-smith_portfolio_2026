@@ -41,7 +41,7 @@ export function HomepageGrid({ items }: HomepageGridProps) {
 
     cells.forEach((cell) => observer.observe(cell));
     return () => observer.disconnect();
-  }, []);
+  }, [items]);
 
   return (
     <section

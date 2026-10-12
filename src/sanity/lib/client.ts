@@ -8,8 +8,12 @@ export const client = isSanityConfigured()
       projectId,
       dataset,
       apiVersion,
-      // Prefer fresh reads when authenticated; CDN ok for public anon later
-      useCdn: !token,
+      // Always hit the API after Save/Publish — CDN lags behind mutations
+      // and was a root cause of public `/` missing admin grid updates.
+      useCdn: false,
       token,
     })
   : null;
+
+/** Next.js cache tag for homepage grid + intro fields. */
+export const HOMEPAGE_CACHE_TAG = "homepage";

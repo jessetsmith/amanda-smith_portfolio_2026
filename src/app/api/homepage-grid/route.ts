@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { isAdminAuthenticated } from "@/lib/auth";
 import {
   loadGridItems,
@@ -9,6 +9,7 @@ import {
 import type { GridItem } from "@/types/grid";
 
 function revalidatePublicViews() {
+  revalidateTag("homepage", "max");
   revalidatePath("/");
   revalidatePath("/admin");
   revalidatePath("/cv");

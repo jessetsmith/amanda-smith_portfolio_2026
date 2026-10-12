@@ -8,6 +8,7 @@ export const homepageQuery = `*[_type == "homepage" && _id == "homepage"][0]{
     order,
     colStart,
     colSpan,
+    rowStart,
     rowSpan,
     featured,
     fill,
@@ -24,7 +25,7 @@ export const homepageQuery = `*[_type == "homepage" && _id == "homepage"][0]{
     imageSrc,
     imageAlt,
     placeholderTone,
-    "id": _key,
+    "id": coalesce(id, _key),
     projectRef->{
       title,
       "slug": slug.current,

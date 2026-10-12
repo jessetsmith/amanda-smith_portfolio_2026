@@ -118,15 +118,20 @@ export function toSanityGridItems(items: GridItem[]) {
     return {
       _type: "gridItem" as const,
       _key: sanitizeKey(id, item.order),
+      id,
       ...rest,
     };
   });
 }
 
+const HOMEPAGE_FETCH = {
+  next: { tags: ["homepage"], revalidate: 0 as const },
+};
+
 export async function loadGridItems(): Promise<GridSyncResult> {
   if (isSanityConfigured() && client) {
     try {
-      const data = await client.fetch(homepageQuery);
+      const data = await client.fetch(homepageQuery, {}, HOMEPAGE_FETCH);
       const sanityGrid = mapSanityGridItems(data?.gridItems);
       if (sanityGrid) {
         return { items: sanityGrid, source: "sanity" };

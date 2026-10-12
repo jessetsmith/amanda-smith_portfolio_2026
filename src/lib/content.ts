@@ -28,7 +28,12 @@ export async function getHomepageContent(): Promise<HomepageContent> {
   }
 
   try {
-    const data = await client.fetch(homepageQuery);
+    // Tagged + revalidate:0 so Save → revalidateTag('homepage') refreshes public `/`
+    const data = await client.fetch(
+      homepageQuery,
+      {},
+      { next: { tags: ["homepage"], revalidate: 0 } },
+    );
     if (!data) return defaults;
     const sanityGrid = mapSanityGridItems(data.gridItems);
     return {
