@@ -600,30 +600,20 @@ select:disabled,
 .intro-mask__title-haze {
   position: absolute;
   z-index: 0;
-  left: -18%;
-  right: -24%;
-  top: -28%;
-  bottom: -32%;
-  border-radius: 48% 52% 45% 55%;
+  /* Soft rectangle covering the full title-band (letters + padding), not a pinpoint glow */
+  inset: -0.22em -0.4em -0.28em -0.35em;
+  border-radius: 0.2em;
   background:
-    radial-gradient(
-      72% 68% at 34% 38%,
-      color-mix(in srgb, var(--color-rust) 92%, transparent) 0%,
-      color-mix(in srgb, var(--color-rust) 55%, transparent) 42%,
-      transparent 70%
-    ),
-    radial-gradient(
-      58% 62% at 72% 58%,
-      color-mix(in srgb, var(--color-sage) 78%, transparent) 0%,
-      transparent 68%
-    ),
-    radial-gradient(
-      85% 75% at 48% 52%,
-      color-mix(in srgb, var(--color-ink) 62%, transparent) 0%,
-      color-mix(in srgb, var(--color-ochre) 35%, transparent) 45%,
-      transparent 74%
+    linear-gradient(
+      112deg,
+      color-mix(in srgb, var(--color-rust) 88%, var(--color-ink)) 0%,
+      color-mix(in srgb, var(--color-ink) 72%, var(--color-rust)) 48%,
+      color-mix(in srgb, var(--color-sage) 42%, var(--color-ink)) 100%
     );
-  filter: blur(52px) saturate(1.15);
+  box-shadow:
+    0 0 2.5em 1.25em color-mix(in srgb, var(--color-rust) 45%, transparent),
+    0 0 4em 1.75em color-mix(in srgb, var(--color-ink) 28%, transparent);
+  filter: blur(22px) saturate(1.12);
   opacity: var(--title-haze-opacity);
   transform: translateZ(0);
   pointer-events: none;
