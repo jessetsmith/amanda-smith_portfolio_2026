@@ -598,7 +598,7 @@ select:disabled,
   transform: translateY(calc(var(--intro-progress) * -18vh));
 }
 
-/* Cloud haze behind the solid punch letters — formless, feathered, expanded */
+/* Cloud haze fills the intro/title sticky section (+ slight overflow) */
 @layer components {
   .intro-mask__title-haze {
     --haze-x: 50%;
@@ -606,13 +606,11 @@ select:disabled,
     --haze-spot: 0px;
     position: absolute;
     z-index: 1;
-    left: -6%;
-    bottom: 4%;
-    /* Large title-band cloud — much wider/taller than the letter box, still not full-page */
-    width: min(92vw, 52rem);
-    height: clamp(16rem, 52vh, 30rem);
+    /* Bound to full punch/sticky title section (soft edge falloff via mask) */
+    inset: 0;
+    width: auto;
+    height: auto;
     pointer-events: auto;
-    transform: translateY(calc(var(--intro-progress) * -18vh));
     background: none;
     border-radius: 0;
     box-shadow: none;
@@ -620,17 +618,17 @@ select:disabled,
     opacity: 1;
     /*
       Mask stack:
-      1) soft ellipse feather (no hard bar)
-      2) cursor spotlight hole (source-in keeps cloud only outside the hole)
+      1) soft section-wide feather (no hard crop at edges)
+      2) cursor spotlight hole
     */
     -webkit-mask-image:
       radial-gradient(
-        ellipse 88% 78% at 42% 55%,
+        ellipse 108% 96% at 50% 52%,
         #000 0%,
-        #000 30%,
-        rgba(0, 0, 0, 0.55) 55%,
-        rgba(0, 0, 0, 0.12) 72%,
-        transparent 86%
+        #000 42%,
+        rgba(0, 0, 0, 0.65) 68%,
+        rgba(0, 0, 0, 0.18) 86%,
+        transparent 100%
       ),
       radial-gradient(
         circle var(--haze-spot) at var(--haze-x) var(--haze-y),
@@ -641,12 +639,12 @@ select:disabled,
     -webkit-mask-composite: source-in;
     mask-image:
       radial-gradient(
-        ellipse 88% 78% at 42% 55%,
+        ellipse 108% 96% at 50% 52%,
         #000 0%,
-        #000 30%,
-        rgba(0, 0, 0, 0.55) 55%,
-        rgba(0, 0, 0, 0.12) 72%,
-        transparent 86%
+        #000 42%,
+        rgba(0, 0, 0, 0.65) 68%,
+        rgba(0, 0, 0, 0.18) 86%,
+        transparent 100%
       ),
       radial-gradient(
         circle var(--haze-spot) at var(--haze-x) var(--haze-y),
@@ -661,78 +659,78 @@ select:disabled,
     position: absolute;
     display: block;
     border-radius: 50%;
-    filter: blur(64px) saturate(1.03);
-    opacity: 0.9;
+    filter: blur(72px) saturate(1.03);
+    opacity: 0.88;
     pointer-events: none;
   }
 
   .intro-mask__haze-cloud--a {
-    left: -28%;
-    top: -30%;
-    width: 110%;
-    height: 125%;
+    left: -18%;
+    top: -22%;
+    width: 78%;
+    height: 85%;
     background: radial-gradient(
-      ellipse 78% 72% at 50% 50%,
+      ellipse 80% 75% at 50% 50%,
       color-mix(in srgb, var(--color-rust) 46%, var(--color-paper)) 0%,
-      color-mix(in srgb, var(--color-rust) 18%, transparent) 50%,
+      color-mix(in srgb, var(--color-rust) 18%, transparent) 52%,
       transparent 78%
     );
   }
 
   .intro-mask__haze-cloud--b {
-    right: -32%;
-    top: -16%;
-    width: 105%;
-    height: 118%;
+    right: -20%;
+    top: -10%;
+    width: 82%;
+    height: 88%;
     background: radial-gradient(
-      ellipse 74% 80% at 40% 48%,
+      ellipse 78% 82% at 42% 48%,
       color-mix(in srgb, var(--color-tan) 58%, var(--color-paper)) 0%,
-      color-mix(in srgb, var(--color-tan) 22%, transparent) 52%,
+      color-mix(in srgb, var(--color-tan) 22%, transparent) 54%,
       transparent 80%
     );
   }
 
   .intro-mask__haze-cloud--c {
-    left: -4%;
-    bottom: -36%;
-    width: 118%;
-    height: 105%;
+    left: -8%;
+    bottom: -24%;
+    width: 90%;
+    height: 78%;
     background: radial-gradient(
-      ellipse 86% 68% at 48% 36%,
+      ellipse 88% 72% at 48% 40%,
       color-mix(in srgb, var(--color-sage) 40%, var(--color-paper)) 0%,
-      color-mix(in srgb, var(--color-sage) 16%, transparent) 52%,
+      color-mix(in srgb, var(--color-sage) 16%, transparent) 54%,
       transparent 78%
     );
   }
 
   .intro-mask__haze-cloud--d {
-    left: 8%;
-    top: -36%;
-    width: 95%;
-    height: 100%;
+    left: 18%;
+    top: 8%;
+    width: 70%;
+    height: 72%;
     background: radial-gradient(
       circle at 50% 50%,
       color-mix(in srgb, var(--color-paper) 72%, var(--color-tan)) 0%,
-      color-mix(in srgb, var(--color-rust) 14%, transparent) 48%,
+      color-mix(in srgb, var(--color-rust) 14%, transparent) 50%,
       transparent 76%
     );
-    opacity: 0.72;
-    filter: blur(72px) saturate(1.02);
+    opacity: 0.7;
+    filter: blur(80px) saturate(1.02);
   }
 
   .intro-mask__haze-cloud--e {
-    left: -20%;
-    top: 8%;
-    width: 85%;
-    height: 110%;
+    left: 28%;
+    bottom: -12%;
+    width: 72%;
+    height: 70%;
     border-radius: 62% 38% 58% 42%;
     background: radial-gradient(
-      ellipse 68% 82% at 55% 45%,
+      ellipse 72% 80% at 55% 45%,
       color-mix(in srgb, var(--color-ochre) 32%, var(--color-paper)) 0%,
       transparent 74%
     );
-    opacity: 0.68;
-    filter: blur(70px) saturate(1.02);
+    opacity: 0.66;
+    filter: blur(78px) saturate(1.02);
   }
 }
 
