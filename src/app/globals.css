@@ -571,7 +571,7 @@ a.grid-cell-link:focus-visible .card-open {
 }
 
 /* Distressed handprint cursor over entire cover (including name text — not I-beam).
-   Hotspot ≈ tip of index/middle finger (upper fingers of the stamp). */
+   Hotspot at index/middle fingertip (upper fingers of the stamp). */
 .intro-mask__sticky,
 .intro-mask__sticky * {
   cursor: url("/cursors/handprint.png") 11 3, pointer;
