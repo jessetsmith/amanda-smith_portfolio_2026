@@ -708,7 +708,8 @@ a.grid-cell-link:focus-visible .card-open {
     border-radius: 0;
     box-shadow: none;
     filter: none;
-    opacity: 1;
+    /* 25% less intense than prior cover haze */
+    opacity: 0.75;
     /*
       Mask stack:
       1) soft section-wide feather (no hard crop at edges)
