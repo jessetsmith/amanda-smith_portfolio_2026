@@ -26,6 +26,7 @@ function seedHero(): HomepageHero {
     videoUrl: str(seed.videoUrl) || defaultHero().videoUrl,
     posterUrl: str(seed.posterUrl) || undefined,
     imageUrl: str(seed.imageUrl) || undefined,
+    watchUrl: str(seed.watchUrl) || undefined,
   });
 }
 

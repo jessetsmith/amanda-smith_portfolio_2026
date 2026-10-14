@@ -22,6 +22,7 @@ export default async function Home() {
           videoSrc={home.videoSrc}
           posterSrc={home.posterSrc}
           imageSrc={home.imageSrc}
+          watchUrl={home.watchUrl}
         />
         <div id="grid" className="relative z-10 bg-paper">
           <div className="mx-auto max-w-[90rem] px-4 pt-10 pb-2 sm:px-6 md:px-8">

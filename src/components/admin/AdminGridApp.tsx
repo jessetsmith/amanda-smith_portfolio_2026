@@ -1029,12 +1029,13 @@ export function AdminGridApp({
               >
                 <div className="admin-hero-preview mb-4 overflow-hidden border border-ink/15">
                   <IntroMask
-                    key={`hero-${previewKey}-${hero.titleText}-${hero.videoUrl}-${hero.imageUrl ?? ""}`}
+                    key={`hero-${previewKey}-${hero.titleText}-${hero.videoUrl}-${hero.imageUrl ?? ""}-${hero.watchUrl ?? ""}`}
                     maskText={hero.titleText}
                     support={hero.supportText}
                     videoSrc={hero.videoUrl}
                     posterSrc={hero.posterUrl}
                     imageSrc={hero.imageUrl}
+                    watchUrl={hero.watchUrl}
                   />
                 </div>
                 <SortableContext
@@ -1232,6 +1233,23 @@ function HeroTab({
         <span className="block text-xs text-ink/45">
           Direct file path/URL, or a YouTube link (autoplay + loop). Leave empty
           for a still image only. Use the cover Sound control to unmute.
+        </span>
+      </label>
+
+      <label className="block space-y-1">
+        <span className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/55 uppercase">
+          Watch full video URL
+        </span>
+        <input
+          type="url"
+          value={hero.watchUrl ?? ""}
+          onChange={(e) => onChange({ watchUrl: e.target.value })}
+          className="w-full border border-ink/20 bg-paper px-2 py-2 font-mono text-xs text-ink"
+          placeholder="https://youtube.com/watch?v=… (optional)"
+        />
+        <span className="block text-xs text-ink/45">
+          When set, shows a “Watch full video” link on the cover (opens in a new
+          tab). Leave empty to hide it.
         </span>
       </label>
 

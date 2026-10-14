@@ -25,12 +25,14 @@ export function normalizeHero(
   const videoUrl = str(raw?.videoUrl);
   const posterUrl = str(raw?.posterUrl);
   const imageUrl = str(raw?.imageUrl);
+  const watchUrl = str(raw?.watchUrl);
   return {
     titleText,
     supportText,
     videoUrl: videoUrl || (imageUrl ? "" : fallback.videoUrl),
     ...(posterUrl ? { posterUrl } : {}),
     ...(imageUrl ? { imageUrl } : {}),
+    ...(watchUrl ? { watchUrl } : {}),
   };
 }
 

@@ -43,6 +43,18 @@ export const homepageHero = defineType({
       description:
         "Optional still background when video is empty, or used as an alternate poster.",
     }),
+    defineField({
+      name: "watchUrl",
+      type: "url",
+      title: "Watch full video URL",
+      description:
+        "Optional link shown on the cover (“Watch full video”) — opens in a new tab. YouTube, Vimeo, or any absolute URL.",
+      validation: (Rule) =>
+        Rule.uri({
+          allowRelative: true,
+          scheme: ["http", "https"],
+        }),
+    }),
   ],
   preview: {
     select: { title: "titleText", subtitle: "videoUrl" },

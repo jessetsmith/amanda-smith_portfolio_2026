@@ -3,7 +3,8 @@ export const homepageHeroQuery = `*[_type == "homepageHero" && _id == "homepageH
   supportText,
   videoUrl,
   posterUrl,
-  imageUrl
+  imageUrl,
+  watchUrl
 }`;
 
 export const homepageQuery = `*[_type == "homepage" && _id == "homepage"][0]{

@@ -21,6 +21,8 @@ export interface HomepageContent {
   posterSrc?: string;
   /** Still used when video is empty (image-only cover). */
   imageSrc?: string;
+  /** Optional “watch full video” link on the cover. */
+  watchUrl?: string;
   gridItems: GridItem[];
 }
 

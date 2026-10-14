@@ -17,6 +17,8 @@ interface IntroMaskProps {
   posterSrc?: string;
   /** Used when videoSrc is empty (still cover). */
   imageSrc?: string;
+  /** Optional “watch full video” link (new tab). */
+  watchUrl?: string;
 }
 
 declare global {
@@ -85,12 +87,14 @@ export function IntroMask({
   videoSrc,
   posterSrc,
   imageSrc,
+  watchUrl,
 }: IntroMaskProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const hazeRef = useRef<HTMLSpanElement>(null);
   const titleRegionRef = useRef<HTMLDivElement>(null);
   const media = resolveHeroMedia(videoSrc);
   const hasPlayable = media.kind === "video" || media.kind === "youtube";
+  const watchHref = watchUrl?.trim() || "";
   const [soundOn, setSoundOn] = useState(false);
   const soundApiRef = useRef<{ setMuted: (muted: boolean) => void } | null>(
     null,
@@ -234,18 +238,39 @@ export function IntroMask({
           <p className="intro-mask__support">{support}</p>
         </div>
 
-        {hasPlayable ? (
-          <button
-            type="button"
-            className="intro-mask__sound"
-            onClick={toggleSound}
-            aria-pressed={soundOn}
-            aria-label={soundOn ? "Mute cover video" : "Unmute cover video"}
-            title={soundOn ? "Sound on — click to mute" : "Sound off — click to unmute"}
-          >
-            <SoundIcon on={soundOn} />
-            <span>{soundOn ? "Sound on" : "Sound off"}</span>
-          </button>
+        {hasPlayable || watchHref ? (
+          <div className="intro-mask__media-controls">
+            {watchHref ? (
+              <a
+                className="intro-mask__watch"
+                href={watchHref}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Watch full video
+                <span className="intro-mask__watch-arrow" aria-hidden>
+                  ↗
+                </span>
+              </a>
+            ) : null}
+            {hasPlayable ? (
+              <button
+                type="button"
+                className="intro-mask__sound"
+                onClick={toggleSound}
+                aria-pressed={soundOn}
+                aria-label={soundOn ? "Mute cover video" : "Unmute cover video"}
+                title={
+                  soundOn
+                    ? "Sound on — click to mute"
+                    : "Sound off — click to unmute"
+                }
+              >
+                <SoundIcon on={soundOn} />
+                <span>{soundOn ? "Sound on" : "Sound off"}</span>
+              </button>
+            ) : null}
+          </div>
         ) : null}
       </div>
     </section>
