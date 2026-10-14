@@ -706,10 +706,13 @@ a.grid-cell-link:focus-visible .card-open {
 
 .intro-mask__sound,
 .intro-mask__watch {
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.35rem 0.55rem;
+  /* Shared height so Watch (text) matches Sound (icon + text) */
+  min-height: 1.85rem;
+  padding: 0 0.55rem;
   border: 1px solid color-mix(in srgb, var(--color-paper) 35%, transparent);
   background: color-mix(in srgb, var(--color-ink) 42%, transparent);
   color: var(--color-paper);
@@ -724,6 +727,11 @@ a.grid-cell-link:focus-visible .card-open {
   cursor: pointer;
   backdrop-filter: blur(6px);
   transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.intro-mask__sound {
+  appearance: none;
+  margin: 0;
 }
 
 .intro-mask__sound:hover,
