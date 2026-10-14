@@ -1,6 +1,9 @@
 import { isSanityConfigured } from "@/sanity/env";
 import { Studio } from "./Studio";
 
+/** Studio is client-heavy and env-dependent — allow blocking under Cache Components. */
+export const instant = false;
+
 export default function StudioPage() {
   if (!isSanityConfigured()) {
     return (

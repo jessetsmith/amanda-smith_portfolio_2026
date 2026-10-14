@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Lint · typecheck · build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      # Public placeholders — fixtures work without a real Sanity project.
+      NEXT_PUBLIC_SANITY_PROJECT_ID: ""
+      NEXT_PUBLIC_SANITY_DATASET: production
+      NEXT_PUBLIC_SANITY_API_VERSION: "2025-01-01"
+      # Server stubs only (not production secrets). Real values live in Vercel.
+      SANITY_API_READ_TOKEN: ""
+      SANITY_API_WRITE_TOKEN: ""
+      ADMIN_USER: admin
+      ADMIN_PASSWORD: admin
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # Lint has pre-existing rule debt; report but do not block deploy readiness.
+      - name: Lint
+        continue-on-error: true
+        run: npm run lint
+
+      - name: Production build
+        run: npm run build

@@ -9,6 +9,9 @@ export const metadata = {
   description: "Curriculum vitae — Amanda Smith",
 };
 
+/** Request-time CV content — allow blocking under Cache Components. */
+export const instant = false;
+
 export default async function CvPage() {
   await connection();
   const [cv, site] = await Promise.all([getCvData(), getSiteSettings()]);

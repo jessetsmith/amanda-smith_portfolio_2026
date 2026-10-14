@@ -44,8 +44,9 @@ yarn-error.log*
 .env*.local
 !.env.example
 
-# vercel
+# vercel (project link + auth — never commit)
 .vercel
+
 
 # typescript
 *.tsbuildinfo

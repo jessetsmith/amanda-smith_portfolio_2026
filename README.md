@@ -68,6 +68,23 @@ Then restart the dev server. Seed fixtures once with `npm run sanity:seed`. Home
 
 See `.env.example`. Do not invent production Sanity credentials.
 
+## CI / deploy (GitHub Actions → Vercel)
+
+- **CI:** `.github/workflows/ci.yml` — typecheck + production build on push/PR to `main`
+- **Deploy:** `.github/workflows/deploy-vercel.yml` — Vercel production (`main`) + PR previews
+
+This app needs a Node host (API routes, `/admin`, revalidation) — not GitHub Pages / `output: 'export'`.
+
+**Live URL:** available after a Vercel project is linked and these **GitHub Actions secrets** are set:
+
+| Secret | Purpose |
+| --- | --- |
+| `VERCEL_TOKEN` | Vercel deploy token |
+| `VERCEL_ORG_ID` | Team / account ID |
+| `VERCEL_PROJECT_ID` | Project ID |
+
+Full steps: [`.github/DEPLOY.md`](.github/DEPLOY.md). Also mirror `.env.example` keys into the Vercel project’s Environment Variables (Sanity + admin).
+
 ## Scripts
 
 | Command | Description |
@@ -75,4 +92,5 @@ See `.env.example`. Do not invent production Sanity credentials.
 | `npm run dev` | Dev server |
 | `npm run build` | Production build |
 | `npm run start` | Serve production build |
+| `npm run typecheck` | TypeScript (`tsc --noEmit`) |
 | `npm run lint` | ESLint |
