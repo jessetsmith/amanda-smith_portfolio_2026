@@ -647,19 +647,25 @@ a.grid-cell-link:focus-visible .card-open {
 .intro-mask__video::-webkit-media-controls-time-remaining-display,
 .intro-mask__video::-webkit-media-controls-mute-button,
 .intro-mask__video::-webkit-media-controls-volume-slider,
-.intro-mask__video::-webkit-media-controls-fullscreen-button {
+.intro-mask__video::-webkit-media-controls-fullscreen-button,
+.intro-mask__video::-webkit-media-controls-overlay-play-button,
+.intro-mask__video::-webkit-media-controls-rewind-button,
+.intro-mask__video::-webkit-media-controls-return-to-realtime-button,
+.intro-mask__video::-webkit-media-controls-toggle-closed-captions-button {
   display: none !important;
   opacity: 0 !important;
+  visibility: hidden !important;
   pointer-events: none !important;
   width: 0 !important;
   height: 0 !important;
+  max-height: 0 !important;
 }
 
 /* Blocks residual YouTube/native chrome hits; Sound + Watch sit above */
 .intro-mask__video-shield {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 2;
   pointer-events: auto;
   background: transparent;
 }
@@ -674,10 +680,11 @@ a.grid-cell-link:focus-visible .card-open {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: max(100%, 177.78vh);
-  height: max(100%, 56.25vw);
+  /* Extra size so bottom/top YouTube chrome strips sit outside the clip */
+  width: max(110%, 195vh);
+  height: max(115%, 64.7vw);
   transform: translate(-50%, -50%)
-    scale(calc(1.05 - var(--intro-progress) * 0.05));
+    scale(calc(1.12 - var(--intro-progress) * 0.05));
   pointer-events: none;
 }
 
@@ -688,6 +695,32 @@ a.grid-cell-link:focus-visible .card-open {
   height: 100%;
   border: 0;
   pointer-events: none;
+}
+
+/* Instant cover so pause/spinner/end-screen never paint a visible frame */
+.intro-mask__youtube-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background-color: #141414;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  opacity: 0;
+  /* loop-veil-no-fade: never animate opacity — fade reveals YT chrome */
+  transition: none !important;
+}
+
+.intro-mask__youtube-veil[data-on="1"] {
+  opacity: 1;
+  transition: none !important;
+}
+
+.intro-mask__video--youtube[data-veiled="1"] .intro-mask__youtube-host,
+.intro-mask__video--youtube[data-veiled="1"] .intro-mask__youtube-host iframe {
+  opacity: 0 !important;
+  visibility: hidden !important;
 }
 
 /* Cover media controls — bottom-right cluster (watch + sound) */
