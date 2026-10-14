@@ -8,7 +8,7 @@ import {
   useState,
   type PointerEvent,
 } from "react";
-import { resolveHeroMedia } from "@/lib/hero-media";
+import { resolveHeroMedia, resolveHeroPoster } from "@/lib/hero-media";
 
 interface IntroMaskProps {
   maskText: string;
@@ -32,6 +32,7 @@ declare global {
           events?: {
             onReady?: (event: { target: YtPlayer }) => void;
             onStateChange?: (event: { data: number; target: YtPlayer }) => void;
+            onError?: (event: { data: number; target: YtPlayer }) => void;
           };
         },
       ) => YtPlayer;
@@ -108,11 +109,22 @@ export function IntroMask({
   const titleRegionRef = useRef<HTMLDivElement>(null);
   const media = resolveHeroMedia(videoSrc);
   const hasPlayable = media.kind === "video" || media.kind === "youtube";
+  const coverPoster = resolveHeroPoster(
+    posterSrc,
+    imageSrc,
+    media.youtubeId,
+  );
   const watchHref = watchUrl?.trim() || "";
   const [soundOn, setSoundOn] = useState(false);
   const soundApiRef = useRef<{ setMuted: (muted: boolean) => void } | null>(
     null,
   );
+
+  // Warm the handprint cursor so the first cover hover doesn’t flash the default arrow
+  useEffect(() => {
+    const img = new window.Image();
+    img.src = "/cursors/handprint.png";
+  }, []);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -194,7 +206,7 @@ export function IntroMask({
             <>
               <NativeHeroVideo
                 src={media.videoUrl}
-                poster={posterSrc || imageSrc}
+                poster={coverPoster}
                 soundOn={soundOn}
                 registerApi={(api) => {
                   soundApiRef.current = api;
@@ -205,16 +217,17 @@ export function IntroMask({
           ) : media.kind === "youtube" && media.youtubeId ? (
             <YouTubeHeroVideo
               videoId={media.youtubeId}
+              poster={coverPoster}
               soundOn={soundOn}
               registerApi={(api) => {
                 soundApiRef.current = api;
               }}
             />
-          ) : imageSrc || posterSrc ? (
+          ) : coverPoster || imageSrc || posterSrc ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               className="intro-mask__video"
-              src={imageSrc || posterSrc}
+              src={coverPoster || imageSrc || posterSrc}
               alt=""
             />
           ) : null}
@@ -339,6 +352,14 @@ function NativeHeroVideo({
   registerApi: (api: { setMuted: (muted: boolean) => void }) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const failedRef = useRef(false);
+  /** Show CMS/still until the first stable play; lock on error. */
+  const [showPoster, setShowPoster] = useState(Boolean(poster));
+
+  useEffect(() => {
+    failedRef.current = false;
+    setShowPoster(Boolean(poster));
+  }, [src, poster]);
 
   useEffect(() => {
     const el = videoRef.current;
@@ -353,7 +374,7 @@ function NativeHeroVideo({
 
     let restarting = false;
     const restartSeamless = () => {
-      if (restarting) return;
+      if (restarting || failedRef.current) return;
       restarting = true;
       stripChrome();
       try {
@@ -367,6 +388,16 @@ function NativeHeroVideo({
       }, 250);
     };
 
+    const markPlaying = () => {
+      if (failedRef.current) return;
+      stripChrome();
+      setShowPoster(false);
+    };
+    const markFailed = () => {
+      failedRef.current = true;
+      if (poster) setShowPoster(true);
+    };
+
     // Restart slightly before natural end so the ended/controls seam never paints
     const onTimeUpdate = () => {
       const duration = el.duration;
@@ -378,16 +409,25 @@ function NativeHeroVideo({
     const onEnded = () => restartSeamless();
     const onPause = () => {
       stripChrome();
+      if (failedRef.current) return;
       // Cover should always be playing; resume unless the tab is hidden
       if (document.visibilityState === "hidden") return;
       void el.play().catch(() => undefined);
     };
+    const onWaiting = () => {
+      // Brief buffers: keep video if we already revealed; show poster only pre-first-play
+      if (failedRef.current) return;
+    };
+    const onError = () => markFailed();
 
     el.addEventListener("timeupdate", onTimeUpdate);
     el.addEventListener("ended", onEnded);
     el.addEventListener("pause", onPause);
     el.addEventListener("play", stripChrome);
+    el.addEventListener("playing", markPlaying);
     el.addEventListener("loadeddata", stripChrome);
+    el.addEventListener("waiting", onWaiting);
+    el.addEventListener("error", onError);
 
     registerApi({
       setMuted: (muted) => {
@@ -398,20 +438,33 @@ function NativeHeroVideo({
         }
       },
     });
-    void el.play().catch(() => undefined);
+
+    void el.play().catch(() => {
+      // Autoplay may be blocked — wait for error/timeout before locking poster
+    });
+
+    const failTimer = window.setTimeout(() => {
+      if (failedRef.current) return;
+      if (el.paused && el.readyState < 2) markFailed();
+    }, 12000);
+
     return () => {
+      window.clearTimeout(failTimer);
       el.removeEventListener("timeupdate", onTimeUpdate);
       el.removeEventListener("ended", onEnded);
       el.removeEventListener("pause", onPause);
       el.removeEventListener("play", stripChrome);
+      el.removeEventListener("playing", markPlaying);
       el.removeEventListener("loadeddata", stripChrome);
+      el.removeEventListener("waiting", onWaiting);
+      el.removeEventListener("error", onError);
       registerApi({ setMuted: () => undefined });
     };
-  }, [registerApi, src]);
+  }, [poster, registerApi, src]);
 
   useEffect(() => {
     const el = videoRef.current;
-    if (!el) return;
+    if (!el || failedRef.current) return;
     el.muted = !soundOn;
     if (!soundOn) return;
     el.volume = 1;
@@ -419,30 +472,45 @@ function NativeHeroVideo({
   }, [soundOn]);
 
   return (
-    <video
-      ref={videoRef}
-      className="intro-mask__video"
-      autoPlay
-      muted
-      loop
-      playsInline
-      controls={false}
-      disablePictureInPicture
-      disableRemotePlayback
-      controlsList="nodownload nofullscreen noremoteplayback noplaybackrate"
-      tabIndex={-1}
-      poster={poster}
-      src={src}
-    />
+    <div className="intro-mask__media">
+      {poster ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          className="intro-mask__media-poster"
+          data-visible={showPoster ? "1" : "0"}
+          src={poster}
+          alt=""
+          draggable={false}
+        />
+      ) : null}
+      <video
+        ref={videoRef}
+        className="intro-mask__video"
+        autoPlay
+        muted
+        loop
+        playsInline
+        controls={false}
+        disablePictureInPicture
+        disableRemotePlayback
+        controlsList="nodownload nofullscreen noremoteplayback noplaybackrate"
+        tabIndex={-1}
+        poster={poster}
+        src={src}
+      />
+    </div>
   );
 }
 
 function YouTubeHeroVideo({
   videoId,
+  poster,
   soundOn,
   registerApi,
 }: {
   videoId: string;
+  /** CMS still (or yt thumb fallback) shown while loading / on failure / at loop seams */
+  poster?: string;
   soundOn: boolean;
   registerApi: (api: { setMuted: (muted: boolean) => void }) => void;
 }) {
@@ -456,10 +524,14 @@ function YouTubeHeroVideo({
   soundOnRef.current = soundOn;
   /** Suppress brief PAUSED→resume races right after our own seamless seek. */
   const restartingRef = useRef(false);
+  const failedRef = useRef(false);
+  const firstPlayDoneRef = useRef(false);
   const unveilPaintTimerRef = useRef<number | null>(null);
-  const thumbUrl = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+  const posterUrl =
+    poster || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
 
-  const setVeil = useCallback((on: boolean) => {
+  const setVeil = useCallback((on: boolean, softReveal = false) => {
+    if (failedRef.current && !on) return; // never uncover after hard failure
     const veil = veilRef.current;
     const root = rootRef.current;
     if (unveilPaintTimerRef.current != null) {
@@ -467,23 +539,30 @@ function YouTubeHeroVideo({
       unveilPaintTimerRef.current = null;
     }
     if (on) {
-      // Cover first, then hide iframe (both instant)
-      if (veil) veil.dataset.on = "1";
+      // Cover first, then hide iframe (both instant — no chrome peek)
+      if (veil) {
+        veil.dataset.on = "1";
+        veil.dataset.soft = "0";
+      }
       if (root) root.dataset.veiled = "1";
       return;
     }
-    // Unveil: show iframe UNDER the opaque veil, then drop the veil once
-    // a decoded frame has replaced any pause/spinner overlay.
+    // Unveil: show iframe UNDER the poster, then drop the poster
     if (root) root.dataset.veiled = "0";
-    unveilPaintTimerRef.current = window.setTimeout(() => {
-      if (veilRef.current) veilRef.current.dataset.on = "0";
-      unveilPaintTimerRef.current = null;
-    }, 1100);
+    if (veil) veil.dataset.soft = softReveal ? "1" : "0";
+    unveilPaintTimerRef.current = window.setTimeout(
+      () => {
+        if (failedRef.current) return;
+        if (veilRef.current) veilRef.current.dataset.on = "0";
+        unveilPaintTimerRef.current = null;
+      },
+      softReveal ? 80 : 1100,
+    );
   }, []);
 
   const setMuted = useCallback((muted: boolean) => {
     const player = playerRef.current;
-    if (!player) return;
+    if (!player || failedRef.current) return;
     if (muted) player.mute();
     else {
       player.unMute();
@@ -500,19 +579,31 @@ function YouTubeHeroVideo({
     let cancelled = false;
     let loopTimer: number | null = null;
     let unveilTimer: number | null = null;
+    let failTimer: number | null = null;
     const host = hostRef.current;
     if (!host) return;
 
+    failedRef.current = false;
+    firstPlayDoneRef.current = false;
     host.innerHTML = "";
     const mount = document.createElement("div");
     mount.id = mountId;
     host.appendChild(mount);
 
-    // Cover YouTube chrome until first PLAYING frame
+    // CMS/still poster until first stable PLAYING frame
     setVeil(true);
 
+    const markFailed = () => {
+      failedRef.current = true;
+      setVeil(true);
+      if (loopTimer != null) {
+        window.clearInterval(loopTimer);
+        loopTimer = null;
+      }
+    };
+
     const restartLoop = (player: YtPlayer) => {
-      if (restartingRef.current) return;
+      if (restartingRef.current || failedRef.current) return;
       restartingRef.current = true;
       // Veil BEFORE restart so pause/spinner/end-screen never paints a frame
       setVeil(true);
@@ -535,137 +626,161 @@ function YouTubeHeroVideo({
       }
     };
 
-    void loadYouTubeApi().then(() => {
-      if (cancelled || !window.YT?.Player) return;
-      playerRef.current = new window.YT.Player(mountId, {
-        videoId,
-        playerVars: {
-          autoplay: 1,
-          mute: 1,
-          controls: 0,
-          disablekb: 1,
-          fs: 0,
-          modestbranding: 1,
-          playsinline: 1,
-          rel: 0,
-          // Manual seamless loop (seek before end) — playlist loop still flashes chrome
-          loop: 0,
-          iv_load_policy: 3,
-          cc_load_policy: 0,
-          showinfo: 0,
-          autohide: 1,
-          enablejsapi: 1,
-        },
-        events: {
-          onReady: (event) => {
-            if (cancelled) return;
-            event.target.mute();
-            event.target.playVideo();
-            if (soundOnRef.current) {
-              event.target.unMute();
-              event.target.setVolume(100);
-            }
-            if (process.env.NODE_ENV === "development") {
-              (
-                window as Window & { __amandaHeroYt?: YtPlayer }
-              ).__amandaHeroYt = event.target;
-            }
-
-            // Poll near the end and restart before ENDED paints end-screen chrome
-            if (loopTimer != null) window.clearInterval(loopTimer);
-            loopTimer = window.setInterval(() => {
-              if (cancelled) return;
-              const player = playerRef.current;
-              if (!player) return;
-              try {
-                const duration = player.getDuration();
-                const current = player.getCurrentTime();
-                if (!Number.isFinite(duration) || duration < 1) return;
-                if (duration - current <= 0.45 && !restartingRef.current) {
-                  restartLoop(player);
-                }
-              } catch {
-                // ignore
-              }
-            }, 120);
+    void loadYouTubeApi()
+      .then(() => {
+        if (cancelled) return;
+        if (!window.YT?.Player) {
+          markFailed();
+          return;
+        }
+        playerRef.current = new window.YT.Player(mountId, {
+          videoId,
+          playerVars: {
+            autoplay: 1,
+            mute: 1,
+            controls: 0,
+            disablekb: 1,
+            fs: 0,
+            modestbranding: 1,
+            playsinline: 1,
+            rel: 0,
+            // Manual seamless loop (seek before end) — playlist loop still flashes chrome
+            loop: 0,
+            iv_load_policy: 3,
+            cc_load_policy: 0,
+            showinfo: 0,
+            autohide: 1,
+            enablejsapi: 1,
           },
-          onStateChange: (event) => {
-            const state = event.data;
-            const ended = window.YT?.PlayerState?.ENDED;
-            const paused = window.YT?.PlayerState?.PAUSED;
-            const playing = window.YT?.PlayerState?.PLAYING;
-            const buffering = window.YT?.PlayerState?.BUFFERING;
-            const cued = window.YT?.PlayerState?.CUED;
-
-            if (state === ended) {
-              restartLoop(event.target);
-              return;
-            }
-
-            if (state === cued) {
-              setVeil(true);
-            }
-
-            if (state === buffering) {
-              // Veil post-seek / loop rebuffers (not every mid-play hiccup)
-              try {
-                const t = event.target.getCurrentTime();
-                if (restartingRef.current || t < 1.25) setVeil(true);
-              } catch {
-                if (restartingRef.current) setVeil(true);
+          events: {
+            onReady: (event) => {
+              if (cancelled || failedRef.current) return;
+              event.target.mute();
+              event.target.playVideo();
+              if (soundOnRef.current) {
+                event.target.unMute();
+                event.target.setVolume(100);
               }
-            }
+              if (process.env.NODE_ENV === "development") {
+                (
+                  window as Window & { __amandaHeroYt?: YtPlayer }
+                ).__amandaHeroYt = event.target;
+              }
 
-            if (state === playing) {
-              if (unveilTimer != null) window.clearTimeout(unveilTimer);
-              // Hold cover until play is past the post-seek chrome window
-              unveilTimer = window.setTimeout(() => {
-                if (cancelled) return;
+              // Poll near the end and restart before ENDED paints end-screen chrome
+              if (loopTimer != null) window.clearInterval(loopTimer);
+              loopTimer = window.setInterval(() => {
+                if (cancelled || failedRef.current) return;
+                const player = playerRef.current;
+                if (!player) return;
                 try {
-                  const player = playerRef.current;
-                  const stillPlaying =
-                    player &&
-                    player.getPlayerState() === window.YT?.PlayerState?.PLAYING;
-                  const t = player?.getCurrentTime() ?? 0;
-                  // YouTube keeps a center pause glyph for multiple seconds after seek+play
-                  if (!stillPlaying || t < 3.4) {
-                    setVeil(true);
-                    unveilTimer = window.setTimeout(() => {
-                      if (cancelled) return;
-                      setVeil(false);
-                      restartingRef.current = false;
-                    }, 900);
-                    return;
+                  const duration = player.getDuration();
+                  const current = player.getCurrentTime();
+                  if (!Number.isFinite(duration) || duration < 1) return;
+                  if (duration - current <= 0.45 && !restartingRef.current) {
+                    restartLoop(player);
                   }
                 } catch {
-                  // fall through and unveil
+                  // ignore
                 }
-                setVeil(false);
-                restartingRef.current = false;
-              }, 900);
-              return;
-            }
+              }, 120);
+            },
+            onError: () => {
+              if (!cancelled) markFailed();
+            },
+            onStateChange: (event) => {
+              if (failedRef.current) return;
+              const state = event.data;
+              const ended = window.YT?.PlayerState?.ENDED;
+              const paused = window.YT?.PlayerState?.PAUSED;
+              const playing = window.YT?.PlayerState?.PLAYING;
+              const buffering = window.YT?.PlayerState?.BUFFERING;
+              const cued = window.YT?.PlayerState?.CUED;
 
-            if (
-              state === paused &&
-              document.visibilityState !== "hidden"
-            ) {
-              setVeil(true);
-              try {
-                event.target.playVideo();
-              } catch {
-                // ignore
+              if (state === ended) {
+                restartLoop(event.target);
+                return;
               }
-            }
+
+              if (state === cued) {
+                setVeil(true);
+              }
+
+              if (state === buffering) {
+                // Veil post-seek / loop rebuffers (not every mid-play hiccup)
+                try {
+                  const t = event.target.getCurrentTime();
+                  if (restartingRef.current || t < 1.25) setVeil(true);
+                } catch {
+                  if (restartingRef.current) setVeil(true);
+                }
+              }
+
+              if (state === playing) {
+                if (unveilTimer != null) window.clearTimeout(unveilTimer);
+                // Hold cover until play is past the post-seek chrome window
+                unveilTimer = window.setTimeout(() => {
+                  if (cancelled || failedRef.current) return;
+                  try {
+                    const player = playerRef.current;
+                    const stillPlaying =
+                      player &&
+                      player.getPlayerState() ===
+                        window.YT?.PlayerState?.PLAYING;
+                    const t = player?.getCurrentTime() ?? 0;
+                    // YouTube keeps a center pause glyph for multiple seconds after seek+play
+                    if (!stillPlaying || t < 3.4) {
+                      setVeil(true);
+                      unveilTimer = window.setTimeout(() => {
+                        if (cancelled || failedRef.current) return;
+                        const soft = !firstPlayDoneRef.current;
+                        firstPlayDoneRef.current = true;
+                        setVeil(false, soft);
+                        restartingRef.current = false;
+                      }, 900);
+                      return;
+                    }
+                  } catch {
+                    // fall through and unveil
+                  }
+                  const soft = !firstPlayDoneRef.current;
+                  firstPlayDoneRef.current = true;
+                  setVeil(false, soft);
+                  restartingRef.current = false;
+                }, 900);
+                return;
+              }
+
+              if (
+                state === paused &&
+                document.visibilityState !== "hidden"
+              ) {
+                setVeil(true);
+                try {
+                  event.target.playVideo();
+                } catch {
+                  // ignore
+                }
+              }
+            },
           },
-        },
+        });
+
+        // If we never reach PLAYING, keep the poster permanently
+        failTimer = window.setTimeout(() => {
+          if (cancelled || failedRef.current || firstPlayDoneRef.current) return;
+          markFailed();
+        }, 15000);
+      })
+      .catch(() => {
+        if (!cancelled) markFailed();
       });
-    });
 
     return () => {
       cancelled = true;
       if (loopTimer != null) window.clearInterval(loopTimer);
       if (unveilTimer != null) window.clearTimeout(unveilTimer);
+      if (failTimer != null) window.clearTimeout(failTimer);
       if (unveilPaintTimerRef.current != null) {
         window.clearTimeout(unveilPaintTimerRef.current);
         unveilPaintTimerRef.current = null;
@@ -697,12 +812,13 @@ function YouTubeHeroVideo({
       aria-hidden
     >
       <div ref={hostRef} className="intro-mask__youtube-host" />
-      {/* Thumbnail veil — covers iframe chrome at load / loop / buffer seams */}
+      {/* CMS poster (fallback yt thumb) — load / loop / buffer / failure cover */}
       <div
         ref={veilRef}
-        className="intro-mask__youtube-veil"
+        className="intro-mask__youtube-veil intro-mask__media-poster"
         data-on="1"
-        style={{ backgroundImage: `url(${thumbUrl})` }}
+        data-soft="0"
+        style={{ backgroundImage: `url(${posterUrl})` }}
       />
       {/* Blocks clicks on residual chrome; oversized host clips edge bars */}
       <div className="intro-mask__video-shield" aria-hidden />

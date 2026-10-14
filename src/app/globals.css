@@ -570,11 +570,33 @@ a.grid-cell-link:focus-visible .card-open {
   isolation: isolate;
 }
 
-/* Distressed handprint cursor over entire cover (including name text — not I-beam).
-   Hotspot at index/middle fingertip (upper fingers of the stamp). */
-.intro-mask__sticky,
+/*
+  Distressed handprint over the cover (including name text — not I-beam).
+  Hotspot at index/middle fingertip (upper fingers of the stamp).
+
+  Define the url() cursor ONCE on the sticky root and inherit on descendants.
+  Re-declaring url(...) on every * child re-decodes at each element boundary
+  and causes the handprint to blink / fall back to the default arrow.
+*/
+.intro-mask__sticky {
+  --cover-cursor: url("/cursors/handprint.png") 11 3, pointer;
+  cursor: var(--cover-cursor);
+}
+
 .intro-mask__sticky * {
-  cursor: url("/cursors/handprint.png") 11 3, pointer;
+  cursor: inherit;
+}
+
+/* Keep click affordance on cover controls (beats sitewide a/button pointer). */
+.intro-mask__sticky .intro-mask__sound,
+.intro-mask__sticky .intro-mask__watch {
+  cursor: pointer;
+}
+
+/* Iframe must never own the cursor — shield/haze sit above with handprint. */
+.intro-mask__sticky .intro-mask__youtube-host,
+.intro-mask__sticky .intro-mask__youtube-host iframe {
+  cursor: inherit !important;
 }
 
 .intro-mask__under {
@@ -623,6 +645,39 @@ a.grid-cell-link:focus-visible .card-open {
   inset: 0;
   z-index: 1;
   isolation: isolate;
+}
+
+/* Native video stack — poster sits above until first play / on failure */
+.intro-mask__media {
+  position: absolute;
+  inset: 0;
+}
+
+.intro-mask__media-poster {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  background-color: #141414;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  opacity: 0;
+  /* Soft crossfade when revealing video; instant when covering again */
+  transition: opacity 0.45s ease;
+}
+
+.intro-mask__media-poster[data-visible="1"],
+.intro-mask__youtube-veil.intro-mask__media-poster[data-on="1"] {
+  opacity: 1;
+  transition: none;
+}
+
+.intro-mask__youtube-veil.intro-mask__media-poster[data-on="0"][data-soft="1"] {
+  transition: opacity 0.45s ease !important;
 }
 
 .intro-mask__video {
