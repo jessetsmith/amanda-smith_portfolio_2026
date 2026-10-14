@@ -57,7 +57,9 @@ import {
   moveItemToContentSection,
   type SectionTarget,
 } from "@/lib/grid-section";
-import { IntroBand } from "@/components/IntroBand";
+import { IntroMask } from "@/components/IntroMask";
+import { defaultHero, heroSignature, normalizeHero } from "@/lib/hero";
+import type { HomepageHero } from "@/types/hero";
 import {
   AdminDragOverlayCard,
   AdminGridCanvas,
@@ -127,9 +129,10 @@ const FILLS: CellFill[] = ["rust", "ochre", "sage", "tan", "paper", "ink"];
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 type DataSource = "sanity" | "fixture";
-type SidebarTab = "blocks" | "section" | "placement" | "content";
+type SidebarTab = "hero" | "blocks" | "section" | "placement" | "content";
 
 const SIDEBAR_TABS: { id: SidebarTab; label: string }[] = [
+  { id: "hero", label: "Hero" },
   { id: "blocks", label: "Blocks" },
   { id: "section", label: "Section" },
   { id: "placement", label: "Placement" },
@@ -139,6 +142,8 @@ const SIDEBAR_TABS: { id: SidebarTab; label: string }[] = [
 interface AdminGridAppProps {
   initialItems: GridItem[];
   initialSource?: DataSource;
+  initialHero?: HomepageHero;
+  initialHeroSource?: DataSource;
 }
 
 const HISTORY_CAP = 40;
@@ -170,6 +175,8 @@ function gridSignature(items: GridItem[]): string {
 export function AdminGridApp({
   initialItems,
   initialSource = "fixture",
+  initialHero,
+  initialHeroSource = "fixture",
 }: AdminGridAppProps) {
   const router = useRouter();
   const [items, setItems] = useState(() => normalizeGridItems(initialItems));
@@ -179,6 +186,10 @@ export function AdminGridApp({
   const [addKind, setAddKind] = useState<GridItemKind>("textCell");
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [source, setSource] = useState<DataSource>(initialSource);
+  const [hero, setHero] = useState<HomepageHero>(() =>
+    normalizeHero(initialHero ?? defaultHero()),
+  );
+  const [heroSource, setHeroSource] = useState<DataSource>(initialHeroSource);
   const [previewKey, setPreviewKey] = useState(0);
   const [contentOpen, setContentOpen] = useState(false);
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>("blocks");
@@ -188,6 +199,9 @@ export function AdminGridApp({
   const itemsRef = useRef(items);
   itemsRef.current = items;
   const savedItemsRef = useRef(cloneItems(initialItems));
+  const heroRef = useRef(hero);
+  heroRef.current = hero;
+  const savedHeroRef = useRef(normalizeHero(initialHero ?? defaultHero()));
   const pastRef = useRef<GridItem[][]>([]);
   const futureRef = useRef<GridItem[][]>([]);
   const resizeHistoryArmed = useRef(true);
@@ -195,10 +209,15 @@ export function AdminGridApp({
   const canUndo = pastRef.current.length > 0;
   const canRedo = futureRef.current.length > 0;
   void historyTick;
-  const isDirty = useMemo(() => {
+  const isGridDirty = useMemo(() => {
     void dirtyTick;
     return gridSignature(items) !== gridSignature(savedItemsRef.current);
   }, [items, dirtyTick]);
+  const isHeroDirty = useMemo(() => {
+    void dirtyTick;
+    return heroSignature(hero) !== heroSignature(savedHeroRef.current);
+  }, [hero, dirtyTick]);
+  const isDirty = isGridDirty || isHeroDirty;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -246,26 +265,66 @@ export function AdminGridApp({
     [items],
   );
 
-  const persist = useCallback(async (next: GridItem[]) => {
+  const persist = useCallback(async (next: GridItem[], nextHero: HomepageHero) => {
     setSaveState("saving");
     try {
-      const res = await fetch("/api/homepage-grid", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: next }),
-      });
-      if (!res.ok) throw new Error("save failed");
-      const data = (await res.json()) as {
-        items: GridItem[];
-        source?: DataSource;
-      };
-      // Keep optimistic draft layout; mark this snapshot as last published.
-      const published = normalizeGridItems(data.items ?? next);
-      savedItemsRef.current = cloneItems(published);
-      if (data.source) setSource(data.source);
+      const gridDirty =
+        gridSignature(next) !== gridSignature(savedItemsRef.current);
+      const heroDirty =
+        heroSignature(nextHero) !== heroSignature(savedHeroRef.current);
+
+      const tasks: Promise<Response>[] = [];
+      if (gridDirty) {
+        tasks.push(
+          fetch("/api/homepage-grid", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ items: next }),
+          }),
+        );
+      }
+      if (heroDirty) {
+        tasks.push(
+          fetch("/api/homepage-hero", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ hero: nextHero }),
+          }),
+        );
+      }
+      if (tasks.length === 0) {
+        setSaveState("saved");
+        return;
+      }
+
+      const results = await Promise.all(tasks);
+      if (results.some((res) => !res.ok)) throw new Error("save failed");
+
+      if (gridDirty) {
+        const gridRes = results[0];
+        const data = (await gridRes.json()) as {
+          items: GridItem[];
+          source?: DataSource;
+        };
+        const published = normalizeGridItems(data.items ?? next);
+        savedItemsRef.current = cloneItems(published);
+        if (data.source) setSource(data.source);
+      }
+      if (heroDirty) {
+        const heroRes = results[gridDirty ? 1 : 0];
+        const data = (await heroRes.json()) as {
+          hero: HomepageHero;
+          source?: DataSource;
+        };
+        const publishedHero = normalizeHero(data.hero ?? nextHero);
+        savedHeroRef.current = publishedHero;
+        setHero(publishedHero);
+        heroRef.current = publishedHero;
+        if (data.source) setHeroSource(data.source);
+      }
+
       setSaveState("saved");
       setDirtyTick((tick) => tick + 1);
-      // Soft-refresh RSC so Open public / hard navigation sees new data.
       router.refresh();
     } catch {
       setSaveState("error");
@@ -300,7 +359,7 @@ export function AdminGridApp({
   );
 
   const saveDraft = useCallback(() => {
-    void persist(itemsRef.current);
+    void persist(itemsRef.current, heroRef.current);
   }, [persist]);
 
   const discardDraft = useCallback(() => {
@@ -313,10 +372,23 @@ export function AdminGridApp({
         ? current
         : (previous[0]?.id ?? null),
     );
+    const previousHero = normalizeHero(savedHeroRef.current);
+    setHero(previousHero);
+    heroRef.current = previousHero;
     setPreviewKey((key) => key + 1);
     setSaveState("idle");
     setDirtyTick((tick) => tick + 1);
   }, [pushHistory]);
+
+  const patchHero = useCallback((patch: Partial<HomepageHero>) => {
+    setHero((prev) => {
+      const next = normalizeHero({ ...prev, ...patch });
+      heroRef.current = next;
+      return next;
+    });
+    setSaveState("idle");
+    setDirtyTick((tick) => tick + 1);
+  }, []);
 
   const updateItems = useCallback(
     (updater: (prev: GridItem[]) => GridItem[]) => {
@@ -560,7 +632,7 @@ export function AdminGridApp({
             ? source === "sanity"
               ? "Published · Sanity"
               : "Published · .data"
-            : source === "sanity"
+            : source === "sanity" || heroSource === "sanity"
               ? "Draft · Sanity"
               : "Draft · fixture";
 
@@ -719,6 +791,17 @@ export function AdminGridApp({
             </div>
 
             <div className="admin-sidebar__panels min-h-0 flex-1 overflow-hidden">
+              {sidebarTab === "hero" ? (
+                <div
+                  id="admin-panel-hero"
+                  role="tabpanel"
+                  aria-labelledby="admin-tab-hero"
+                  className="h-full min-h-0 overflow-y-auto p-4"
+                >
+                  <HeroTab hero={hero} onChange={patchHero} />
+                </div>
+              ) : null}
+
               {sidebarTab === "blocks" ? (
                 <div
                   id="admin-panel-blocks"
@@ -944,7 +1027,16 @@ export function AdminGridApp({
                   if (event.target === event.currentTarget) setSelectedId(null);
                 }}
               >
-                <IntroBand />
+                <div className="admin-hero-preview mb-4 overflow-hidden border border-ink/15">
+                  <IntroMask
+                    key={`hero-${previewKey}-${hero.titleText}-${hero.videoUrl}-${hero.imageUrl ?? ""}`}
+                    maskText={hero.titleText}
+                    support={hero.supportText}
+                    videoSrc={hero.videoUrl}
+                    posterSrc={hero.posterUrl}
+                    imageSrc={hero.imageUrl}
+                  />
+                </div>
                 <SortableContext
                   items={gridSortableIds}
                   strategy={rectSortingStrategy}
@@ -1079,6 +1171,94 @@ function itemContentPreview(item: GridItem): string {
   if (item.kind === "projectCell") return item.title;
   if (item.kind === "blankCell") return "Spacer";
   return item.title || item.caption || "Media";
+}
+
+function HeroTab({
+  hero,
+  onChange,
+}: {
+  hero: HomepageHero;
+  onChange: (patch: Partial<HomepageHero>) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
+          Cover / IntroMask
+        </p>
+        <p className="mt-1 text-xs text-ink/50">
+          Edits stay local until Save publishes to Sanity{" "}
+          <code className="font-mono">homepageHero</code>.
+        </p>
+      </div>
+
+      <label className="block space-y-1">
+        <span className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/55 uppercase">
+          Hero title
+        </span>
+        <input
+          type="text"
+          value={hero.titleText}
+          onChange={(e) => onChange({ titleText: e.target.value })}
+          className="w-full border border-ink/20 bg-paper px-2 py-2 text-sm text-ink"
+          placeholder="Amanda Smith"
+        />
+      </label>
+
+      <label className="block space-y-1">
+        <span className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/55 uppercase">
+          Support line
+        </span>
+        <textarea
+          value={hero.supportText}
+          onChange={(e) => onChange({ supportText: e.target.value })}
+          rows={3}
+          className="w-full border border-ink/20 bg-paper px-2 py-2 text-sm text-ink"
+          placeholder="Exhibitions, research, and writing…"
+        />
+      </label>
+
+      <label className="block space-y-1">
+        <span className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/55 uppercase">
+          Background video URL
+        </span>
+        <input
+          type="text"
+          value={hero.videoUrl}
+          onChange={(e) => onChange({ videoUrl: e.target.value })}
+          className="w-full border border-ink/20 bg-paper px-2 py-2 font-mono text-xs text-ink"
+          placeholder="/media/intro.mp4 or https://…"
+        />
+        <span className="block text-xs text-ink/45">
+          Site path or CDN URL. Leave empty to use a still image only.
+        </span>
+      </label>
+
+      <label className="block space-y-1">
+        <span className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/55 uppercase">
+          Video poster URL
+        </span>
+        <input
+          type="text"
+          value={hero.posterUrl ?? ""}
+          onChange={(e) => onChange({ posterUrl: e.target.value })}
+          className="w-full border border-ink/20 bg-paper px-2 py-2 font-mono text-xs text-ink"
+          placeholder="/media/… (optional)"
+        />
+      </label>
+
+      <div className="space-y-1">
+        <ImagePickerField
+          value={hero.imageUrl ?? ""}
+          onChange={(imageUrl) => onChange({ imageUrl })}
+        />
+        <p className="text-xs text-ink/45">
+          Background image — used when video is empty, or as an alternate
+          poster.
+        </p>
+      </div>
+    </div>
+  );
 }
 
 function SectionTab({

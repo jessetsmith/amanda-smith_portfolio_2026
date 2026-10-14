@@ -7,6 +7,8 @@ interface IntroMaskProps {
   support: string;
   videoSrc: string;
   posterSrc?: string;
+  /** Used when videoSrc is empty (still cover). */
+  imageSrc?: string;
 }
 
 export function IntroMask({
@@ -14,6 +16,7 @@ export function IntroMask({
   support,
   videoSrc,
   posterSrc,
+  imageSrc,
 }: IntroMaskProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const hazeRef = useRef<HTMLSpanElement>(null);
@@ -81,17 +84,26 @@ export function IntroMask({
           </p>
         </div>
 
-        {/* Video + cloud haze + destination-out solid name (one solid layer) */}
+        {/* Video/image + cloud haze + destination-out solid name (one solid layer) */}
         <div className="intro-mask__punch">
-          <video
-            className="intro-mask__video"
-            autoPlay
-            muted
-            loop
-            playsInline
-            poster={posterSrc}
-            src={videoSrc}
-          />
+          {videoSrc ? (
+            <video
+              className="intro-mask__video"
+              autoPlay
+              muted
+              loop
+              playsInline
+              poster={posterSrc || imageSrc}
+              src={videoSrc}
+            />
+          ) : imageSrc || posterSrc ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              className="intro-mask__video"
+              src={imageSrc || posterSrc}
+              alt=""
+            />
+          ) : null}
           <span
             ref={hazeRef}
             className="intro-mask__title-haze"

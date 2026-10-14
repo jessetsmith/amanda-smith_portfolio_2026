@@ -1,6 +1,8 @@
 import { filterPublicGridItems } from "@/lib/grid";
 import { readGridItems } from "@/lib/grid-store";
 import { loadGridItems, mapSanityGridItems } from "@/lib/grid-sync";
+import { defaultHero } from "@/lib/hero";
+import { loadHero } from "@/lib/hero-sync";
 import { client } from "@/sanity/lib/client";
 import { isSanityConfigured } from "@/sanity/env";
 import {
@@ -13,14 +15,15 @@ import siteFixture from "@/data/site-settings.json";
 import type { CvData, HomepageContent, NavItem, SiteSettings } from "@/types/content";
 
 export async function getHomepageContent(): Promise<HomepageContent> {
-  const grid = await loadGridItems();
+  const [grid, heroResult] = await Promise.all([loadGridItems(), loadHero()]);
+  const hero = heroResult.hero;
   const defaults: HomepageContent = {
     source: grid.source,
-    maskText: "Amanda Smith",
-    support:
-      "Exhibitions, research, and writing — arranged as one connected grid.",
-    videoSrc: "/media/intro.mp4",
-    posterSrc: undefined,
+    maskText: hero.titleText || defaultHero().titleText,
+    support: hero.supportText || defaultHero().supportText,
+    videoSrc: hero.videoUrl || defaultHero().videoUrl,
+    posterSrc: hero.posterUrl || hero.imageUrl || undefined,
+    imageSrc: hero.imageUrl || undefined,
     gridItems: filterPublicGridItems(grid.items),
   };
 
@@ -41,12 +44,30 @@ export async function getHomepageContent(): Promise<HomepageContent> {
     );
     if (!data) return defaults;
     const sanityGrid = mapSanityGridItems(data.gridItems);
+    // Prefer dedicated homepageHero; fall back to legacy homepage intro fields
+    const maskText =
+      heroResult.source === "sanity"
+        ? hero.titleText
+        : data.introMaskText || hero.titleText || defaults.maskText;
+    const support =
+      heroResult.source === "sanity"
+        ? hero.supportText
+        : data.introSupport || hero.supportText || defaults.support;
+    const videoSrc =
+      heroResult.source === "sanity"
+        ? hero.videoUrl || defaults.videoSrc
+        : data.introVideoUrl || hero.videoUrl || defaults.videoSrc;
+    const posterSrc =
+      heroResult.source === "sanity"
+        ? hero.posterUrl || hero.imageUrl || undefined
+        : data.introPosterUrl || hero.posterUrl || hero.imageUrl || undefined;
     return {
-      source: sanityGrid ? "sanity" : grid.source,
-      maskText: data.introMaskText || defaults.maskText,
-      support: data.introSupport || defaults.support,
-      videoSrc: data.introVideoUrl || defaults.videoSrc,
-      posterSrc: data.introPosterUrl || defaults.posterSrc,
+      source: sanityGrid || heroResult.source === "sanity" ? "sanity" : grid.source,
+      maskText: maskText || defaults.maskText,
+      support: support || defaults.support,
+      videoSrc: videoSrc || defaults.videoSrc,
+      posterSrc,
+      imageSrc: hero.imageUrl || undefined,
       gridItems: filterPublicGridItems(sanityGrid ?? grid.items),
     };
   } catch {

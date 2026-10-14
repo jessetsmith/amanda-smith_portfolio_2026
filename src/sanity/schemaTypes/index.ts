@@ -8,6 +8,7 @@ import { publication } from "./publication";
 import { researchItem } from "./researchItem";
 import { cv } from "./cv";
 import { homepage } from "./homepage";
+import { homepageHero } from "./homepageHero";
 import { siteSettings } from "./siteSettings";
 
 export const schemaTypes = [
@@ -19,5 +20,6 @@ export const schemaTypes = [
   researchItem,
   cv,
   homepage,
+  homepageHero,
   siteSettings,
 ];

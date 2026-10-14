@@ -1,3 +1,11 @@
+export const homepageHeroQuery = `*[_type == "homepageHero" && _id == "homepageHero"][0]{
+  titleText,
+  supportText,
+  videoUrl,
+  posterUrl,
+  imageUrl
+}`;
+
 export const homepageQuery = `*[_type == "homepage" && _id == "homepage"][0]{
   introMaskText,
   introSupport,

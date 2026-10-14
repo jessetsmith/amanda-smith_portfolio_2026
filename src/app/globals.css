@@ -1091,6 +1091,20 @@ a.grid-cell-link:focus-visible .card-open {
   margin-inline: auto;
 }
 
+/* Live hero cover in admin — clip tall IntroMask scroll runway */
+.admin-hero-preview {
+  max-height: min(52vh, 28rem);
+  background: var(--color-ink);
+}
+
+.admin-hero-preview .intro-mask {
+  height: min(52vh, 28rem);
+}
+
+.admin-hero-preview .intro-mask__sticky {
+  height: min(52vh, 28rem);
+}
+
 .admin-sortable-cell {
   position: relative;
   z-index: 1;

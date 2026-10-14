@@ -9,6 +9,14 @@ export const structure: StructureResolver = (S) =>
         .id("homepage")
         .child(S.document().schemaType("homepage").documentId("homepage")),
       S.listItem()
+        .title("Homepage hero")
+        .id("homepageHero")
+        .child(
+          S.document()
+            .schemaType("homepageHero")
+            .documentId("homepageHero"),
+        ),
+      S.listItem()
         .title("Site settings")
         .id("siteSettings")
         .child(
@@ -21,6 +29,8 @@ export const structure: StructureResolver = (S) =>
       S.divider(),
       ...S.documentTypeListItems().filter(
         (item) =>
-          !["homepage", "siteSettings", "cv"].includes(item.getId() ?? ""),
+          !["homepage", "homepageHero", "siteSettings", "cv"].includes(
+            item.getId() ?? "",
+          ),
       ),
     ]);

@@ -19,6 +19,8 @@ export interface HomepageContent {
   support: string;
   videoSrc: string;
   posterSrc?: string;
+  /** Still used when video is empty (image-only cover). */
+  imageSrc?: string;
   gridItems: GridItem[];
 }
 

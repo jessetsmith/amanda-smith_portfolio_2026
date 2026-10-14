@@ -13,9 +13,9 @@ export default function StudioPage() {
         </h1>
         <p className="mt-4 text-base leading-relaxed opacity-80">
           Schemas for <code>project</code>, <code>publication</code>,{" "}
-          <code>researchItem</code>, <code>cv</code>, <code>homepage</code>, and{" "}
-          <code>siteSettings</code> are scaffolded in{" "}
-          <code>src/sanity/schemaTypes</code>.
+          <code>researchItem</code>, <code>cv</code>, <code>homepage</code>,{" "}
+          <code>homepageHero</code>, and <code>siteSettings</code> are
+          scaffolded in <code>src/sanity/schemaTypes</code>.
         </p>
         <p className="mt-3 text-base leading-relaxed opacity-80">
           Create a Sanity project, then set{" "}
