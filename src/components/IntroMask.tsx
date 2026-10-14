@@ -8,6 +8,7 @@ import {
   useState,
   type PointerEvent,
 } from "react";
+import { createPortal } from "react-dom";
 import { resolveHeroMedia, resolveHeroPoster } from "@/lib/hero-media";
 
 interface IntroMaskProps {
@@ -105,6 +106,8 @@ export function IntroMask({
   watchUrl,
 }: IntroMaskProps) {
   const sectionRef = useRef<HTMLElement>(null);
+  const stickyRef = useRef<HTMLDivElement>(null);
+  const handCursorRef = useRef<HTMLDivElement>(null);
   const hazeRef = useRef<HTMLSpanElement>(null);
   const titleRegionRef = useRef<HTMLDivElement>(null);
   const media = resolveHeroMedia(videoSrc);
@@ -116,15 +119,149 @@ export function IntroMask({
   );
   const watchHref = watchUrl?.trim() || "";
   const [soundOn, setSoundOn] = useState(false);
+  const [handCursorMounted, setHandCursorMounted] = useState(false);
   const soundApiRef = useRef<{ setMuted: (muted: boolean) => void } | null>(
     null,
   );
 
-  // Warm the handprint cursor so the first cover hover doesn’t flash the default arrow
+  // Warm the handprint asset used by the fixed cursor overlay
   useEffect(() => {
     const img = new window.Image();
     img.src = "/cursors/handprint.png";
+    setHandCursorMounted(true);
   }, []);
+
+  // Stable handprint: system cursor locked to none; one overlay follows the
+  // pointer. Document capture listeners avoid leave/enter flicker across
+  // title/haze/shield/iframe stacking.
+  useEffect(() => {
+    if (!handCursorMounted) return;
+    const sticky = stickyRef.current;
+    const hand = handCursorRef.current;
+    if (!sticky || !hand) return;
+
+    const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+    if (!finePointer.matches) return;
+
+    const root = document.documentElement;
+    const HOTSPOT_X = 11;
+    const HOTSPOT_Y = 3;
+
+    let x = 0;
+    let y = 0;
+    let raf = 0;
+    /** off | hand | control */
+    let mode: "off" | "hand" | "control" = "off";
+
+    const paint = () => {
+      raf = 0;
+      if (mode !== "hand") return;
+      hand.style.transform = `translate3d(${x - HOTSPOT_X}px, ${y - HOTSPOT_Y}px, 0)`;
+    };
+
+    const schedulePaint = () => {
+      if (!raf) raf = window.requestAnimationFrame(paint);
+    };
+
+    const setMode = (next: "off" | "hand" | "control") => {
+      if (mode === next) return;
+      mode = next;
+
+      if (next === "hand") {
+        root.classList.add("intro-mask--hand-cursor");
+        root.classList.remove("intro-mask--control-cursor");
+        sticky.classList.remove("is-control-cursor");
+        hand.classList.add("is-on");
+        schedulePaint();
+        return;
+      }
+
+      hand.classList.remove("is-on");
+      hand.style.transform = "translate3d(-9999px, -9999px, 0)";
+      if (raf) {
+        window.cancelAnimationFrame(raf);
+        raf = 0;
+      }
+
+      if (next === "control") {
+        root.classList.add("intro-mask--hand-cursor");
+        root.classList.add("intro-mask--control-cursor");
+        sticky.classList.add("is-control-cursor");
+        return;
+      }
+
+      root.classList.remove("intro-mask--hand-cursor");
+      root.classList.remove("intro-mask--control-cursor");
+      sticky.classList.remove("is-control-cursor");
+    };
+
+    const hitInsideSticky = (clientX: number, clientY: number) => {
+      const rect = sticky.getBoundingClientRect();
+      return (
+        clientX >= rect.left &&
+        clientX < rect.right &&
+        clientY >= rect.top &&
+        clientY < rect.bottom
+      );
+    };
+
+    const overControlAt = (clientX: number, clientY: number) => {
+      const el = document.elementFromPoint(clientX, clientY);
+      return Boolean(
+        el instanceof Element &&
+          el.closest(".intro-mask__sound, .intro-mask__watch"),
+      );
+    };
+
+    const onPointerMove = (event: Event) => {
+      const e = event as globalThis.PointerEvent;
+      if (e.pointerType && e.pointerType !== "mouse" && e.pointerType !== "") {
+        // Ignore coarse/touch pointers; CSS media query already gates mount.
+        if (e.pointerType === "touch" || e.pointerType === "pen") return;
+      }
+
+      const { clientX, clientY } = e;
+      if (!hitInsideSticky(clientX, clientY)) {
+        setMode("off");
+        return;
+      }
+
+      if (overControlAt(clientX, clientY)) {
+        setMode("control");
+        return;
+      }
+
+      x = clientX;
+      y = clientY;
+      if (mode !== "hand") setMode("hand");
+      else schedulePaint();
+    };
+
+    const onBlur = () => setMode("off");
+
+    // Capture on document so stacking/iframe quirks can't drop moves mid-cover.
+    document.addEventListener("pointermove", onPointerMove, {
+      capture: true,
+      passive: true,
+    });
+    document.addEventListener("pointerdown", onPointerMove, {
+      capture: true,
+      passive: true,
+    });
+    window.addEventListener("blur", onBlur);
+
+    return () => {
+      document.removeEventListener("pointermove", onPointerMove, true);
+      document.removeEventListener("pointerdown", onPointerMove, true);
+      window.removeEventListener("blur", onBlur);
+      setMode("off");
+      root.classList.remove("intro-mask--hand-cursor");
+      root.classList.remove("intro-mask--control-cursor");
+      sticky.classList.remove("is-control-cursor");
+      hand.classList.remove("is-on");
+      if (raf) window.cancelAnimationFrame(raf);
+    };
+  }, [handCursorMounted]);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -191,7 +328,17 @@ export function IntroMask({
 
   return (
     <section ref={sectionRef} className="intro-mask" aria-label="Introduction">
-      <div className="intro-mask__sticky">
+      {handCursorMounted
+        ? createPortal(
+            <div
+              ref={handCursorRef}
+              className="intro-mask__hand-cursor"
+              aria-hidden
+            />,
+            document.body,
+          )
+        : null}
+      <div ref={stickyRef} className="intro-mask__sticky">
         {/* Alternate under-layer revealed through the text punch */}
         <div className="intro-mask__under" aria-hidden>
           <div className="intro-mask__under-wash" />

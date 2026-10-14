@@ -571,32 +571,89 @@ a.grid-cell-link:focus-visible .card-open {
 }
 
 /*
-  Distressed handprint over the cover (including name text — not I-beam).
-  Hotspot at index/middle fingertip (upper fingers of the stamp).
-
-  Define the url() cursor ONCE on the sticky root and inherit on descendants.
-  Re-declaring url(...) on every * child re-decodes at each element boundary
-  and causes the handprint to blink / fall back to the default arrow.
+  Handprint cover cursor — never use CSS url() cursors here (they flicker when
+  crossing title/haze/shield descendants). IntroMask hides the system cursor and
+  paints one body-portaled stamp that follows the pointer.
+  Hotspot: 11px × 3px from top-left of the 43×44 stamp.
 */
 .intro-mask__sticky {
-  --cover-cursor: url("/cursors/handprint.png") 11 3, pointer;
-  cursor: var(--cover-cursor);
+  cursor: none;
 }
 
-.intro-mask__sticky * {
-  cursor: inherit;
+.intro-mask__sticky *,
+.intro-mask__sticky *::before,
+.intro-mask__sticky *::after {
+  cursor: none !important;
 }
 
-/* Keep click affordance on cover controls (beats sitewide a/button pointer). */
-.intro-mask__sticky .intro-mask__sound,
-.intro-mask__sticky .intro-mask__watch {
-  cursor: pointer;
+/* Document-level lock so nothing (iframes, UA quirks) restores a system cursor. */
+html.intro-mask--hand-cursor,
+html.intro-mask--hand-cursor * {
+  cursor: none !important;
 }
 
-/* Iframe must never own the cursor — shield/haze sit above with handprint. */
-.intro-mask__sticky .intro-mask__youtube-host,
-.intro-mask__sticky .intro-mask__youtube-host iframe {
-  cursor: inherit !important;
+/* Sound / Watch: restore pointer; hand stamp is hidden by JS. */
+html.intro-mask--hand-cursor.intro-mask--control-cursor,
+html.intro-mask--hand-cursor.intro-mask--control-cursor *,
+.intro-mask__sticky.is-control-cursor,
+.intro-mask__sticky.is-control-cursor *,
+.intro-mask__sticky.is-control-cursor *::before,
+.intro-mask__sticky.is-control-cursor *::after {
+  cursor: pointer !important;
+}
+
+.intro-mask__hand-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2147483646;
+  width: 43px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+  background: url("/cursors/handprint.png") no-repeat 0 0 / 43px 44px;
+  transform: translate3d(-9999px, -9999px, 0);
+  will-change: transform;
+  contain: strict;
+  transition: none !important;
+  user-select: none;
+}
+
+.intro-mask__hand-cursor.is-on {
+  visibility: visible;
+  opacity: 1;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .intro-mask__sticky,
+  .intro-mask__sticky *,
+  .intro-mask__sticky *::before,
+  .intro-mask__sticky *::after {
+    cursor: auto !important;
+  }
+
+  .intro-mask__sticky .intro-mask__sound,
+  .intro-mask__sticky .intro-mask__watch {
+    cursor: pointer !important;
+  }
+
+  html.intro-mask--hand-cursor,
+  html.intro-mask--hand-cursor * {
+    cursor: auto !important;
+  }
+
+  html.intro-mask--hand-cursor.intro-mask--control-cursor,
+  html.intro-mask--hand-cursor.intro-mask--control-cursor * {
+    cursor: pointer !important;
+  }
+
+  .intro-mask__hand-cursor {
+    display: none !important;
+  }
 }
 
 .intro-mask__under {
