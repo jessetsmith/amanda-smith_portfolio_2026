@@ -9,6 +9,9 @@ export const metadata = {
   description: "Curriculum vitae — Amanda Smith",
 };
 
+/** Allow request-time CV fetch under Cache Components (Vercel). */
+export const instant = false;
+
 export default async function CvPage() {
   if (process.env.GITHUB_PAGES !== "1") {
     await connection();

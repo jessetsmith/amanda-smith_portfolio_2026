@@ -5,8 +5,11 @@ import { IntroMask } from "@/components/IntroMask";
 import { DefinitionText } from "@/components/DefinitionText";
 import { getHomepageContent, getSiteSettings } from "@/lib/content";
 
+/** Allow request-time Sanity/fixture fetch under Cache Components (Vercel). */
+export const instant = false;
+
 export default async function Home() {
-  // Static export (Pages) cannot use connection(); bake content at build time.
+  // Static export (optional Pages build) cannot use connection().
   if (process.env.GITHUB_PAGES !== "1") {
     await connection();
   }

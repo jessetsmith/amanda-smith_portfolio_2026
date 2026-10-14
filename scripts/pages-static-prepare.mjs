@@ -1,10 +1,18 @@
 #!/usr/bin/env node
 /**
- * GitHub Pages uses `output: 'export'`, which cannot include Route Handlers,
- * middleware, or cookie-gated admin. Park those trees during the Pages build
- * and restore afterward (see pages-static-restore.mjs).
+ * Optional GitHub Pages static export helper.
+ * Production is Vercel (full Next + /admin). Pages export cannot include
+ * Route Handlers / middleware / admin, and cannot use `export const instant`
+ * without Cache Components.
  */
-import { existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -17,6 +25,8 @@ const moves = [
   ["src/app/admin", "admin"],
   ["src/app/studio", "studio"],
 ];
+
+const instantFiles = ["src/app/page.tsx", "src/app/cv/page.tsx"];
 
 if (existsSync(stash)) {
   rmSync(stash, { recursive: true, force: true });
@@ -35,6 +45,19 @@ for (const [rel, name] of moves) {
   console.log(`stashed ${rel} -> .pages-export-stash/${name}`);
 }
 
-// Marker so restore is a no-op if prepare never ran
+// Strip `export const instant` while Cache Components is off for output:export.
+mkdirSync(join(stash, "instant-files"), { recursive: true });
+for (const rel of instantFiles) {
+  const from = join(root, rel);
+  if (!existsSync(from)) continue;
+  const original = readFileSync(from, "utf8");
+  writeFileSync(join(stash, "instant-files", rel.replaceAll("/", "__")), original);
+  const stripped = original
+    .replace(/\n\/\*\*[^*]*\*\/\s*\nexport const instant = false;\n/g, "\n")
+    .replace(/\nexport const instant = false;\n/g, "\n");
+  writeFileSync(from, stripped);
+  console.log(`stripped instant from ${rel}`);
+}
+
 writeFileSync(join(stash, ".prepared"), new Date().toISOString());
 console.log("pages static prepare complete");

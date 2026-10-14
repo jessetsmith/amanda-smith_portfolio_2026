@@ -1,52 +1,63 @@
-# Deploy (GitHub Actions → GitHub Pages)
+# Deploy (GitHub Actions → Vercel)
 
-Public site is a **static export** hosted on **GitHub Pages** (custom domain).
+Production is **Vercel** (full Next.js) so **`/admin`**, `/api/*`, and Sanity writes work.
+
+GitHub Pages static export **cannot** host admin (no Route Handlers). The Pages workflow is optional / non-production only.
 
 ## Live URLs
 
 | URL | Notes |
 | --- | --- |
-| https://portfolio.bittersweetwoman.com/ | Custom domain (DNS already pointed at GitHub; `public/CNAME`) |
-| https://jessetsmith.github.io/amanda-smith_portfolio_2026/ | github.io fallback (only if Pages is served from project site without custom domain) |
+| https://portfolio.bittersweetwoman.com/ | Custom domain (after DNS points at Vercel) |
+| https://portfolio.bittersweetwoman.com/admin | Admin (same host) |
+| https://amanda-smith-portfolio-2026.vercel.app/ | Works **now** (before DNS cutover) |
+| https://amanda-smith-portfolio-2026.vercel.app/admin | Admin on Vercel alias |
 
-Deploy workflow: `.github/workflows/deploy-pages.yml` (push to `main` or manual dispatch).
+## DNS click Jesse must do (Google Domains / Cloud DNS)
 
-## What is / isn’t on Pages
+`portfolio.bittersweetwoman.com` currently CNAMEs to **GitHub Pages** (`bittersweetwoman.github.io`). Change it to Vercel:
 
-| Included (static) | Local / Studio only (excluded from export) |
-| --- | --- |
-| `/`, `/cv`, public media | `/admin`, `/studio`, `/api/*`, middleware auth |
+| Type | Host / name | Value |
+| --- | --- | --- |
+| **CNAME** | `portfolio` | `6ef570c297b0004c.vercel-dns-017.com.` |
 
-CMS edits: use local `npm run dev` + `/admin`, or Sanity Studio. Re-deploy (push to `main`) to refresh the public static snapshot.
+Fallback (also accepted by Vercel): `cname.vercel-dns.com.`
 
-**Hero poster / background image:** upload in Admin → Hero (or Studio → Homepage hero). Uploads go to **Sanity assets** (`cdn.sanity.io`). Local `/media/uploads/…` paths are not deployed to Pages — always prefer Sanity for production stills.
+Leave apex `bittersweetwoman.com` alone unless you intend to move the whole site.
 
-## Exact GitHub secrets / vars Jesse should set
+After DNS propagates, https://portfolio.bittersweetwoman.com/admin should hit Vercel (not GitHub 404).
+
+Verify: `dig +short portfolio.bittersweetwoman.com CNAME`
+
+## GitHub Actions secrets
 
 Repo → **Settings → Secrets and variables → Actions**:
 
-| Name | Type | Purpose |
+| Secret | Required | Notes |
 | --- | --- | --- |
-| `NEXT_PUBLIC_SANITY_PROJECT_ID` | **Secret** (or Variable) | Bake Sanity project into the static build |
-| `SANITY_API_READ_TOKEN` | **Secret** | Server-side read at build time (not exposed as `NEXT_PUBLIC_`) |
-| `NEXT_PUBLIC_SANITY_DATASET` | **Variable** (optional) | Defaults to `production` |
-| `NEXT_PUBLIC_SANITY_API_VERSION` | **Variable** (optional) | Defaults to `2025-01-01` |
+| `VERCEL_TOKEN` | **Yes — Jesse must add** | https://vercel.com/account/tokens (CLI cannot mint team tokens here) |
+| `VERCEL_ORG_ID` | Set | Team id from `.vercel/project.json` |
+| `VERCEL_PROJECT_ID` | Set | Project id from `.vercel/project.json` |
+| `NEXT_PUBLIC_SANITY_PROJECT_ID` | Set | Public |
+| `SANITY_API_READ_TOKEN` | Set | Server |
+| `SANITY_API_WRITE_TOKEN` | Set | Server (admin saves / uploads) |
 
-Without the Sanity project id, the build still succeeds using **fixtures**.
+**Variables:** `NEXT_PUBLIC_SANITY_DATASET`, `NEXT_PUBLIC_SANITY_API_VERSION`
 
-Vercel secrets (`VERCEL_*`) are unused — safe to delete.
+Vercel project env vars are also set (Production / Preview / Development) from local `.env.local` — never commit that file.
 
-## Enable Pages (if needed)
+## Workflows
 
-Already configured for this repo (`build_type: workflow`, CNAME `portfolio.bittersweetwoman.com`). If Actions can’t publish:
+| File | Role |
+| --- | --- |
+| `.github/workflows/deploy-vercel.yml` | Production + PR preview deploys |
+| `.github/workflows/ci.yml` | Typecheck + full `next build` |
+| `.github/workflows/deploy-pages.yml` | Optional static export only (`workflow_dispatch`) |
 
-1. Repo → **Settings → Pages**
-2. **Source:** GitHub Actions
-3. Confirm custom domain `portfolio.bittersweetwoman.com` + HTTPS
+## Admin on production
 
-## Local commands
+1. Open `/admin` → login (`ADMIN_USER` / `ADMIN_PASSWORD` from Vercel env)
+2. Edit grid / hero → Save publishes to Sanity
+3. Hero images upload to Sanity CDN (required for public stills)
 
-```bash
-npm run build:pages   # writes ./out (stashes admin/api/studio during build)
-npx serve out         # optional preview of static site
-```
+No Sanity write tokens in the browser bundle.

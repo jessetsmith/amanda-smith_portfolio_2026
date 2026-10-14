@@ -13,16 +13,18 @@ concurrency:
 
 jobs:
   check:
-    name: Typecheck · Pages export
+    name: Typecheck · production build
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
       NEXT_TELEMETRY_DISABLED: "1"
-      GITHUB_PAGES: "1"
       NEXT_PUBLIC_SANITY_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_SANITY_PROJECT_ID }}
       NEXT_PUBLIC_SANITY_DATASET: ${{ vars.NEXT_PUBLIC_SANITY_DATASET }}
       NEXT_PUBLIC_SANITY_API_VERSION: ${{ vars.NEXT_PUBLIC_SANITY_API_VERSION }}
       SANITY_API_READ_TOKEN: ${{ secrets.SANITY_API_READ_TOKEN }}
+      SANITY_API_WRITE_TOKEN: ${{ secrets.SANITY_API_WRITE_TOKEN }}
+      ADMIN_USER: admin
+      ADMIN_PASSWORD: admin
 
     steps:
       - name: Checkout
@@ -44,5 +46,6 @@ jobs:
         continue-on-error: true
         run: npm run lint
 
-      - name: Static export (Pages)
-        run: npm run build:pages
+      # Full Next build (includes /admin + API) — matches Vercel production.
+      - name: Production build
+        run: npm run build
