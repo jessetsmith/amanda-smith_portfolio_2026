@@ -35,7 +35,7 @@ declare global {
           };
         },
       ) => YtPlayer;
-      PlayerState?: { ENDED: number; PLAYING: number };
+      PlayerState?: { ENDED: number; PLAYING: number; PAUSED: number };
     };
     onYouTubeIframeAPIReady?: () => void;
   }
@@ -177,14 +177,17 @@ export function IntroMask({
         {/* Video/image + cloud haze + destination-out solid name (one solid layer) */}
         <div className="intro-mask__punch">
           {media.kind === "video" && media.videoUrl ? (
-            <NativeHeroVideo
-              src={media.videoUrl}
-              poster={posterSrc || imageSrc}
-              soundOn={soundOn}
-              registerApi={(api) => {
-                soundApiRef.current = api;
-              }}
-            />
+            <>
+              <NativeHeroVideo
+                src={media.videoUrl}
+                poster={posterSrc || imageSrc}
+                soundOn={soundOn}
+                registerApi={(api) => {
+                  soundApiRef.current = api;
+                }}
+              />
+              <div className="intro-mask__video-shield" aria-hidden />
+            </>
           ) : media.kind === "youtube" && media.youtubeId ? (
             <YouTubeHeroVideo
               videoId={media.youtubeId}
@@ -358,6 +361,11 @@ function NativeHeroVideo({
       muted
       loop
       playsInline
+      controls={false}
+      disablePictureInPicture
+      disableRemotePlayback
+      controlsList="nodownload nofullscreen noremoteplayback noplaybackrate"
+      tabIndex={-1}
       poster={poster}
       src={src}
     />
@@ -422,6 +430,10 @@ function YouTubeHeroVideo({
           playlist: videoId,
           iv_load_policy: 3,
           cc_load_policy: 0,
+          // Hide as much YouTube chrome as the embed API allows
+          showinfo: 0,
+          autohide: 1,
+          enablejsapi: 1,
         },
         events: {
           onReady: (event) => {
@@ -433,8 +445,11 @@ function YouTubeHeroVideo({
             }
           },
           onStateChange: (event) => {
-            // Reinforce loop if playlist param is ignored
-            if (event.data === window.YT?.PlayerState?.ENDED) {
+            const state = event.data;
+            const ended = window.YT?.PlayerState?.ENDED;
+            const paused = window.YT?.PlayerState?.PAUSED;
+            // Keep playing so the big YouTube play overlay never sticks
+            if (state === ended || state === paused) {
               event.target.playVideo();
             }
           },
@@ -461,6 +476,8 @@ function YouTubeHeroVideo({
   return (
     <div className="intro-mask__video intro-mask__video--youtube" aria-hidden>
       <div ref={hostRef} className="intro-mask__youtube-host" />
+      {/* Blocks clicks on any residual YouTube chrome; Sound/Watch sit above */}
+      <div className="intro-mask__video-shield" aria-hidden />
     </div>
   );
 }
