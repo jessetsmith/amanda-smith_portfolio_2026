@@ -19,6 +19,8 @@ Deploy workflow: `.github/workflows/deploy-pages.yml` (push to `main` or manual 
 
 CMS edits: use local `npm run dev` + `/admin`, or Sanity Studio. Re-deploy (push to `main`) to refresh the public static snapshot.
 
+**Hero poster / background image:** upload in Admin → Hero (or Studio → Homepage hero). Uploads go to **Sanity assets** (`cdn.sanity.io`). Local `/media/uploads/…` paths are not deployed to Pages — always prefer Sanity for production stills.
+
 ## Exact GitHub secrets / vars Jesse should set
 
 Repo → **Settings → Secrets and variables → Actions**:

@@ -76,6 +76,8 @@ See `.env.example`. Do not invent production Sanity credentials.
 
 Public site is a **static export**. `/admin`, `/studio`, and `/api/*` stay **local-only** (excluded from the Pages build). Full steps + secrets: [`.github/DEPLOY.md`](.github/DEPLOY.md).
 
+**Hero stills for production:** set Video poster / Background image in Admin → Hero (uploads to Sanity CDN) or Studio → Homepage hero image fields. Do not rely on `/media/uploads/…` for Pages — those files are gitignored and won’t ship.
+
 ## Scripts
 
 | Command | Description |

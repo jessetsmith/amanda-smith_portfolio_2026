@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "sanity:seed": "node scripts/seed-sanity.mjs"
+    "sanity:seed": "node scripts/seed-sanity.mjs",
+    "sanity:migrate-hero-poster": "node scripts/migrate-hero-poster-to-sanity.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

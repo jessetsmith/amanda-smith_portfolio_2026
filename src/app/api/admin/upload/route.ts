@@ -3,6 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/auth";
+import { getWriteClient } from "@/sanity/lib/write-client";
 
 const MAX_BYTES = 8 * 1024 * 1024;
 const ALLOWED_EXT = new Set([
@@ -76,12 +77,41 @@ export async function POST(request: Request) {
   }
 
   const filename = `${slugBase(file.name)}-${randomBytes(4).toString("hex")}${ext}`;
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  // Prefer Sanity assets so GitHub Pages / production can load cdn.sanity.io URLs.
+  const writeClient = getWriteClient();
+  if (writeClient) {
+    try {
+      const asset = await writeClient.assets.upload("image", buffer, {
+        filename,
+        contentType: file.type || undefined,
+      });
+      const src = asset.url;
+      if (!src) {
+        throw new Error("Sanity asset missing url");
+      }
+      return NextResponse.json({
+        src,
+        assetId: asset._id,
+        filename,
+        storage: "sanity",
+      });
+    } catch (err) {
+      console.error("Sanity asset upload failed, falling back to local", err);
+    }
+  }
+
   const uploadsDir = path.join(process.cwd(), "public", "media", "uploads");
   await mkdir(uploadsDir, { recursive: true });
-
-  const buffer = Buffer.from(await file.arrayBuffer());
   await writeFile(path.join(uploadsDir, filename), buffer);
 
   const src = `/media/uploads/${filename}`;
-  return NextResponse.json({ src, filename });
+  return NextResponse.json({
+    src,
+    filename,
+    storage: "local",
+    warning:
+      "Saved locally only — not available on GitHub Pages. Configure Sanity write token to upload to CDN.",
+  });
 }

@@ -28,20 +28,41 @@ export const homepageHero = defineType({
       type: "string",
       title: "Background video URL",
       description:
-        "Absolute CDN URL or site path (e.g. /media/intro.mp4). Prefer Mux/CDN for large files.",
+        "Absolute CDN URL, site path, or YouTube link. Prefer Mux/CDN for large files.",
+    }),
+    defineField({
+      name: "poster",
+      type: "image",
+      title: "Video poster",
+      description:
+        "Still shown while the video loads / on failure. Prefer this Sanity asset so GitHub Pages can load cdn.sanity.io URLs.",
+      options: { hotspot: true },
+    }),
+    defineField({
+      name: "backgroundImage",
+      type: "image",
+      title: "Background image",
+      description:
+        "Still cover when there is no video, or alternate poster. Sanity asset preferred for production.",
+      options: { hotspot: true },
     }),
     defineField({
       name: "posterUrl",
-      type: "string",
-      title: "Video poster URL",
-      description: "Still shown before video plays (path or absolute URL)",
+      type: "url",
+      title: "Video poster URL (override)",
+      description:
+        "Optional absolute URL fallback. Ignored when a Poster image asset is set. Do not use local /media/uploads paths for production.",
+      validation: (Rule) =>
+        Rule.uri({ allowRelative: true, scheme: ["http", "https"] }),
     }),
     defineField({
       name: "imageUrl",
-      type: "string",
-      title: "Background image URL",
+      type: "url",
+      title: "Background image URL (override)",
       description:
-        "Optional still background when video is empty, or used as an alternate poster.",
+        "Optional absolute URL fallback. Ignored when a Background image asset is set.",
+      validation: (Rule) =>
+        Rule.uri({ allowRelative: true, scheme: ["http", "https"] }),
     }),
     defineField({
       name: "watchUrl",
@@ -57,11 +78,16 @@ export const homepageHero = defineType({
     }),
   ],
   preview: {
-    select: { title: "titleText", subtitle: "videoUrl" },
-    prepare({ title, subtitle }) {
+    select: {
+      title: "titleText",
+      subtitle: "videoUrl",
+      media: "poster",
+    },
+    prepare({ title, subtitle, media }) {
       return {
         title: title || "Homepage hero",
         subtitle: subtitle || "No video set",
+        media,
       };
     },
   },

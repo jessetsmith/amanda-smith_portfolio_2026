@@ -1253,27 +1253,37 @@ function HeroTab({
         </span>
       </label>
 
-      <label className="block space-y-1">
-        <span className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/55 uppercase">
-          Video poster URL
-        </span>
-        <input
-          type="text"
+      <div className="space-y-1">
+        <ImagePickerField
+          label="Video poster"
           value={hero.posterUrl ?? ""}
-          onChange={(e) => onChange({ posterUrl: e.target.value })}
-          className="w-full border border-ink/20 bg-paper px-2 py-2 font-mono text-xs text-ink"
-          placeholder="/media/… (optional)"
+          onChange={(posterUrl, posterAssetId) =>
+            onChange({
+              posterUrl: posterUrl || undefined,
+              posterAssetId: posterAssetId || undefined,
+            })
+          }
         />
-      </label>
+        <p className="text-xs text-ink/45">
+          Still shown while the video loads / on failure. Uploads go to Sanity
+          (cdn.sanity.io) so GitHub Pages can load them.
+        </p>
+      </div>
 
       <div className="space-y-1">
         <ImagePickerField
+          label="Background image"
           value={hero.imageUrl ?? ""}
-          onChange={(imageUrl) => onChange({ imageUrl })}
+          onChange={(imageUrl, imageAssetId) =>
+            onChange({
+              imageUrl: imageUrl || undefined,
+              imageAssetId: imageAssetId || undefined,
+            })
+          }
         />
         <p className="text-xs text-ink/45">
-          Background image — used when video is empty, or as an alternate
-          poster.
+          Used when video is empty, or as an alternate poster. Prefer Sanity
+          uploads for production.
         </p>
       </div>
     </div>
@@ -1889,16 +1899,19 @@ function ContentEditModal({
 }
 
 function ImagePickerField({
+  label = "Image",
   value,
   onChange,
 }: {
+  label?: string;
   value: string;
-  onChange: (value: string) => void;
+  onChange: (value: string, assetId?: string) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPath, setShowPath] = useState(false);
+  const [storageNote, setStorageNote] = useState<string | null>(null);
 
   async function onFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -1907,6 +1920,7 @@ function ImagePickerField({
 
     setUploading(true);
     setError(null);
+    setStorageNote(null);
     try {
       const body = new FormData();
       body.append("file", file);
@@ -1914,11 +1928,22 @@ function ImagePickerField({
         method: "POST",
         body,
       });
-      const data = (await res.json()) as { src?: string; error?: string };
+      const data = (await res.json()) as {
+        src?: string;
+        assetId?: string;
+        storage?: string;
+        warning?: string;
+        error?: string;
+      };
       if (!res.ok || !data.src) {
         throw new Error(data.error || "Upload failed");
       }
-      onChange(data.src);
+      onChange(data.src, data.assetId);
+      if (data.storage === "sanity") {
+        setStorageNote("Stored on Sanity CDN");
+      } else if (data.warning) {
+        setStorageNote(data.warning);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
     } finally {
@@ -1929,7 +1954,7 @@ function ImagePickerField({
   return (
     <div className="space-y-2">
       <p className="text-[0.65rem] tracking-[0.08em] text-ink/55 uppercase">
-        Image
+        {label}
       </p>
       <div className="admin-image-picker">
         <div className="admin-image-picker__preview">
@@ -1962,7 +1987,7 @@ function ImagePickerField({
             <button
               type="button"
               disabled={uploading}
-              onClick={() => onChange("")}
+              onClick={() => onChange("", undefined)}
               className="border border-ink/20 px-3 py-1.5 font-mono text-[0.6rem] tracking-[0.12em] uppercase disabled:opacity-50"
             >
               Remove
@@ -1979,14 +2004,17 @@ function ImagePickerField({
             <input
               type="text"
               value={value}
-              onChange={(e) => onChange(e.target.value)}
-              placeholder="/media/…"
+              onChange={(e) => onChange(e.target.value, undefined)}
+              placeholder="https://cdn.sanity.io/… or /media/…"
               className="w-full border border-ink/15 bg-paper px-2 py-1.5 font-mono text-[0.7rem] text-ink/70"
             />
           ) : value ? (
             <p className="truncate font-mono text-[0.6rem] text-ink/40">
               {value}
             </p>
+          ) : null}
+          {storageNote ? (
+            <p className="text-xs text-ink/50">{storageNote}</p>
           ) : null}
           {error ? (
             <p className="text-xs text-rust" role="alert">
