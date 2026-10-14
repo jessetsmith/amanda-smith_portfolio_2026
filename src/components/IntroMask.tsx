@@ -205,20 +205,42 @@ export function IntroMask({
       );
     };
 
-    const overControlAt = (clientX: number, clientY: number) => {
-      const el = document.elementFromPoint(clientX, clientY);
-      return Boolean(
-        el instanceof Element &&
-          el.closest(".intro-mask__sound, .intro-mask__watch"),
+    const pointInRect = (
+      clientX: number,
+      clientY: number,
+      rect: DOMRect,
+    ) =>
+      clientX >= rect.left &&
+      clientX < rect.right &&
+      clientY >= rect.top &&
+      clientY < rect.bottom;
+
+    const overControlAt = (
+      clientX: number,
+      clientY: number,
+      target: EventTarget | null,
+    ) => {
+      if (
+        target instanceof Element &&
+        target.closest(".intro-mask__sound, .intro-mask__watch")
+      ) {
+        return true;
+      }
+      // Bounds check — reliable when stacking / elementFromPoint is flaky.
+      const controls = sticky.querySelectorAll(
+        ".intro-mask__sound, .intro-mask__watch",
       );
+      for (const el of controls) {
+        if (pointInRect(clientX, clientY, el.getBoundingClientRect())) {
+          return true;
+        }
+      }
+      return false;
     };
 
     const onPointerMove = (event: Event) => {
       const e = event as globalThis.PointerEvent;
-      if (e.pointerType && e.pointerType !== "mouse" && e.pointerType !== "") {
-        // Ignore coarse/touch pointers; CSS media query already gates mount.
-        if (e.pointerType === "touch" || e.pointerType === "pen") return;
-      }
+      if (e.pointerType === "touch" || e.pointerType === "pen") return;
 
       const { clientX, clientY } = e;
       if (!hitInsideSticky(clientX, clientY)) {
@@ -226,7 +248,7 @@ export function IntroMask({
         return;
       }
 
-      if (overControlAt(clientX, clientY)) {
+      if (overControlAt(clientX, clientY, e.target)) {
         setMode("control");
         return;
       }
