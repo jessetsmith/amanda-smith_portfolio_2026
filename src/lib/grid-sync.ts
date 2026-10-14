@@ -5,6 +5,7 @@ import {
   writeGridItems as writeLocalGridItems,
 } from "@/lib/grid-store";
 import { normalizeGridItems } from "@/lib/grid-normalize";
+import { sanityFetchOptions } from "@/lib/sanity-fetch";
 import type { GridItem } from "@/types/grid";
 import { client } from "@/sanity/lib/client";
 import { getWriteClient } from "@/sanity/lib/write-client";
@@ -141,9 +142,7 @@ export function toSanityGridItems(items: GridItem[]) {
   });
 }
 
-const HOMEPAGE_FETCH = {
-  next: { tags: ["homepage"], revalidate: 0 as const },
-};
+const HOMEPAGE_FETCH = sanityFetchOptions;
 
 export async function loadGridItems(): Promise<GridSyncResult> {
   if (isSanityConfigured() && client) {

@@ -1,0 +1,37 @@
+#!/usr/bin/env node
+import { existsSync, mkdirSync, renameSync, rmSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const stash = join(root, ".pages-export-stash");
+
+const moves = [
+  ["api", "src/app/api"],
+  ["middleware.ts", "src/middleware.ts"],
+  ["admin", "src/app/admin"],
+  ["studio", "src/app/studio"],
+];
+
+if (!existsSync(join(stash, ".prepared"))) {
+  console.log("nothing to restore");
+  process.exit(0);
+}
+
+for (const [name, rel] of moves) {
+  const from = join(stash, name);
+  const to = join(root, rel);
+  if (!existsSync(from)) {
+    console.log(`skip (missing stash): ${name}`);
+    continue;
+  }
+  if (existsSync(to)) {
+    rmSync(to, { recursive: true, force: true });
+  }
+  mkdirSync(dirname(to), { recursive: true });
+  renameSync(from, to);
+  console.log(`restored ${rel}`);
+}
+
+rmSync(stash, { recursive: true, force: true });
+console.log("pages static restore complete");

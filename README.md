@@ -68,29 +68,21 @@ Then restart the dev server. Seed fixtures once with `npm run sanity:seed`. Home
 
 See `.env.example`. Do not invent production Sanity credentials.
 
-## CI / deploy (GitHub Actions → Vercel)
+## CI / deploy (GitHub Actions → GitHub Pages)
 
-- **CI:** `.github/workflows/ci.yml` — typecheck + production build on push/PR to `main`
-- **Deploy:** `.github/workflows/deploy-vercel.yml` — Vercel production (`main`) + PR previews
+- **Live:** [https://portfolio.bittersweetwoman.com/](https://portfolio.bittersweetwoman.com/) (`public/CNAME`)
+- **CI:** `.github/workflows/ci.yml` — typecheck + static export on push/PR
+- **Deploy:** `.github/workflows/deploy-pages.yml` — build `out/` and publish to Pages on `main`
 
-This app needs a Node host (API routes, `/admin`, revalidation) — not GitHub Pages / `output: 'export'`.
-
-**Live URL:** available after a Vercel project is linked and these **GitHub Actions secrets** are set:
-
-| Secret | Purpose |
-| --- | --- |
-| `VERCEL_TOKEN` | Vercel deploy token |
-| `VERCEL_ORG_ID` | Team / account ID |
-| `VERCEL_PROJECT_ID` | Project ID |
-
-Full steps: [`.github/DEPLOY.md`](.github/DEPLOY.md). Also mirror `.env.example` keys into the Vercel project’s Environment Variables (Sanity + admin).
+Public site is a **static export**. `/admin`, `/studio`, and `/api/*` stay **local-only** (excluded from the Pages build). Full steps + secrets: [`.github/DEPLOY.md`](.github/DEPLOY.md).
 
 ## Scripts
 
 | Command | Description |
 | --- | --- |
-| `npm run dev` | Dev server |
-| `npm run build` | Production build |
-| `npm run start` | Serve production build |
+| `npm run dev` | Dev server (full app incl. admin/API) |
+| `npm run build` | Node production build |
+| `npm run build:pages` | Static export for GitHub Pages (`out/`) |
+| `npm run start` | Serve Node production build |
 | `npm run typecheck` | TypeScript (`tsc --noEmit`) |
 | `npm run lint` | ESLint |

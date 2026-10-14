@@ -1,60 +1,50 @@
-# Deploy (GitHub Actions → Vercel)
+# Deploy (GitHub Actions → GitHub Pages)
 
-This app is **not** static-export / GitHub Pages friendly (`/admin`, API routes, Sanity revalidation). Production hosting is **Vercel**.
+Public site is a **static export** hosted on **GitHub Pages** (custom domain).
 
-## Live URL status
+## Live URLs
 
-A public URL appears **after** Jesse links a Vercel project and adds the GitHub secrets below, then the **Deploy Vercel** workflow succeeds on `main`.
-
-Until then:
-
-- **CI** (`.github/workflows/ci.yml`) still runs typecheck + `next build` on every push/PR
-- **Deploy** (`.github/workflows/deploy-vercel.yml`) fails at “Require Vercel secrets” by design
-
-## Exact GitHub secrets Jesse must add
-
-Repo → **Settings → Secrets and variables → Actions → New repository secret**:
-
-| Secret | How to get it |
+| URL | Notes |
 | --- | --- |
-| `VERCEL_TOKEN` | [vercel.com/account/tokens](https://vercel.com/account/tokens) → Create (scope: full account or this project) |
-| `VERCEL_ORG_ID` | After `vercel link` locally: `.vercel/project.json` → `orgId` (or Vercel → Team / Account Settings → General → Team ID) |
-| `VERCEL_PROJECT_ID` | Same file → `projectId` (or Project → Settings → General → Project ID) |
+| https://portfolio.bittersweetwoman.com/ | Custom domain (DNS already pointed at GitHub; `public/CNAME`) |
+| https://jessetsmith.github.io/amanda-smith_portfolio_2026/ | github.io fallback (only if Pages is served from project site without custom domain) |
 
-Do **not** commit `.vercel/` or real tokens.
+Deploy workflow: `.github/workflows/deploy-pages.yml` (push to `main` or manual dispatch).
 
-### One-time local link (on Jesse’s machine)
+## What is / isn’t on Pages
+
+| Included (static) | Local / Studio only (excluded from export) |
+| --- | --- |
+| `/`, `/cv`, public media | `/admin`, `/studio`, `/api/*`, middleware auth |
+
+CMS edits: use local `npm run dev` + `/admin`, or Sanity Studio. Re-deploy (push to `main`) to refresh the public static snapshot.
+
+## Exact GitHub secrets / vars Jesse should set
+
+Repo → **Settings → Secrets and variables → Actions**:
+
+| Name | Type | Purpose |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SANITY_PROJECT_ID` | **Secret** (or Variable) | Bake Sanity project into the static build |
+| `SANITY_API_READ_TOKEN` | **Secret** | Server-side read at build time (not exposed as `NEXT_PUBLIC_`) |
+| `NEXT_PUBLIC_SANITY_DATASET` | **Variable** (optional) | Defaults to `production` |
+| `NEXT_PUBLIC_SANITY_API_VERSION` | **Variable** (optional) | Defaults to `2025-01-01` |
+
+Without the Sanity project id, the build still succeeds using **fixtures**.
+
+Vercel secrets (`VERCEL_*`) are unused — safe to delete.
+
+## Enable Pages (if needed)
+
+Already configured for this repo (`build_type: workflow`, CNAME `portfolio.bittersweetwoman.com`). If Actions can’t publish:
+
+1. Repo → **Settings → Pages**
+2. **Source:** GitHub Actions
+3. Confirm custom domain `portfolio.bittersweetwoman.com` + HTTPS
+
+## Local commands
 
 ```bash
-cd portfolio_2026
-npx vercel login
-npx vercel link          # create or select project
-# copy orgId + projectId from .vercel/project.json into GitHub secrets
+npm run build:pages   # writes ./out (stashes admin/api/studio during build)
+npx serve out         # optional preview of static site
 ```
-
-Optional: import the GitHub repo in the Vercel dashboard (**Add New… → Project**) instead of CLI — then copy the same IDs into GitHub secrets so Actions can deploy.
-
-## Vercel project environment variables
-
-Set these in **Vercel → Project → Settings → Environment Variables** (Production + Preview). Values come from local `.env.local` — never commit them.
-
-| Variable | Notes |
-| --- | --- |
-| `NEXT_PUBLIC_SANITY_PROJECT_ID` | Public |
-| `NEXT_PUBLIC_SANITY_DATASET` | Usually `production` |
-| `NEXT_PUBLIC_SANITY_API_VERSION` | e.g. `2025-01-01` |
-| `SANITY_API_READ_TOKEN` | Server-only |
-| `SANITY_API_WRITE_TOKEN` | Server-only; needed for `/admin` Sanity writes |
-| `ADMIN_USER` / `ADMIN_PASSWORD` | Change from local defaults for any shared deploy |
-| `GOOGLE_TRANSLATE_API_KEY` | Optional |
-
-`vercel pull` in Actions loads these into the build. Align names with `.env.example`.
-
-## Workflows
-
-| File | When | What |
-| --- | --- | --- |
-| `.github/workflows/ci.yml` | push/PR → `main` | `npm ci` · typecheck · lint (non-blocking) · `next build` |
-| `.github/workflows/deploy-vercel.yml` | push/PR → `main`, or manual | Preview (PR) / Production (`main`) via Vercel CLI |
-
-After secrets exist: push to `main` or **Actions → Deploy Vercel → Run workflow**.

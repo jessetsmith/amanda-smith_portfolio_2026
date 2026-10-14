@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import seed from "@/data/homepage-hero.json";
 import { defaultHero, normalizeHero } from "@/lib/hero";
+import { sanityFetchOptions } from "@/lib/sanity-fetch";
 import { client } from "@/sanity/lib/client";
 import { getWriteClient } from "@/sanity/lib/write-client";
 import { isSanityConfigured } from "@/sanity/env";
@@ -11,9 +12,7 @@ import type { HomepageHero, HomepageHeroResult } from "@/types/hero";
 const DATA_DIR = path.join(process.cwd(), ".data");
 const DATA_FILE = path.join(DATA_DIR, "homepage-hero.json");
 
-const HERO_FETCH = {
-  next: { tags: ["homepage"], revalidate: 0 as const },
-};
+const HERO_FETCH = sanityFetchOptions;
 
 function str(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";

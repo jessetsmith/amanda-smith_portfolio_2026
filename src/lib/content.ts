@@ -3,6 +3,7 @@ import { readGridItems } from "@/lib/grid-store";
 import { loadGridItems, mapSanityGridItems } from "@/lib/grid-sync";
 import { defaultHero } from "@/lib/hero";
 import { loadHero } from "@/lib/hero-sync";
+import { sanityFetchOptions } from "@/lib/sanity-fetch";
 import { client } from "@/sanity/lib/client";
 import { isSanityConfigured } from "@/sanity/env";
 import {
@@ -38,11 +39,8 @@ export async function getHomepageContent(): Promise<HomepageContent> {
 
   try {
     // Tagged + revalidate:0 so Save → revalidateTag('homepage') refreshes public `/`
-    const data = await client.fetch(
-      homepageQuery,
-      {},
-      { next: { tags: ["homepage"], revalidate: 0 } },
-    );
+    // (cache opts skipped on GitHub Pages static export — see sanity-fetch.ts)
+    const data = await client.fetch(homepageQuery, {}, sanityFetchOptions);
     if (!data) return defaults;
     const sanityGrid = mapSanityGridItems(data.gridItems);
     // Prefer dedicated homepageHero; fall back to legacy homepage intro fields

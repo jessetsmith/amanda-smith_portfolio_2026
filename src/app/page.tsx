@@ -5,11 +5,11 @@ import { IntroMask } from "@/components/IntroMask";
 import { DefinitionText } from "@/components/DefinitionText";
 import { getHomepageContent, getSiteSettings } from "@/lib/content";
 
-/** Request-time homepage content (Sanity / fixtures) — allow blocking under Cache Components. */
-export const instant = false;
-
 export default async function Home() {
-  await connection();
+  // Static export (Pages) cannot use connection(); bake content at build time.
+  if (process.env.GITHUB_PAGES !== "1") {
+    await connection();
+  }
   const [home, site] = await Promise.all([
     getHomepageContent(),
     getSiteSettings(),
