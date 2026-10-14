@@ -635,6 +635,78 @@ a.grid-cell-link:focus-visible .card-open {
   transform: scale(calc(1.05 - var(--intro-progress) * 0.05));
 }
 
+/* YouTube iframe — full-bleed cover (16:9 scaled to fill) */
+.intro-mask__video--youtube {
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.intro-mask__youtube-host {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, 177.78vh);
+  height: max(100%, 56.25vw);
+  transform: translate(-50%, -50%)
+    scale(calc(1.05 - var(--intro-progress) * 0.05));
+}
+
+.intro-mask__youtube-host iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* Small mute/unmute — corner of cover, doesn’t compete with title */
+.intro-mask__sound {
+  position: absolute;
+  z-index: 5;
+  right: 1.1rem;
+  bottom: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--color-paper) 35%, transparent);
+  background: color-mix(in srgb, var(--color-ink) 42%, transparent);
+  color: var(--color-paper);
+  font-family: var(--font-meta);
+  font-size: 0.58rem;
+  font-weight: var(--weight-meta);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1;
+  pointer-events: auto;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.intro-mask__sound:hover {
+  background: color-mix(in srgb, var(--color-ink) 62%, transparent);
+  border-color: color-mix(in srgb, var(--color-paper) 55%, transparent);
+}
+
+.intro-mask__sound:focus-visible {
+  outline: 1px solid var(--color-paper);
+  outline-offset: 2px;
+}
+
+.intro-mask__sound-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .intro-mask__sound {
+    right: 2rem;
+    bottom: 1.35rem;
+  }
+}
+
 /* Solid type punches through video (+ haze) into the under-layer — the one solid name */
 .intro-mask__title {
   position: absolute;

@@ -1227,10 +1227,11 @@ function HeroTab({
           value={hero.videoUrl}
           onChange={(e) => onChange({ videoUrl: e.target.value })}
           className="w-full border border-ink/20 bg-paper px-2 py-2 font-mono text-xs text-ink"
-          placeholder="/media/intro.mp4 or https://…"
+          placeholder="/media/intro.mp4 or https://youtube.com/watch?v=…"
         />
         <span className="block text-xs text-ink/45">
-          Site path or CDN URL. Leave empty to use a still image only.
+          Direct file path/URL, or a YouTube link (autoplay + loop). Leave empty
+          for a still image only. Use the cover Sound control to unmute.
         </span>
       </label>
 
