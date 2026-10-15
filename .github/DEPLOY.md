@@ -87,7 +87,7 @@ Workflow `.github/workflows/sanity-schema-deploy.yml` runs `sanity:studio-regist
 
 | Secret | Required | Notes |
 | --- | --- | --- |
-| `VERCEL_TOKEN` | **Yes — Jesse must add** if Actions deploy should work | https://vercel.com/account/tokens |
+| `VERCEL_TOKEN` | Optional — only for the Actions CLI deploy workflow | https://vercel.com/account/tokens. **Primary production deploy is Vercel Git** (auto on `main`). Without this secret the Actions workflow skips cleanly. |
 | `VERCEL_ORG_ID` | Set | Team id from `.vercel/project.json` |
 | `VERCEL_PROJECT_ID` | Set | Project id from `.vercel/project.json` |
 | `NEXT_PUBLIC_SANITY_PROJECT_ID` | Set | Public |

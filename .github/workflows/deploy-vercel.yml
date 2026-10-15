@@ -1,5 +1,6 @@
-# Production host: Vercel (full Next.js — /admin, /api, Sanity writes).
-# Custom domain: portfolio.bittersweetwoman.com (see .github/DEPLOY.md for DNS).
+# Optional Actions deploy via Vercel CLI.
+# Primary production path is the Vercel Git integration (auto-deploys on push to main).
+# This workflow only runs when VERCEL_TOKEN + org/project ids are set as Actions secrets.
 
 name: Deploy Vercel
 
@@ -26,37 +27,52 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - name: Require Vercel secrets
+      - name: Check Vercel secrets
+        id: secrets
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          missing=0
+          missing=
           for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
             if [ -z "${!name}" ]; then
-              echo "::error::$name is not set"
-              missing=1
+              missing="$missing $name"
             fi
           done
-          if [ "$missing" -ne 0 ]; then
-            echo "See .github/DEPLOY.md"
-            exit 1
+          if [ -n "$missing" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            {
+              echo "## Vercel Actions deploy skipped"
+              echo ""
+              echo "Missing secrets:$missing"
+              echo ""
+              echo "Production is deployed by the **Vercel Git integration** on push to \`main\`."
+              echo "To enable this CLI workflow, add the secrets (see \`.github/DEPLOY.md\`)."
+              echo "Live: https://portfolio.bittersweetwoman.com/"
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::notice::Skipping Actions Vercel CLI deploy (secrets missing). Vercel Git integration handles production."
+            exit 0
           fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
 
       - name: Checkout
+        if: steps.secrets.outputs.skip != 'true'
         uses: actions/checkout@v4
 
       - name: Setup Node
+        if: steps.secrets.outputs.skip != 'true'
         uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
 
       - name: Install Vercel CLI
+        if: steps.secrets.outputs.skip != 'true'
         run: npm install --global vercel@latest
 
       - name: Pull Vercel environment
+        if: steps.secrets.outputs.skip != 'true'
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
@@ -67,6 +83,7 @@ jobs:
           fi
 
       - name: Build (Vercel)
+        if: steps.secrets.outputs.skip != 'true'
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
@@ -77,6 +94,7 @@ jobs:
           fi
 
       - name: Deploy
+        if: steps.secrets.outputs.skip != 'true'
         id: deploy
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -90,6 +108,7 @@ jobs:
           echo "Deployed: $url"
 
       - name: Summary
+        if: steps.secrets.outputs.skip != 'true'
         run: |
           {
             echo "## Vercel deploy"
