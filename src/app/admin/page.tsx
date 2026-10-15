@@ -1,5 +1,6 @@
 import { connection } from "next/server";
 import { AdminGridApp } from "@/components/admin/AdminGridApp";
+import { getSiteSettings } from "@/lib/content";
 import { loadGridItems } from "@/lib/grid-sync";
 import { loadHero } from "@/lib/hero-sync";
 
@@ -8,9 +9,10 @@ export const instant = false;
 
 export default async function AdminPage() {
   await connection();
-  const [{ items, source }, heroResult] = await Promise.all([
+  const [{ items, source }, heroResult, site] = await Promise.all([
     loadGridItems(),
     loadHero(),
+    getSiteSettings(),
   ]);
   return (
     <AdminGridApp
@@ -18,6 +20,8 @@ export default async function AdminPage() {
       initialSource={source}
       initialHero={heroResult.hero}
       initialHeroSource={heroResult.source}
+      siteTitle={site.siteTitle}
+      siteNav={site.nav}
     />
   );
 }

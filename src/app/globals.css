@@ -1609,6 +1609,9 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   width: 100%;
   max-width: 72rem;
   margin-inline: auto;
+  /* Frame width drives preview chrome; @container mirrors public @media below */
+  container-type: inline-size;
+  container-name: admin-preview;
 }
 
 .admin-preview__stage[data-breakpoint="tablet"],
@@ -1618,23 +1621,174 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   box-shadow: 0 12px 40px color-mix(in srgb, var(--color-ink) 8%, transparent);
 }
 
-/* Force grid columns to match the edit breakpoint (browser media queries
-   still see the full admin window, so preview must opt in explicitly). */
-.admin-preview[data-breakpoint="mobile"] .staggered-grid,
-.admin-preview__stage[data-breakpoint="mobile"] .staggered-grid {
-  grid-template-columns: minmax(0, 1fr) !important;
+/*
+  Admin preview mirrors public responsive rules via @container so the
+  wide admin browser window cannot apply desktop @media / vw sizing inside
+  a 390 or 768 frame. Live site CSS stays the source of truth — these blocks
+  copy the same breakpoints and values, swapping vw → cqw where needed.
+*/
+@container admin-preview (max-width: 639px) {
+  .staggered-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .grid-cell,
+  .admin-sortable-cell {
+    grid-column: var(--m-col-start, 1) / span var(--m-col-span, 1) !important;
+    grid-row: var(--m-row-start, auto) / span var(--m-row-span, 1) !important;
+    min-height: clamp(9.5rem, 28cqw, 14rem);
+  }
+
+  .grid-cell.title-row,
+  .admin-sortable-cell[data-kind="titleRow"] {
+    min-height: 3.25rem;
+    grid-column: 1 / -1 !important;
+  }
+
+  .grid-cell[data-kind="blankCell"],
+  .admin-sortable-cell[data-kind="blankCell"] {
+    display: none !important;
+  }
+
+  .grid-lines {
+    display: none !important;
+  }
+
+  .content-card .card-meta {
+    font-size: 0.72rem;
+  }
 }
 
-.admin-preview[data-breakpoint="tablet"] .staggered-grid,
-.admin-preview__stage[data-breakpoint="tablet"] .staggered-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+@container admin-preview (min-width: 640px) and (max-width: 1023px) {
+  .staggered-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .grid-cell,
+  .admin-sortable-cell {
+    grid-column: var(--t-col-start, auto) / span var(--t-col-span, 1) !important;
+    grid-row: var(--t-row-start, auto) / span var(--t-row-span, 1) !important;
+  }
+
+  .grid-cell.title-row,
+  .grid-cell[data-kind="titleRow"],
+  .admin-sortable-cell[data-kind="titleRow"] {
+    grid-column: 1 / -1 !important;
+  }
+
+  .grid-cell[data-kind="blankCell"],
+  .admin-sortable-cell[data-kind="blankCell"] {
+    display: none !important;
+  }
+
+  .grid-lines {
+    display: none !important;
+  }
+
+  .content-card .card-meta {
+    font-size: 0.68rem;
+  }
 }
 
-.admin-preview[data-breakpoint="mobile"] .grid-lines,
-.admin-preview[data-breakpoint="tablet"] .grid-lines,
-.admin-preview__stage[data-breakpoint="mobile"] .grid-lines,
-.admin-preview__stage[data-breakpoint="tablet"] .grid-lines {
-  display: none;
+@container admin-preview (max-width: 767px) {
+  .intro-mask {
+    height: 100% !important;
+  }
+
+  .intro-mask__title {
+    left: max(1.25rem, env(safe-area-inset-left)) !important;
+    right: max(1.25rem, env(safe-area-inset-right)) !important;
+    bottom: 34% !important;
+    /* cqw = frame width; public uses 12vw at a real phone viewport */
+    font-size: clamp(2.75rem, 12cqw, 9rem) !important;
+  }
+
+  .intro-mask__title-region {
+    font-size: clamp(2.75rem, 12cqw, 9rem) !important;
+  }
+
+  .intro-mask__support {
+    margin-bottom: 0.5rem;
+    max-width: min(16rem, calc(100cqw - 7.5rem)) !important;
+    font-size: 0.95rem;
+    line-height: 1.35;
+  }
+
+  .intro-mask__content {
+    padding: 5.5rem max(1.25rem, env(safe-area-inset-right))
+      max(5.5rem, calc(env(safe-area-inset-bottom) + 4.5rem))
+      max(1.25rem, env(safe-area-inset-left)) !important;
+  }
+
+  .intro-mask__media-controls {
+    right: max(0.75rem, env(safe-area-inset-right));
+    bottom: max(0.85rem, env(safe-area-inset-bottom));
+    max-width: calc(100cqw - 1.5rem) !important;
+  }
+
+  .hazy-nav__bar {
+    flex-wrap: wrap;
+    row-gap: 0.15rem;
+    column-gap: 0.75rem;
+    padding: 0.65rem max(1rem, env(safe-area-inset-right)) 0.55rem
+      max(1rem, env(safe-area-inset-left));
+    padding-top: max(0.65rem, env(safe-area-inset-top));
+  }
+
+  .hazy-nav__brand {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 1rem;
+    min-height: 2.5rem;
+  }
+
+  .hazy-nav__menu {
+    order: 3;
+    flex: 1 1 100%;
+    justify-content: flex-start;
+    filter: none !important;
+    opacity: 1 !important;
+  }
+
+  .hazy-nav__list {
+    justify-content: flex-start;
+    gap: 0.15rem 0.85rem;
+    width: 100%;
+  }
+
+  .hazy-nav__link {
+    min-height: 2.5rem;
+    font-size: 0.64rem;
+  }
+}
+
+/* Tablet frame (~768): match public @media (min-width: 768px) but with cqw */
+@container admin-preview (min-width: 768px) and (max-width: 1023px) {
+  .intro-mask__title {
+    left: 2.5rem !important;
+    right: 2.5rem !important;
+    bottom: 28% !important;
+    font-size: clamp(3.75rem, 13cqw, 9rem) !important;
+  }
+
+  .intro-mask__title-region {
+    font-size: clamp(3.75rem, 13cqw, 9rem) !important;
+  }
+
+  .intro-mask__content {
+    padding: 6rem 2.5rem 3.5rem !important;
+  }
+
+  .intro-mask__media-controls {
+    right: 2rem;
+    bottom: 1.35rem;
+    max-width: none;
+  }
+
+  .hazy-nav__menu {
+    filter: none !important;
+    opacity: 1 !important;
+  }
 }
 
 .admin-viewport-switcher {
@@ -1691,6 +1845,8 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 .admin-hero-preview {
   max-height: min(52vh, 28rem);
   background: var(--color-ink);
+  position: relative;
+  overflow: hidden;
 }
 
 .admin-hero-preview .intro-mask {
@@ -1699,6 +1855,53 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 
 .admin-hero-preview .intro-mask__sticky {
   height: min(52vh, 28rem);
+}
+
+/*
+  Mobile/tablet frames: hero sticky ≈ phone/tablet viewport height (not
+  52vh of the wide admin window), so title/controls land like production.
+  Nav + intro stack like the public page (nav in flow, then cover).
+*/
+.admin-preview__stage[data-breakpoint="mobile"] .admin-hero-preview,
+.admin-preview__stage[data-breakpoint="tablet"] .admin-hero-preview {
+  display: flex;
+  flex-direction: column;
+  max-height: none;
+}
+
+.admin-preview__stage[data-breakpoint="mobile"] .admin-hero-preview {
+  height: min(780px, 85dvh);
+}
+
+.admin-preview__stage[data-breakpoint="tablet"] .admin-hero-preview {
+  height: min(1024px, 85dvh);
+}
+
+.admin-preview__stage[data-breakpoint="mobile"] .admin-hero-preview .intro-mask,
+.admin-preview__stage[data-breakpoint="tablet"] .admin-hero-preview .intro-mask {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto !important;
+  max-height: none;
+}
+
+.admin-preview__stage[data-breakpoint="mobile"] .admin-hero-preview .intro-mask__sticky,
+.admin-preview__stage[data-breakpoint="tablet"] .admin-hero-preview .intro-mask__sticky {
+  height: 100%;
+  max-height: none;
+  position: relative;
+  top: auto;
+}
+
+.admin-preview__stage .admin-preview-nav {
+  position: relative;
+  z-index: 5;
+  flex: 0 0 auto;
+}
+
+.admin-preview__stage .admin-preview-nav .hazy-nav {
+  position: relative;
+  top: auto;
 }
 
 /*

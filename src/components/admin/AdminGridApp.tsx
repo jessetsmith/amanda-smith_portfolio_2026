@@ -69,8 +69,10 @@ import {
   moveItemToContentSection,
   type SectionTarget,
 } from "@/lib/grid-section";
+import { HazyNav } from "@/components/HazyNav";
 import { IntroMask } from "@/components/IntroMask";
 import { defaultHero, heroSignature, normalizeHero } from "@/lib/hero";
+import type { NavItem } from "@/types/content";
 import type { HomepageHero } from "@/types/hero";
 import {
   AdminDragOverlayCard,
@@ -156,6 +158,8 @@ interface AdminGridAppProps {
   initialSource?: DataSource;
   initialHero?: HomepageHero;
   initialHeroSource?: DataSource;
+  siteTitle?: string;
+  siteNav?: NavItem[];
 }
 
 const HISTORY_CAP = 40;
@@ -189,6 +193,13 @@ export function AdminGridApp({
   initialSource = "fixture",
   initialHero,
   initialHeroSource = "fixture",
+  siteTitle = "Amanda Smith",
+  siteNav = [
+    { label: "Work", href: "/#grid" },
+    { label: "CV", href: "/cv" },
+    { label: "Research", href: "/#grid" },
+    { label: "Contact", href: "mailto:hello@example.com" },
+  ],
 }: AdminGridAppProps) {
   const router = useRouter();
   const [items, setItems] = useState(() => normalizeGridItems(initialItems));
@@ -1142,6 +1153,9 @@ export function AdminGridApp({
                 }}
               >
                 <div className="admin-hero-preview mb-4 overflow-hidden border border-ink/15">
+                  <div className="admin-preview-nav">
+                    <HazyNav brand={siteTitle} items={siteNav} />
+                  </div>
                   <IntroMask
                     key={`hero-${previewKey}-${hero.titleText}-${hero.videoUrl}-${hero.imageUrl ?? ""}-${hero.watchUrl ?? ""}`}
                     maskText={hero.titleText}
