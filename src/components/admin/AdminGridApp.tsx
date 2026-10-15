@@ -67,6 +67,7 @@ import {
   gridDndId,
   parseGridDndId,
 } from "@/components/admin/AdminGridCanvas";
+import { ChangePasswordModal } from "@/components/admin/ChangePasswordModal";
 
 const LIST_DND_PREFIX = "list:" as const;
 
@@ -191,6 +192,7 @@ export function AdminGridApp({
   const [heroSource, setHeroSource] = useState<DataSource>(initialHeroSource);
   const [previewKey, setPreviewKey] = useState(0);
   const [contentOpen, setContentOpen] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>("blocks");
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [historyTick, setHistoryTick] = useState(0);
@@ -716,19 +718,31 @@ export function AdminGridApp({
           <button
             type="button"
             onClick={() => void resetToSeed()}
-            className="border border-ink/20 px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-ink uppercase"
+            className="cursor-pointer border border-ink/20 px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-ink uppercase"
           >
             Reset seed
           </button>
           <button
             type="button"
+            onClick={() => setPasswordOpen(true)}
+            className="cursor-pointer border border-ink/20 px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-ink uppercase"
+          >
+            Change password
+          </button>
+          <button
+            type="button"
             onClick={() => void logout()}
-            className="bg-ink px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-paper uppercase"
+            className="cursor-pointer bg-ink px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-paper uppercase"
           >
             Log out
           </button>
         </div>
       </header>
+
+      <ChangePasswordModal
+        open={passwordOpen}
+        onClose={() => setPasswordOpen(false)}
+      />
 
       <DndContext
         sensors={sensors}

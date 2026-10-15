@@ -124,9 +124,10 @@ Vercel project env vars are also set (Production / Preview / Development) from l
 1. Seed credentials once (bcrypt hash → Sanity `adminAuth` singleton):
    `npm run sanity:seed-admin` (prints username + password once; not committed)
 2. Open `/admin` → sign in with those credentials
-3. Edit grid / hero → Save publishes to Sanity
-4. Hero images upload to Sanity CDN (required for public stills)
+3. Change password anytime while logged in: **Change password** in the admin header (verifies current hash, writes new bcrypt hash). CLI: `ADMIN_SEED_PASSWORD='…' npm run sanity:seed-admin`
+4. Edit grid / hero → Save publishes to Sanity
+5. Hero images upload to Sanity CDN (required for public stills)
 
-Optional emergency bootstrap: `ADMIN_USER` / `ADMIN_PASSWORD` env — used **only** when the Sanity `adminAuth` document is missing. Prefer unsetting them on Vercel after seed.
+Do not edit plaintext passwords in Studio (`passwordHash` is read-only). Optional emergency bootstrap: `ADMIN_USER` / `ADMIN_PASSWORD` env — used **only** when the Sanity `adminAuth` document is missing. Prefer unsetting them on Vercel after seed.
 
 No Sanity write tokens or plaintext admin passwords in the browser bundle / git.

@@ -3,9 +3,12 @@
  * One-time (or rotate) seed for the adminAuth singleton in Sanity.
  * Stores username + bcrypt hash only — prints plaintext password once to stdout.
  *
- * Usage:
- *   node scripts/seed-admin-auth.mjs
- *   ADMIN_SEED_USER=amanda ADMIN_SEED_PASSWORD='...' node scripts/seed-admin-auth.mjs
+ * Usage (rotate / seed — writes bcrypt hash only, never stores plaintext):
+ *   npm run sanity:seed-admin
+ *   ADMIN_SEED_USER=amanda ADMIN_SEED_PASSWORD='your-new-password' npm run sanity:seed-admin
+ *
+ * Prefer the in-app “Change password” control while logged into /admin when you
+ * know the current password. This CLI path is for rotation without a session.
  *
  * Requires SANITY_API_WRITE_TOKEN (or READ with write grants) + NEXT_PUBLIC_SANITY_*.
  */

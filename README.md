@@ -36,11 +36,13 @@ Open [http://localhost:3456](http://localhost:3456).
 
 1. Seed login once: `npm run sanity:seed-admin` (writes bcrypt hash to Sanity `adminAuth`; prints password once).
 2. Open `/admin` and sign in with those credentials.
-3. Reorder (DnD), edit spans (1–4), fill/copy, add/remove/duplicate.
-4. Live preview updates immediately; saves patch Sanity `homepage.gridItems` (same doc Studio uses). Public `/` refetches after `revalidatePath`.
-5. `.data/` is only a mirror/fallback if Sanity is unavailable.
+3. **Change password** (while logged in): header → Change password → current + new + confirm (bcrypt hash updated in Sanity).
+4. CLI rotate (no session): `ADMIN_SEED_PASSWORD='…' npm run sanity:seed-admin`
+5. Reorder (DnD), edit spans (1–4), fill/copy, add/remove/duplicate.
+6. Live preview updates immediately; saves patch Sanity `homepage.gridItems` (same doc Studio uses). Public `/` refetches after `revalidatePath`.
+7. `.data/` is only a mirror/fallback if Sanity is unavailable.
 
-Optional emergency bootstrap: `ADMIN_USER` / `ADMIN_PASSWORD` in env — used only when the Sanity doc is missing.
+Do **not** put plaintext passwords in Studio — the `passwordHash` field is read-only. Optional emergency bootstrap: `ADMIN_USER` / `ADMIN_PASSWORD` env — used only when the Sanity doc is missing.
 
 ## Sanity
 
