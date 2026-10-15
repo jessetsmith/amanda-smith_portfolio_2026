@@ -68,15 +68,18 @@ Then restart the dev server. Seed fixtures once with `npm run sanity:seed`. Home
 
 See `.env.example`. Do not invent production Sanity credentials.
 
-## CI / deploy (GitHub Actions → GitHub Pages)
+## CI / deploy (GitHub Actions → Vercel)
 
-- **Live:** [https://portfolio.bittersweetwoman.com/](https://portfolio.bittersweetwoman.com/) (`public/CNAME`)
-- **CI:** `.github/workflows/ci.yml` — typecheck + static export on push/PR
-- **Deploy:** `.github/workflows/deploy-pages.yml` — build `out/` and publish to Pages on `main`
+Production is **Vercel** (full Next.js) so **`/admin`** and `/api/*` work.
 
-Public site is a **static export**. `/admin`, `/studio`, and `/api/*` stay **local-only** (excluded from the Pages build). Full steps + secrets: [`.github/DEPLOY.md`](.github/DEPLOY.md).
+- **Site (after DNS):** [https://portfolio.bittersweetwoman.com/](https://portfolio.bittersweetwoman.com/)
+- **Admin (after DNS):** [https://portfolio.bittersweetwoman.com/admin](https://portfolio.bittersweetwoman.com/admin)
+- **Works now:** [https://amanda-smith-portfolio-2026.vercel.app/admin](https://amanda-smith-portfolio-2026.vercel.app/admin)
+- **CI / deploy:** `.github/workflows/ci.yml` + `deploy-vercel.yml`
 
-**Hero stills for production:** set Video poster / Background image in Admin → Hero (uploads to Sanity CDN) or Studio → Homepage hero image fields. Do not rely on `/media/uploads/…` for Pages — those files are gitignored and won’t ship.
+**DNS:** point `portfolio` CNAME at Vercel (see [`.github/DEPLOY.md`](.github/DEPLOY.md)) — it still points at GitHub Pages until Jesse updates it.
+
+**Hero stills:** Admin → Hero uploads go to Sanity CDN (`cdn.sanity.io`).
 
 ## Scripts
 
