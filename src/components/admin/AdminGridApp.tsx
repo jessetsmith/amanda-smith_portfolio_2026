@@ -1030,6 +1030,7 @@ export function AdminGridApp({
                     posterSrc={hero.posterUrl}
                     imageSrc={hero.imageUrl}
                     watchUrl={hero.watchUrl}
+                    enableHandCursor={false}
                   />
                 </div>
                 <SortableContext

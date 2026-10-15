@@ -20,6 +20,11 @@ interface IntroMaskProps {
   imageSrc?: string;
   /** Optional “watch full video” link (new tab). */
   watchUrl?: string;
+  /**
+   * Handprint overlay + `cursor: none` on the cover.
+   * Public homepage only — leave off in admin live preview.
+   */
+  enableHandCursor?: boolean;
 }
 
 declare global {
@@ -104,6 +109,7 @@ export function IntroMask({
   posterSrc,
   imageSrc,
   watchUrl,
+  enableHandCursor = true,
 }: IntroMaskProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
@@ -124,18 +130,22 @@ export function IntroMask({
     null,
   );
 
-  // Warm the handprint asset used by the fixed cursor overlay
+  // Warm the handprint asset used by the fixed cursor overlay (public only)
   useEffect(() => {
+    if (!enableHandCursor) {
+      setHandCursorMounted(false);
+      return;
+    }
     const img = new window.Image();
     img.src = "/cursors/handprint.png";
     setHandCursorMounted(true);
-  }, []);
+  }, [enableHandCursor]);
 
   // Stable handprint: system cursor locked to none; one overlay follows the
   // pointer. Document capture listeners avoid leave/enter flicker across
-  // title/haze/shield/iframe stacking.
+  // title/haze/shield/iframe stacking. Skipped in admin live preview.
   useEffect(() => {
-    if (!handCursorMounted) return;
+    if (!enableHandCursor || !handCursorMounted) return;
     const sticky = stickyRef.current;
     const hand = handCursorRef.current;
     if (!sticky || !hand) return;
@@ -283,7 +293,7 @@ export function IntroMask({
       hand.classList.remove("is-on");
       if (raf) window.cancelAnimationFrame(raf);
     };
-  }, [handCursorMounted]);
+  }, [enableHandCursor, handCursorMounted]);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -373,7 +383,7 @@ export function IntroMask({
 
   return (
     <section ref={sectionRef} className="intro-mask" aria-label="Introduction">
-      {handCursorMounted
+      {enableHandCursor && handCursorMounted
         ? createPortal(
             <div
               ref={handCursorRef}

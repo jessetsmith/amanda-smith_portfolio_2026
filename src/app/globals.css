@@ -1614,6 +1614,17 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   height: min(52vh, 28rem);
 }
 
+/* Admin preview never uses the public handprint / cursor:none lock */
+.admin-hero-preview,
+.admin-hero-preview * {
+  cursor: auto;
+}
+
+.admin-hero-preview a,
+.admin-hero-preview button {
+  cursor: pointer;
+}
+
 .admin-sortable-cell {
   position: relative;
   z-index: 1;
