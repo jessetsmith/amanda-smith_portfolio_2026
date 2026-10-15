@@ -40,6 +40,10 @@ export const homepageQuery = `*[_type == "homepage" && _id == "homepage"][0]{
     imageSrc,
     imageAlt,
     placeholderTone,
+    layouts{
+      tablet{ colStart, colSpan, rowStart, rowSpan, order },
+      mobile{ colStart, colSpan, rowStart, rowSpan, order }
+    },
     "id": coalesce(id, _key),
     projectRef->{
       title,

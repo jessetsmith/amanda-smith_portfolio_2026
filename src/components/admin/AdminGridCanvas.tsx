@@ -39,6 +39,10 @@ interface AdminGridCanvasProps {
   onResizeStart?: () => void;
   onResizeEnd?: () => void;
   onResize: (id: string, patch: Partial<GridResizePatch>) => void;
+  /** Column count for the active edit breakpoint (desktop 4 / tablet 2 / mobile 1). */
+  columns?: number;
+  /** Hint shown under the canvas chrome. */
+  layoutHint?: string;
 }
 
 export function AdminGridCanvas({
@@ -48,6 +52,8 @@ export function AdminGridCanvas({
   onResizeStart,
   onResizeEnd,
   onResize,
+  columns = GRID_COLUMNS,
+  layoutHint,
 }: AdminGridCanvasProps) {
   const sorted = sortGridItems(items);
   const packed = useMemo(() => packGridSectioned(items), [items]);
@@ -85,7 +91,8 @@ export function AdminGridCanvas({
       aria-label="Admin homepage grid canvas"
     >
       <p className="mb-3 font-mono text-[0.65rem] tracking-[0.16em] text-ink/45 uppercase">
-        Click to select · ⋮⋮ grip to reorder · edge handles to resize
+        {layoutHint ??
+          "Click to select · ⋮⋮ grip to reorder · edge handles to resize"}
       </p>
       <div className="grid-canvas">
         <div className="grid-lines" aria-hidden style={{ opacity: 0.45 }} />
@@ -95,7 +102,7 @@ export function AdminGridCanvas({
             const colEnd = item.colStart + item.colSpan - 1;
             const atLeftEdge = item.kind === "titleRow" || item.colStart <= 1;
             const atRightEdge =
-              item.kind === "titleRow" || colEnd >= GRID_COLUMNS;
+              item.kind === "titleRow" || colEnd >= columns;
             let titleId = "__preamble__";
             let sectionHidden = false;
             const idx = items.findIndex((row) => row.id === item.id);
@@ -127,6 +134,7 @@ export function AdminGridCanvas({
                 atTopEdge={atTopEdge}
                 atBottomEdge={atBottomEdge}
                 packedRow={geom?.row ?? item.rowStart ?? 1}
+                columns={columns}
                 onSelect={() => onSelect(item.id)}
                 onResizeStart={onResizeStart}
                 onResizeEnd={onResizeEnd}
@@ -155,6 +163,7 @@ function AdminSortableCell({
   atTopEdge,
   atBottomEdge,
   packedRow,
+  columns,
   onSelect,
   onResizeStart,
   onResizeEnd,
@@ -168,6 +177,7 @@ function AdminSortableCell({
   atTopEdge: boolean;
   atBottomEdge: boolean;
   packedRow: number;
+  columns: number;
   onSelect: () => void;
   onResizeStart?: () => void;
   onResizeEnd?: () => void;
@@ -212,7 +222,7 @@ function AdminSortableCell({
     opacity: isDragging ? 0 : undefined,
   };
 
-  const canResizeCols = item.kind !== "titleRow";
+  const canResizeCols = item.kind !== "titleRow" && columns > 1;
   // Center: all sides. On an outer boundary: omit the crushed side only.
   const showE = canResizeCols && !atRightEdge;
   const showW = canResizeCols && !atLeftEdge;
@@ -246,7 +256,7 @@ function AdminSortableCell({
     const current = itemRef.current;
     const grid = el.closest(".staggered-grid");
     const gridWidth = grid?.clientWidth || el.offsetWidth;
-    const colUnit = Math.max(24, gridWidth / GRID_COLUMNS);
+    const colUnit = Math.max(24, gridWidth / columns);
     const startRowSpan = current.rowSpan ?? 1;
     const rowUnit = Math.max(48, el.offsetHeight / Math.max(1, startRowSpan));
 
@@ -256,6 +266,7 @@ function AdminSortableCell({
       startY: event.clientY,
       colUnit,
       rowUnit,
+      columns,
       colStart: current.colStart,
       colSpan: current.colSpan,
       rowSpan: startRowSpan,
@@ -304,7 +315,7 @@ function AdminSortableCell({
       if (resizeEast) {
         const dx = moveEvent.clientX - session.startX;
         const deltaCols = Math.round(dx / session.colUnit);
-        const maxSpan = GRID_COLUMNS - session.colStart + 1;
+        const maxSpan = session.columns - session.colStart + 1;
         colSpan = clamp(session.colSpan + deltaCols, 1, maxSpan);
         colStart = session.colStart;
         patch.colStart = colStart;

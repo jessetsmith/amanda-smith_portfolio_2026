@@ -4,6 +4,7 @@ import {
   resetGridItems as resetLocalGridItems,
   writeGridItems as writeLocalGridItems,
 } from "@/lib/grid-store";
+import { normalizeItemLayouts } from "@/lib/grid-breakpoints";
 import { normalizeGridItems } from "@/lib/grid-normalize";
 import { sanityFetchOptions } from "@/lib/sanity-fetch";
 import type { GridItem } from "@/types/grid";
@@ -34,6 +35,7 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
     const kind = String(row.kind || "textCell");
     const featured = Boolean(row.featured);
     const rowStartNum = Number(row.rowStart);
+    const layouts = normalizeItemLayouts(row.layouts);
     const base = {
       id: String(row.id || row._key || `sanity-${index + 1}`),
       order: Number(row.order ?? index + 1),
@@ -45,6 +47,7 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
         ? { rowStart: Math.floor(rowStartNum) }
         : {}),
       ...(featured ? { featured: true as const } : {}),
+      ...(layouts ? { layouts } : {}),
     };
 
     const href =

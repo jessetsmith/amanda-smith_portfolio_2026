@@ -544,14 +544,19 @@ a.grid-cell-link:focus-visible .card-open {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  /*
+    Prefer saved mobile overrides (CSS vars from gridPlacementStyle).
+    Fall back to full-width auto-stack when --m-col-start is unset.
+  */
   .grid-cell {
-    grid-column: 1 / -1 !important;
-    grid-row: auto !important;
+    grid-column: var(--m-col-start, 1) / span var(--m-col-span, 1) !important;
+    grid-row: var(--m-row-start, auto) / span var(--m-row-span, 1) !important;
     min-height: clamp(9.5rem, 28vh, 14rem);
   }
 
   .grid-cell.title-row {
     min-height: 3.25rem;
+    grid-column: 1 / -1 !important;
   }
 
   .grid-cell[data-kind="blankCell"] {
@@ -578,14 +583,12 @@ a.grid-cell-link:focus-visible .card-open {
   }
 
   .grid-cell {
-    grid-column: span 1 !important;
-    grid-row: auto !important;
+    grid-column: var(--t-col-start, auto) / span var(--t-col-span, 1) !important;
+    grid-row: var(--t-row-start, auto) / span var(--t-row-span, 1) !important;
   }
 
   .grid-cell.title-row,
-  .grid-cell[data-kind="titleRow"],
-  .grid-cell[data-featured="true"],
-  .grid-cell.content-card--featured {
+  .grid-cell[data-kind="titleRow"] {
     grid-column: 1 / -1 !important;
   }
 
@@ -1598,6 +1601,82 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   width: 100%;
   max-width: 72rem;
   margin-inline: auto;
+}
+
+.admin-preview__stage[data-breakpoint="tablet"],
+.admin-preview__stage[data-breakpoint="mobile"] {
+  border: 1px solid color-mix(in srgb, var(--color-ink) 16%, transparent);
+  background: var(--color-paper);
+  box-shadow: 0 12px 40px color-mix(in srgb, var(--color-ink) 8%, transparent);
+}
+
+/* Force grid columns to match the edit breakpoint (browser media queries
+   still see the full admin window, so preview must opt in explicitly). */
+.admin-preview[data-breakpoint="mobile"] .staggered-grid,
+.admin-preview__stage[data-breakpoint="mobile"] .staggered-grid {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.admin-preview[data-breakpoint="tablet"] .staggered-grid,
+.admin-preview__stage[data-breakpoint="tablet"] .staggered-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.admin-preview[data-breakpoint="mobile"] .grid-lines,
+.admin-preview[data-breakpoint="tablet"] .grid-lines,
+.admin-preview__stage[data-breakpoint="mobile"] .grid-lines,
+.admin-preview__stage[data-breakpoint="tablet"] .grid-lines {
+  display: none;
+}
+
+.admin-viewport-switcher {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid color-mix(in srgb, var(--color-ink) 18%, transparent);
+  background: color-mix(in srgb, var(--color-paper) 88%, var(--color-tan));
+}
+
+.admin-viewport-switcher__btn {
+  appearance: none;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0.55rem 0.85rem;
+  font-family: var(--font-meta);
+  font-size: 0.62rem;
+  font-weight: var(--weight-meta-strong);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-ink) 45%, transparent);
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.admin-viewport-switcher__btn + .admin-viewport-switcher__btn {
+  border-left: 1px solid color-mix(in srgb, var(--color-ink) 14%, transparent);
+}
+
+.admin-viewport-switcher__btn:hover {
+  color: var(--color-ink);
+  background: color-mix(in srgb, var(--color-tan) 22%, transparent);
+}
+
+.admin-viewport-switcher__btn.is-active {
+  color: var(--color-rust);
+  background: color-mix(in srgb, var(--color-tan) 20%, transparent);
+  box-shadow: inset 0 -1.5px 0 var(--color-rust);
+}
+
+.admin-viewport-switcher__btn:focus {
+  outline: none;
+}
+
+.admin-viewport-switcher__btn:focus-visible {
+  color: var(--color-rust);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--color-rust) 45%, transparent),
+    inset 0 -1.5px 0 var(--color-rust);
 }
 
 /* Live hero cover in admin — clip tall IntroMask scroll runway */

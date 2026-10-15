@@ -1,3 +1,4 @@
+import { normalizeItemLayouts } from "@/lib/grid-breakpoints";
 import { finalizeGridLayout } from "@/lib/grid-layout";
 import type {
   CellFill,
@@ -50,6 +51,9 @@ export function normalizeGridItem(item: GridItem, order: number): GridItem {
     typeof rowStartRaw === "number" && rowStartRaw >= 1
       ? Math.floor(rowStartRaw)
       : undefined;
+  const layouts = normalizeItemLayouts(
+    (item as { layouts?: unknown }).layouts,
+  );
   const base = {
     id,
     order,
@@ -58,6 +62,7 @@ export function normalizeGridItem(item: GridItem, order: number): GridItem {
     rowSpan,
     ...(rowStart ? { rowStart } : {}),
     ...(featured ? { featured: true as const } : {}),
+    ...(layouts ? { layouts } : {}),
   };
 
   switch (kind) {

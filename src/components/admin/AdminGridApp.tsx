@@ -34,9 +34,21 @@ import type {
   CellFill,
   GridItem,
   GridItemKind,
+  LayoutBreakpoint,
   TitleRowItem,
 } from "@/types/grid";
-import { GRID_COLUMNS } from "@/types/grid";
+import {
+  BREAKPOINT_COLUMNS,
+  GRID_COLUMNS,
+  LAYOUT_BREAKPOINTS,
+} from "@/types/grid";
+import {
+  BREAKPOINT_LABEL,
+  PREVIEW_FRAME_WIDTH,
+  projectItemsForBreakpoint,
+  reorderBreakpointLayouts,
+  writeBreakpointPlacement,
+} from "@/lib/grid-breakpoints";
 import { duplicateGridItem, normalizeGridItems } from "@/lib/grid-normalize";
 import { reorderGridItems } from "@/lib/grid-reorder";
 import { applyGridResize } from "@/lib/grid-resize";
@@ -194,6 +206,8 @@ export function AdminGridApp({
   const [contentOpen, setContentOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>("blocks");
+  const [editBreakpoint, setEditBreakpoint] =
+    useState<LayoutBreakpoint>("desktop");
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [historyTick, setHistoryTick] = useState(0);
   const [dirtyTick, setDirtyTick] = useState(0);
@@ -224,6 +238,7 @@ export function AdminGridApp({
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   );
 
+  /** Canonical item (desktop placement + shared content + layout overrides). */
   const selected = useMemo(
     () => items.find((item) => item.id === selectedId) ?? null,
     [items, selectedId],
@@ -247,23 +262,41 @@ export function AdminGridApp({
     };
   }, []);
 
+  /** Flat items for the active breakpoint (desktop = canonical; tablet/mobile projected). */
+  const viewItems = useMemo(
+    () => projectItemsForBreakpoint(items, editBreakpoint),
+    [items, editBreakpoint],
+  );
+  const editColumns = BREAKPOINT_COLUMNS[editBreakpoint];
+  const previewFrameWidth = PREVIEW_FRAME_WIDTH[editBreakpoint];
+
   const activeDragItem = useMemo(() => {
     if (!activeDragId) return null;
-    return items.find((item) => item.id === activeDragId) ?? null;
-  }, [activeDragId, items]);
+    return (
+      viewItems.find((item) => item.id === activeDragId) ??
+      items.find((item) => item.id === activeDragId) ??
+      null
+    );
+  }, [activeDragId, viewItems, items]);
 
   /** Sidebar omits vacancy spacers — they clutter the list without aiding edit. */
   const listItems = useMemo(
-    () => items.filter((item) => item.kind !== "blankCell"),
-    [items],
+    () => viewItems.filter((item) => item.kind !== "blankCell"),
+    [viewItems],
   );
   const listSortableIds = useMemo(
     () => listItems.map((item) => listDndId(item.id)),
     [listItems],
   );
   const gridSortableIds = useMemo(
-    () => items.map((item) => gridDndId(item.id)),
-    [items],
+    () => viewItems.map((item) => gridDndId(item.id)),
+    [viewItems],
+  );
+
+  /** Placement shown in sidebar for the active breakpoint. */
+  const selectedView = useMemo(
+    () => viewItems.find((item) => item.id === selectedId) ?? selected,
+    [viewItems, selectedId, selected],
   );
 
   const persist = useCallback(async (next: GridItem[], nextHero: HomepageHero) => {
@@ -489,8 +522,19 @@ export function AdminGridApp({
 
     // Commit new CSS-grid placement before DragOverlay / isDragging tear down
     // so the source never paints one frame at the old slot (snap-back).
+    // Tablet/mobile only write layouts[bp] — desktop fields stay untouched.
     flushSync(() => {
-      updateItems((prev) => reorderGridItems(prev, activeId, overId));
+      updateItems((prev) => {
+        if (editBreakpoint === "desktop") {
+          return reorderGridItems(prev, activeId, overId);
+        }
+        return reorderBreakpointLayouts(
+          prev,
+          editBreakpoint,
+          activeId,
+          overId,
+        );
+      });
     });
     setActiveDragId(null);
   }
@@ -506,9 +550,18 @@ export function AdminGridApp({
     >,
     options?: { recordHistory?: boolean },
   ) {
-    commitItems((prev) => applyGridResize(prev, id, patch), {
-      recordHistory: options?.recordHistory !== false,
-    });
+    commitItems(
+      (prev) => {
+        if (editBreakpoint === "desktop") {
+          return applyGridResize(prev, id, patch);
+        }
+        // Placement-only write into layouts[bp]; skip desktop blank refill.
+        return writeBreakpointPlacement(prev, id, editBreakpoint, patch);
+      },
+      {
+        recordHistory: options?.recordHistory !== false,
+      },
+    );
   }
 
   function onCanvasResizeStart() {
@@ -648,6 +701,18 @@ export function AdminGridApp({
           updateItems((prev) => {
             const current = prev.find((row) => row.id === selected.id);
             if (!current) return prev;
+            // Featured flag is shared content; desktop also widens the lead cell.
+            // Tablet/mobile must not rewrite desktop colSpan — only flip featured.
+            if (editBreakpoint !== "desktop") {
+              return prev.map((row) =>
+                row.id === selected.id
+                  ? ({
+                      ...row,
+                      featured: featured || undefined,
+                    } as GridItem)
+                  : row,
+              );
+            }
             const colStart =
               featured && current.colStart > 3 ? 3 : current.colStart;
             const resized = applyGridResize(prev, selected.id, {
@@ -876,10 +941,12 @@ export function AdminGridApp({
                   aria-labelledby="admin-tab-section"
                   className="h-full min-h-0 overflow-y-auto p-4"
                 >
-                  {selected && selectedHandlers ? (
+                  {selected && selectedView && selectedHandlers ? (
                     <SectionTab
-                      item={selected}
+                      item={selectedView}
                       items={items}
+                      columns={editColumns}
+                      breakpoint={editBreakpoint}
                       onSectionRowsChange={selectedHandlers.onSectionRowsChange}
                       onCompactSection={selectedHandlers.onCompactSection}
                       onSectionHiddenChange={
@@ -922,6 +989,43 @@ export function AdminGridApp({
 
           <section className="admin-shell__preview flex min-h-0 min-w-0 flex-col bg-paper/40">
             <div className="flex shrink-0 flex-col gap-2 border-b border-ink/10 px-4 py-3">
+              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                <div
+                  className="admin-viewport-switcher"
+                  role="group"
+                  aria-label="Edit layout breakpoint"
+                >
+                  {LAYOUT_BREAKPOINTS.map((bp) => {
+                    const active = editBreakpoint === bp;
+                    return (
+                      <button
+                        key={bp}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => setEditBreakpoint(bp)}
+                        className={`admin-viewport-switcher__btn${
+                          active ? " is-active" : ""
+                        }`}
+                        title={
+                          bp === "desktop"
+                            ? "Edit desktop layout (4-col)"
+                            : bp === "tablet"
+                              ? "Edit tablet layout (~768px, 2-col) — does not change desktop"
+                              : "Edit mobile layout (~390px, 1-col) — does not change desktop"
+                        }
+                      >
+                        {BREAKPOINT_LABEL[bp]}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="font-mono text-[0.55rem] tracking-[0.12em] text-ink/45 uppercase">
+                  Editing {BREAKPOINT_LABEL[editBreakpoint]}
+                  {editBreakpoint === "desktop"
+                    ? " · 4-col base"
+                    : ` · ${editColumns}-col override`}
+                </p>
+              </div>
               <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
                 <div className="flex flex-wrap items-center gap-3">
                   <button
@@ -973,8 +1077,13 @@ export function AdminGridApp({
                     onClick={() =>
                       updateItems((prev) => compactAllSections(prev))
                     }
-                    title="Trim blank rows in every section — content defines height"
-                    className="border border-ink/20 px-3 py-2 font-mono text-[0.65rem] tracking-[0.14em] text-ink uppercase"
+                    disabled={editBreakpoint !== "desktop"}
+                    title={
+                      editBreakpoint === "desktop"
+                        ? "Trim blank rows in every section — content defines height"
+                        : "Switch to Desktop to compact section blanks"
+                    }
+                    className="border border-ink/20 px-3 py-2 font-mono text-[0.65rem] tracking-[0.14em] text-ink uppercase disabled:cursor-not-allowed disabled:opacity-35"
                   >
                     Compact all
                   </button>
@@ -1011,12 +1120,23 @@ export function AdminGridApp({
             </div>
             <div
               className="admin-preview min-h-0 flex-1 overflow-auto p-3 sm:p-4"
+              data-breakpoint={editBreakpoint}
               onMouseDown={(event) => {
                 if (event.target === event.currentTarget) setSelectedId(null);
               }}
             >
               <div
                 className="admin-preview__stage origin-top"
+                data-breakpoint={editBreakpoint}
+                style={
+                  previewFrameWidth
+                    ? {
+                        width: "100%",
+                        maxWidth: previewFrameWidth,
+                        marginInline: "auto",
+                      }
+                    : undefined
+                }
                 onMouseDown={(event) => {
                   if (event.target === event.currentTarget) setSelectedId(null);
                 }}
@@ -1038,9 +1158,17 @@ export function AdminGridApp({
                   strategy={rectSortingStrategy}
                 >
                   <AdminGridCanvas
-                    key={previewKey}
-                    items={items}
+                    key={`${previewKey}-${editBreakpoint}`}
+                    items={viewItems}
                     selectedId={selectedId}
+                    columns={editColumns}
+                    layoutHint={
+                      editBreakpoint === "desktop"
+                        ? "Click to select · ⋮⋮ grip to reorder · edge handles to resize · Desktop layout"
+                        : editBreakpoint === "tablet"
+                          ? "Editing Tablet layout only · desktop placement unchanged · Save stores tablet overrides"
+                          : "Editing Mobile layout only · desktop placement unchanged · Save stores mobile overrides"
+                    }
                     onSelect={setSelectedId}
                     onResizeStart={onCanvasResizeStart}
                     onResizeEnd={onCanvasResizeEnd}
@@ -1288,6 +1416,8 @@ function HeroTab({
 function SectionTab({
   item,
   items,
+  columns = GRID_COLUMNS,
+  breakpoint = "desktop",
   onSectionRowsChange,
   onCompactSection,
   onSectionHiddenChange,
@@ -1298,6 +1428,8 @@ function SectionTab({
 }: {
   item: GridItem;
   items: GridItem[];
+  columns?: number;
+  breakpoint?: LayoutBreakpoint;
   onSectionRowsChange: (rows: number) => void;
   onCompactSection: () => void;
   onSectionHiddenChange: (hidden: boolean) => void;
@@ -1319,6 +1451,7 @@ function SectionTab({
   const isHidden =
     head?.kind === "titleRow" ? Boolean(head.hidden) : false;
   const canHide = head?.kind === "titleRow";
+  const desktopOnlySection = breakpoint !== "desktop";
 
   return (
     <div className="space-y-5">
@@ -1326,7 +1459,15 @@ function SectionTab({
         <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
           {sectionLabel}
           {isHidden ? " · Hidden" : ""}
+          {` · ${BREAKPOINT_LABEL[breakpoint]}`}
         </p>
+        {desktopOnlySection ? (
+          <p className="text-xs text-ink/50">
+            Placement edits apply to {BREAKPOINT_LABEL[breakpoint]} only.
+            Desktop layout is unchanged. Section size / compact stay desktop
+            controls — switch to Desktop to edit them.
+          </p>
+        ) : null}
         {canHide ? (
           <label className="flex cursor-pointer items-start justify-between gap-3 border border-ink/12 px-3 py-2.5">
             <span className="min-w-0">
@@ -1351,7 +1492,7 @@ function SectionTab({
             Add a title row to hide this band from the public site.
           </p>
         )}
-        {band ? (
+        {desktopOnlySection ? null : band ? (
           <div className="space-y-2">
             <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
               Section size · {band.sectionRows} rows (content{" "}
@@ -1374,19 +1515,23 @@ function SectionTab({
             No section metrics for this block.
           </p>
         )}
-        <button
-          type="button"
-          onClick={onCompactSection}
-          className="border border-ink/20 px-2 py-1.5 font-mono text-[0.6rem] tracking-[0.12em] uppercase"
-          title="Trim trailing blank rows in this section"
-        >
-          Compact section
-        </button>
+        {desktopOnlySection ? null : (
+          <button
+            type="button"
+            onClick={onCompactSection}
+            className="border border-ink/20 px-2 py-1.5 font-mono text-[0.6rem] tracking-[0.12em] uppercase"
+            title="Trim trailing blank rows in this section"
+          >
+            Compact section
+          </button>
+        )}
       </div>
 
       <div className="border-t border-ink/12 pt-4">
         <PlacementTab
           item={item}
+          columns={columns}
+          breakpoint={breakpoint}
           onResize={onResize}
           onFeaturedChange={onFeaturedChange}
           onDuplicate={onDuplicate}
@@ -1399,12 +1544,16 @@ function SectionTab({
 
 function PlacementTab({
   item,
+  columns = GRID_COLUMNS,
+  breakpoint = "desktop",
   onResize,
   onFeaturedChange,
   onDuplicate,
   onRemove,
 }: {
   item: GridItem;
+  columns?: number;
+  breakpoint?: LayoutBreakpoint;
   onResize: (
     patch: Partial<
       Pick<GridItem, "colStart" | "colSpan" | "rowSpan" | "rowStart">
@@ -1414,12 +1563,12 @@ function PlacementTab({
   onDuplicate: () => void;
   onRemove: () => void;
 }) {
-  const maxSpan = GRID_COLUMNS - item.colStart + 1;
+  const maxSpan = columns - item.colStart + 1;
 
   return (
     <div className="space-y-3">
       <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
-        Placement · {item.kind}
+        Placement · {BREAKPOINT_LABEL[breakpoint]} · {item.kind}
       </p>
 
       <div className="grid grid-cols-3 gap-2">
@@ -1427,12 +1576,12 @@ function PlacementTab({
           label="colStart"
           value={item.colStart}
           min={1}
-          max={GRID_COLUMNS}
+          max={columns}
           onChange={(colStart) => {
-            const colSpan = Math.min(item.colSpan, GRID_COLUMNS - colStart + 1);
+            const colSpan = Math.min(item.colSpan, columns - colStart + 1);
             onResize({ colStart, colSpan });
           }}
-          disabled={item.kind === "titleRow"}
+          disabled={item.kind === "titleRow" || columns <= 1}
         />
         <NumberField
           label="colSpan"
@@ -1440,7 +1589,7 @@ function PlacementTab({
           min={1}
           max={maxSpan}
           onChange={(colSpan) => onResize({ colSpan })}
-          disabled={item.kind === "titleRow"}
+          disabled={item.kind === "titleRow" || columns <= 1}
         />
         <NumberField
           label="rowSpan"

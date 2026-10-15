@@ -1,5 +1,6 @@
 import type { CellFill, GridItem } from "@/types/grid";
 import { GRID_COLUMNS } from "@/types/grid";
+import { breakpointPlacementVars } from "@/lib/grid-breakpoints";
 import { finalizeGridLayout } from "@/lib/grid-layout";
 import type { CSSProperties } from "react";
 
@@ -41,9 +42,10 @@ export function gridPlacementStyle(item: GridItem): CSSProperties {
 
   return {
     gridColumn: item.kind === "titleRow" ? "1 / -1" : `${start} / span ${span}`,
-    // Explicit rowStart locks section bands; mobile CSS forces auto stack.
+    // Explicit rowStart locks section bands; tablet/mobile use CSS vars / overrides.
     gridRow: rowStart ? `${rowStart} / span ${rowSpan}` : `span ${rowSpan}`,
-  };
+    ...breakpointPlacementVars(item),
+  } as CSSProperties;
 }
 
 export function sortGridItems(items: GridItem[]): GridItem[] {

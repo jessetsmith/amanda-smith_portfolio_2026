@@ -13,6 +13,40 @@ export type GridItemKind =
 /** Homepage grid is max 4 columns. Spans are 1–4. */
 export const GRID_COLUMNS = 4 as const;
 
+/** Editable layout breakpoints (desktop is the base placement on the item). */
+export type LayoutBreakpoint = "desktop" | "tablet" | "mobile";
+
+export const LAYOUT_BREAKPOINTS: LayoutBreakpoint[] = [
+  "desktop",
+  "tablet",
+  "mobile",
+];
+
+/** Column count used when editing / packing each breakpoint. */
+export const BREAKPOINT_COLUMNS: Record<LayoutBreakpoint, number> = {
+  desktop: GRID_COLUMNS,
+  tablet: 2,
+  mobile: 1,
+};
+
+/**
+ * Per-breakpoint placement override. Desktop uses the top-level col/row fields;
+ * tablet/mobile store independent overrides here so edits never rewrite desktop.
+ */
+export interface LayoutPlacement {
+  colStart: number;
+  colSpan: number;
+  rowStart?: number;
+  rowSpan?: number;
+  /** Sort key within this breakpoint (falls back to item.order). */
+  order?: number;
+}
+
+export interface ItemLayouts {
+  tablet?: LayoutPlacement;
+  mobile?: LayoutPlacement;
+}
+
 export interface GridItemBase {
   id: string;
   order: number;
@@ -33,6 +67,8 @@ export interface GridItemBase {
    * immediately after each titleRow at colSpan 2 (50% width); standards use 1.
    */
   featured?: boolean;
+  /** Independent tablet/mobile placement — omitted until customized. */
+  layouts?: ItemLayouts;
 }
 
 /**

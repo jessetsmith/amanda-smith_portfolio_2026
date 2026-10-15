@@ -138,6 +138,39 @@ export const gridItem = defineType({
       initialValue: false,
     }),
     defineField({
+      name: "layouts",
+      type: "object",
+      title: "Breakpoint layouts",
+      description:
+        "Independent tablet/mobile placement overrides. Desktop uses colStart/colSpan/row* above.",
+      fields: [
+        defineField({
+          name: "tablet",
+          type: "object",
+          title: "Tablet (~768)",
+          fields: [
+            defineField({ name: "colStart", type: "number" }),
+            defineField({ name: "colSpan", type: "number" }),
+            defineField({ name: "rowStart", type: "number" }),
+            defineField({ name: "rowSpan", type: "number" }),
+            defineField({ name: "order", type: "number" }),
+          ],
+        }),
+        defineField({
+          name: "mobile",
+          type: "object",
+          title: "Mobile (~390)",
+          fields: [
+            defineField({ name: "colStart", type: "number" }),
+            defineField({ name: "colSpan", type: "number" }),
+            defineField({ name: "rowStart", type: "number" }),
+            defineField({ name: "rowSpan", type: "number" }),
+            defineField({ name: "order", type: "number" }),
+          ],
+        }),
+      ],
+    }),
+    defineField({
       name: "fill",
       type: "string",
       options: {
