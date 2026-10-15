@@ -186,9 +186,14 @@ export function IntroMask({
   const [handCursorMounted, setHandCursorMounted] = useState(false);
   /** Public-only session stamps — cleared on refresh (no persistence). */
   const [handprints, setHandprints] = useState<HeroHandprint[]>([]);
-  /** Show tip after first hover; hide permanently after first stamp (this session). */
+  /**
+   * Tip: mount → fade in on pointer-inside; fade out on first stamp, then unmount.
+   * Session-only (refresh can show again).
+   */
+  const [stampHintMounted, setStampHintMounted] = useState(false);
   const [stampHintVisible, setStampHintVisible] = useState(false);
   const [stampHintDismissed, setStampHintDismissed] = useState(false);
+  const stampHintFadeRef = useRef<number | null>(null);
   const lastStampAtRef = useRef(0);
   const soundApiRef = useRef<{ setMuted: (muted: boolean) => void } | null>(
     null,
@@ -452,8 +457,89 @@ export function IntroMask({
 
   const revealStampHint = useCallback(() => {
     if (!enableHandCursor || stampHintDismissed) return;
-    setStampHintVisible(true);
+    if (stampHintFadeRef.current) {
+      window.clearTimeout(stampHintFadeRef.current);
+      stampHintFadeRef.current = null;
+    }
+    setStampHintMounted(true);
+    // Next frame so opacity transition runs from 0 → 1
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setStampHintVisible(true));
+    });
   }, [enableHandCursor, stampHintDismissed]);
+
+  const dismissStampHint = useCallback(() => {
+    if (stampHintDismissed) return;
+    setStampHintDismissed(true);
+    setStampHintVisible(false);
+    if (stampHintFadeRef.current) {
+      window.clearTimeout(stampHintFadeRef.current);
+    }
+    stampHintFadeRef.current = window.setTimeout(() => {
+      setStampHintMounted(false);
+      stampHintFadeRef.current = null;
+    }, 600);
+  }, [stampHintDismissed]);
+
+  // If the pointer is already over the hero on load (or moves inside), show tip.
+  useEffect(() => {
+    if (!enableHandCursor || stampHintDismissed) return;
+    const sticky = stickyRef.current;
+    if (!sticky) return;
+
+    const pointerInsideSticky = (clientX?: number, clientY?: number) => {
+      try {
+        if (sticky.matches(":hover")) return true;
+      } catch {
+        /* :hover may throw in odd environments */
+      }
+      if (
+        typeof clientX === "number" &&
+        typeof clientY === "number" &&
+        Number.isFinite(clientX) &&
+        Number.isFinite(clientY)
+      ) {
+        const hit = document.elementFromPoint(clientX, clientY);
+        if (hit && sticky.contains(hit)) return true;
+      }
+      return false;
+    };
+
+    const maybeReveal = (clientX?: number, clientY?: number) => {
+      if (pointerInsideSticky(clientX, clientY)) revealStampHint();
+    };
+
+    // After paint — catches mouse already resting on the cover
+    const raf = requestAnimationFrame(() => maybeReveal());
+
+    const onPointerMove = (event: Event) => {
+      const e = event as globalThis.PointerEvent;
+      maybeReveal(e.clientX, e.clientY);
+    };
+
+    sticky.addEventListener("pointerenter", onPointerMove, { passive: true });
+    sticky.addEventListener("pointermove", onPointerMove, { passive: true });
+    // First document move covers the “already over hero” case when :hover is flaky
+    document.addEventListener("pointermove", onPointerMove, {
+      passive: true,
+      capture: true,
+    });
+
+    return () => {
+      cancelAnimationFrame(raf);
+      sticky.removeEventListener("pointerenter", onPointerMove);
+      sticky.removeEventListener("pointermove", onPointerMove);
+      document.removeEventListener("pointermove", onPointerMove, true);
+    };
+  }, [enableHandCursor, stampHintDismissed, revealStampHint]);
+
+  useEffect(() => {
+    return () => {
+      if (stampHintFadeRef.current) {
+        window.clearTimeout(stampHintFadeRef.current);
+      }
+    };
+  }, []);
 
   const stampHandprint = useCallback(
     (event: PointerEvent<HTMLElement>) => {
@@ -478,15 +564,14 @@ export function IntroMask({
       if (rect.width < 1 || rect.height < 1) return;
       const xPct = ((event.clientX - rect.left) / rect.width) * 100;
       const yPct = ((event.clientY - rect.top) / rect.height) * 100;
-      setStampHintDismissed(true);
-      setStampHintVisible(false);
+      dismissStampHint();
       setHandprints((prev) => {
         const next = [...prev, randomHandprint(xPct, yPct)];
         // Soft cap so a long session doesn’t pile infinitely
         return next.length > 36 ? next.slice(next.length - 36) : next;
       });
     },
-    [enableHandCursor],
+    [enableHandCursor, dismissStampHint],
   );
 
   return (
@@ -504,11 +589,16 @@ export function IntroMask({
       <div
         ref={stickyRef}
         className="intro-mask__sticky"
-        onPointerEnter={enableHandCursor ? revealStampHint : undefined}
         onPointerUp={enableHandCursor ? stampHandprint : undefined}
       >
-        {enableHandCursor && stampHintVisible && !stampHintDismissed ? (
-          <p className="intro-mask__stamp-hint" role="status">
+        {enableHandCursor && stampHintMounted ? (
+          <p
+            className={`intro-mask__stamp-hint${
+              stampHintVisible ? " is-visible" : ""
+            }`}
+            role="status"
+            aria-hidden={stampHintDismissed || !stampHintVisible}
+          >
             {stampHintText}
           </p>
         ) : null}
