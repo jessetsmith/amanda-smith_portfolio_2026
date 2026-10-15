@@ -26,11 +26,21 @@ export const structure: StructureResolver = (S) =>
         .title("CV")
         .id("cv")
         .child(S.document().schemaType("cv").documentId("cv")),
+      S.listItem()
+        .title("Admin auth")
+        .id("adminAuth")
+        .child(
+          S.document().schemaType("adminAuth").documentId("adminAuth"),
+        ),
       S.divider(),
       ...S.documentTypeListItems().filter(
         (item) =>
-          !["homepage", "homepageHero", "siteSettings", "cv"].includes(
-            item.getId() ?? "",
-          ),
+          ![
+            "homepage",
+            "homepageHero",
+            "siteSettings",
+            "cv",
+            "adminAuth",
+          ].includes(item.getId() ?? ""),
       ),
     ]);

@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-10-15T18:16:16.927Z",
+  "createdAt": "2026-10-15T18:22:58.494Z",
   "studioVersion": "6.19.0",
   "version": 3,
   "workspaces": [
@@ -13,7 +13,7 @@
       },
       "name": "portfolio2026",
       "projectId": "00c2spwm",
-      "schema": "2ec662b3.create-schema.json",
+      "schema": "d12dd3c3.create-schema.json",
       "title": "Amanda Smith — Portfolio 2026",
       "tools": "a1fd46b5.create-tools.json"
     }

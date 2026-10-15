@@ -1,14 +1,13 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [user, setUser] = useState("admin");
-  const [password, setPassword] = useState("admin");
+  const [user, setUser] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -49,9 +48,7 @@ function LoginForm() {
           Sign in
         </h1>
         <p className="mt-2 text-sm text-ink/60">
-          Placeholder auth for local grid editing. Default:{" "}
-          <code className="font-mono text-ink">admin</code> /{" "}
-          <code className="font-mono text-ink">admin</code>
+          Credentials are stored as a bcrypt hash in Sanity (server-only).
         </p>
 
         <label className="mt-8 block text-sm text-ink">
@@ -86,7 +83,7 @@ function LoginForm() {
         <button
           type="submit"
           disabled={pending}
-          className="mt-6 w-full bg-ink px-4 py-2.5 font-mono text-xs tracking-[0.16em] text-paper uppercase disabled:opacity-50"
+          className="mt-6 w-full cursor-pointer bg-ink px-4 py-2.5 font-mono text-xs tracking-[0.16em] text-paper uppercase disabled:opacity-50"
         >
           {pending ? "Signing in…" : "Sign in"}
         </button>

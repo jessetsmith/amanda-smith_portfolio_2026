@@ -1542,5 +1542,59 @@
     "name": "siteSettings",
     "type": "document",
     "title": "Site settings"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              },
+              {
+                "flag": "min",
+                "constraint": 1
+              }
+            ]
+          }
+        ],
+        "name": "username",
+        "type": "string"
+      },
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              },
+              {
+                "flag": "min",
+                "constraint": 20
+              }
+            ]
+          }
+        ],
+        "description": "bcrypt hash only — never store a plaintext password. Rotate with `npm run sanity:seed-admin`.",
+        "readOnly": true,
+        "name": "passwordHash",
+        "type": "string",
+        "title": "Password hash (bcrypt)"
+      },
+      {
+        "readOnly": true,
+        "name": "updatedAtNote",
+        "type": "string",
+        "title": "Last rotated (note)"
+      }
+    ],
+    "name": "adminAuth",
+    "type": "document",
+    "title": "Admin auth"
   }
 ]

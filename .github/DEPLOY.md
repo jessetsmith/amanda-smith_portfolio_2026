@@ -108,7 +108,7 @@ Vercel project env vars are also set (Production / Preview / Development) from l
 | `NEXT_PUBLIC_SANITY_API_VERSION` | e.g. `2025-01-01` |
 | `SANITY_API_READ_TOKEN` | Server reads |
 | `SANITY_API_WRITE_TOKEN` | Admin Save / uploads |
-| `ADMIN_USER` / `ADMIN_PASSWORD` | `/admin` login |
+| `ADMIN_USER` / `ADMIN_PASSWORD` | Optional emergency bootstrap only (prefer Sanity `adminAuth`) |
 
 ## Workflows
 
@@ -121,8 +121,12 @@ Vercel project env vars are also set (Production / Preview / Development) from l
 
 ## Admin on production
 
-1. Open `/admin` → login (`ADMIN_USER` / `ADMIN_PASSWORD` from Vercel env)
-2. Edit grid / hero → Save publishes to Sanity
-3. Hero images upload to Sanity CDN (required for public stills)
+1. Seed credentials once (bcrypt hash → Sanity `adminAuth` singleton):
+   `npm run sanity:seed-admin` (prints username + password once; not committed)
+2. Open `/admin` → sign in with those credentials
+3. Edit grid / hero → Save publishes to Sanity
+4. Hero images upload to Sanity CDN (required for public stills)
 
-No Sanity write tokens in the browser bundle.
+Optional emergency bootstrap: `ADMIN_USER` / `ADMIN_PASSWORD` env — used **only** when the Sanity `adminAuth` document is missing. Prefer unsetting them on Vercel after seed.
+
+No Sanity write tokens or plaintext admin passwords in the browser bundle / git.

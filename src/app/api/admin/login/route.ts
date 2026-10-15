@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   const user = body.user ?? "";
   const password = body.password ?? "";
 
-  if (!verifyCredentials(user, password)) {
+  if (!(await verifyCredentials(user, password))) {
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }
 
@@ -27,6 +27,7 @@ export async function POST(request: Request) {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
+    secure: process.env.NODE_ENV === "production",
     maxAge: 60 * 60 * 24 * 7,
   });
   return response;

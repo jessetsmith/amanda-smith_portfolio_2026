@@ -10,6 +10,7 @@ import { cv } from "./cv";
 import { homepage } from "./homepage";
 import { homepageHero } from "./homepageHero";
 import { siteSettings } from "./siteSettings";
+import { adminAuth } from "./adminAuth";
 
 export const schemaTypes = [
   definitionMark,
@@ -22,4 +23,5 @@ export const schemaTypes = [
   homepage,
   homepageHero,
   siteSettings,
+  adminAuth,
 ];

@@ -23,8 +23,6 @@ jobs:
       NEXT_PUBLIC_SANITY_API_VERSION: ${{ vars.NEXT_PUBLIC_SANITY_API_VERSION }}
       SANITY_API_READ_TOKEN: ${{ secrets.SANITY_API_READ_TOKEN }}
       SANITY_API_WRITE_TOKEN: ${{ secrets.SANITY_API_WRITE_TOKEN }}
-      ADMIN_USER: admin
-      ADMIN_PASSWORD: admin
 
     steps:
       - name: Checkout
