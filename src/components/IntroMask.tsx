@@ -332,14 +332,15 @@ export function IntroMask({
     setSpotlight(
       event.clientX - rect.left,
       event.clientY - rect.top,
-      "7.5rem",
+      // Larger radius so the soft feather still leaves a clear core
+      "10.5rem",
     );
   };
 
   const onFocus = () => {
     const haze = hazeRef.current;
     if (!haze) return;
-    setSpotlight(haze.clientWidth / 2, haze.clientHeight / 2, "7.5rem");
+    setSpotlight(haze.clientWidth / 2, haze.clientHeight / 2, "10.5rem");
   };
 
   const toggleSound = () => {
