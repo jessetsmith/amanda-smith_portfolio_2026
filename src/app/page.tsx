@@ -30,7 +30,7 @@ export default async function Home() {
           imageSrc={home.imageSrc}
           watchUrl={home.watchUrl}
         />
-        <div id="grid" className="relative z-10 bg-paper">
+        <div id="grid" className="relative z-10 overflow-x-clip bg-paper">
           <div className="mx-auto max-w-[90rem] px-4 pt-10 pb-2 sm:px-6 md:px-8">
             <DefinitionText
               className="max-w-2xl text-base leading-relaxed text-ink/70 sm:text-lg"

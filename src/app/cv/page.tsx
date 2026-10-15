@@ -30,11 +30,15 @@ export default async function CvPage() {
             {cv.name}
           </h1>
           <p className="mt-2 text-lg text-ink/70">{cv.headline}</p>
-          <p className="mt-4 text-sm text-ink/60">
+          <div className="cv-page__meta">
             {[cv.location, cv.email, cv.phone, cv.relocationNote]
               .filter(Boolean)
-              .join(" · ")}
-          </p>
+              .map((part) => (
+                <span key={part} className="cv-page__meta-item">
+                  {part}
+                </span>
+              ))}
+          </div>
           {cv.summary ? (
             <p className="mt-5 max-w-2xl text-base leading-relaxed text-ink/75">
               {cv.summary}

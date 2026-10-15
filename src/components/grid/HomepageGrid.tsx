@@ -46,7 +46,7 @@ export function HomepageGrid({ items }: HomepageGridProps) {
   return (
     <section
       ref={rootRef}
-      className="homepage-grid mx-auto w-full max-w-[90rem] px-4 pb-24 sm:px-6 md:px-8"
+      className="homepage-grid mx-auto w-full max-w-[90rem] px-4 pb-[max(6rem,calc(env(safe-area-inset-bottom)+4rem))] sm:px-6 md:px-8"
       aria-label="Homepage grid"
     >
       <div className="grid-canvas">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import definitions from "@/data/definitions.json";
 
 interface DefinitionEntry {
@@ -42,18 +42,51 @@ function DefinitionPhrase({
   definition: string;
 }) {
   const [open, setOpen] = useState(false);
+  const tipRef = useRef<HTMLSpanElement>(null);
+
+  const keepTipInView = () => {
+    const tip = tipRef.current;
+    if (!tip) return;
+    tip.style.transform = "translateY(0)";
+    // Measure after open class applies, then clamp horizontally
+    requestAnimationFrame(() => {
+      const rect = tip.getBoundingClientRect();
+      const pad = 8;
+      let shift = 0;
+      if (rect.right > window.innerWidth - pad) {
+        shift = window.innerWidth - pad - rect.right;
+      }
+      if (rect.left + shift < pad) {
+        shift = pad - rect.left;
+      }
+      tip.style.transform =
+        shift !== 0 ? `translateY(0) translateX(${shift}px)` : "translateY(0)";
+    });
+  };
+
+  const show = () => {
+    setOpen(true);
+    keepTipInView();
+  };
+
+  const hide = () => {
+    setOpen(false);
+    tipRef.current?.style.removeProperty("transform");
+  };
 
   return (
     <span
       className="definition-phrase"
       tabIndex={0}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-      onFocus={() => setOpen(true)}
-      onBlur={() => setOpen(false)}
+      onMouseEnter={show}
+      onMouseLeave={hide}
+      onFocus={show}
+      onBlur={hide}
+      onClick={() => (open ? hide() : show())}
     >
       <span className="definition-phrase__text">{phrase}</span>
       <span
+        ref={tipRef}
         className={`definition-phrase__tip ${open ? "is-open" : ""}`}
         role="tooltip"
       >

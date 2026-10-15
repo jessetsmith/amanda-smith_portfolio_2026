@@ -313,6 +313,10 @@ export function IntroMask({
     soundApiRef.current?.setMuted(true);
   }, [media.kind, media.videoUrl, media.youtubeId]);
 
+  const isCoarsePointer = () =>
+    typeof window !== "undefined" &&
+    window.matchMedia("(hover: none), (pointer: coarse)").matches;
+
   const setSpotlight = (xPx: number, yPx: number, spot: string) => {
     const haze = hazeRef.current;
     if (!haze) return;
@@ -322,10 +326,28 @@ export function IntroMask({
   };
 
   const clearSpotlight = () => {
+    if (isCoarsePointer()) return;
     setSpotlight(0, 0, "0px");
   };
 
+  // Touch: soft static clear-spot (no cursor spotlight / hand cursor)
+  useEffect(() => {
+    const haze = hazeRef.current;
+    if (!haze) return;
+    const mq = window.matchMedia("(hover: none), (pointer: coarse)");
+    const apply = () => {
+      if (!mq.matches) return;
+      haze.style.setProperty("--haze-x", "50%");
+      haze.style.setProperty("--haze-y", "42%");
+      haze.style.setProperty("--haze-spot", "8rem");
+    };
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
   const onPointerMove = (event: PointerEvent<HTMLElement>) => {
+    if (isCoarsePointer()) return;
     const haze = hazeRef.current;
     if (!haze) return;
     const rect = haze.getBoundingClientRect();
