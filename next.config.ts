@@ -21,6 +21,10 @@ const nextConfig: NextConfig = {
             validationLevel: "manual-warning",
           },
         },
+        // Keep Create/Manage schema JSON available to the /studio/static route handler.
+        outputFileTracingIncludes: {
+          "/studio/static/[...path]": ["./public/studio/static/**/*"],
+        },
       }),
   transpilePackages: ["next-sanity", "sanity"],
   turbopack: {

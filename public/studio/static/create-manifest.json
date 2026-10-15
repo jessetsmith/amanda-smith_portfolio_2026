@@ -1,0 +1,21 @@
+{
+  "createdAt": "2026-10-15T18:16:16.927Z",
+  "studioVersion": "6.19.0",
+  "version": 3,
+  "workspaces": [
+    {
+      "basePath": "/studio",
+      "dataset": "production",
+      "icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 32 32\"><rect width=\"32\" height=\"32\" rx=\"2\" fill=\"#556bfc\"></rect><text x=\"50%\" y=\"50%\" text-anchor=\"middle\" alignment-baseline=\"middle\" fill=\"hsla(232, 97%, 26%, 1)\" style=\"font-family:Inter, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, &quot;Helvetica Neue&quot;, &quot;Liberation Sans&quot;, Helvetica, Arial, system-ui, sans-serif;font-weight:500;font-size:13px;transform:translateY(1px)\">AS</text></svg>",
+      "mediaLibrary": {
+        "enabled": false,
+        "__internal": {}
+      },
+      "name": "portfolio2026",
+      "projectId": "00c2spwm",
+      "schema": "2ec662b3.create-schema.json",
+      "title": "Amanda Smith — Portfolio 2026",
+      "tools": "a1fd46b5.create-tools.json"
+    }
+  ]
+}

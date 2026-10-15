@@ -55,7 +55,8 @@ next-env.d.ts
 # sanity
 .sanity/
 /dist/
-/public/studio/static/
+# TypeGen extract (local); Create/Manage manifests in public/studio/static are committed
+/schema.json
 
 # temporary stash while building GitHub Pages static export
 .pages-export-stash/

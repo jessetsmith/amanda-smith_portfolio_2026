@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "npm run sanity:manifest-extract",
     "build": "next build",
     "build:pages": "node scripts/pages-static-build.mjs",
     "start": "next start",
@@ -11,7 +12,10 @@
     "typecheck": "tsc --noEmit",
     "sanity:seed": "node scripts/seed-sanity.mjs",
     "sanity:migrate-hero-poster": "node scripts/migrate-hero-poster-to-sanity.mjs",
+    "sanity:schema-extract": "sanity schemas extract --path ./schema.json --force",
+    "sanity:schema-validate": "sanity schemas validate",
     "sanity:schema-deploy": "sanity schemas deploy",
+    "sanity:manifest-extract": "sanity manifest extract --path public/studio/static",
     "sanity:studio-register": "sanity deploy --external --url https://portfolio.bittersweetwoman.com/studio --schema-required --yes"
   },
   "dependencies": {

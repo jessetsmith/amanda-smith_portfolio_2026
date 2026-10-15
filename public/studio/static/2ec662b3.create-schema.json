@@ -1,0 +1,1546 @@
+[
+  {
+    "fields": [
+      {
+        "rows": 3,
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "definition",
+        "type": "text",
+        "title": "Definition text"
+      }
+    ],
+    "name": "definition",
+    "type": "object"
+  },
+  {
+    "of": [
+      {
+        "lists": [
+          {
+            "value": "bullet",
+            "title": "Bulleted list"
+          },
+          {
+            "value": "number",
+            "title": "Numbered list"
+          }
+        ],
+        "marks": {
+          "annotations": [
+            {
+              "fields": [
+                {
+                  "rows": 3,
+                  "name": "definition",
+                  "type": "text"
+                }
+              ],
+              "name": "definition",
+              "type": "object"
+            },
+            {
+              "fields": [
+                {
+                  "validation": [
+                    {
+                      "level": "error",
+                      "rules": [
+                        {
+                          "flag": "uri",
+                          "constraint": {
+                            "options": {
+                              "scheme": [
+                                "/^http$/",
+                                "/^https$/"
+                              ],
+                              "allowRelative": false,
+                              "relativeOnly": false,
+                              "allowCredentials": false
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "name": "href",
+                  "type": "url",
+                  "title": "URL"
+                }
+              ],
+              "name": "link",
+              "type": "object"
+            }
+          ],
+          "decorators": [
+            {
+              "value": "strong",
+              "title": "Strong"
+            },
+            {
+              "value": "em",
+              "title": "Italic"
+            },
+            {
+              "value": "code",
+              "title": "Code"
+            },
+            {
+              "value": "underline",
+              "title": "Underline"
+            },
+            {
+              "value": "strike-through",
+              "title": "Strike"
+            }
+          ]
+        },
+        "of": [],
+        "styles": [
+          {
+            "value": "normal",
+            "title": "Normal"
+          },
+          {
+            "value": "h1",
+            "title": "Heading 1"
+          },
+          {
+            "value": "h2",
+            "title": "Heading 2"
+          },
+          {
+            "value": "h3",
+            "title": "Heading 3"
+          },
+          {
+            "value": "h4",
+            "title": "Heading 4"
+          },
+          {
+            "value": "h5",
+            "title": "Heading 5"
+          },
+          {
+            "value": "h6",
+            "title": "Heading 6"
+          },
+          {
+            "value": "blockquote",
+            "title": "Quote"
+          }
+        ],
+        "type": "block"
+      }
+    ],
+    "name": "portableBody",
+    "type": "array",
+    "title": "Body"
+  },
+  {
+    "fields": [
+      {
+        "options": {
+          "list": [
+            {
+              "title": "Title row",
+              "value": "titleRow"
+            },
+            {
+              "title": "Color cell",
+              "value": "colorCell"
+            },
+            {
+              "title": "Media cell",
+              "value": "mediaCell"
+            },
+            {
+              "title": "Text cell",
+              "value": "textCell"
+            },
+            {
+              "title": "Project cell",
+              "value": "projectCell"
+            },
+            {
+              "title": "Blank spacer",
+              "value": "blankCell"
+            }
+          ]
+        },
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "valid",
+                "constraint": [
+                  "titleRow",
+                  "colorCell",
+                  "mediaCell",
+                  "textCell",
+                  "projectCell",
+                  "blankCell"
+                ]
+              },
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "kind",
+        "type": "string"
+      },
+      {
+        "description": "Client id mirrored from admin (falls back to _key).",
+        "hidden": true,
+        "name": "id",
+        "type": "string",
+        "title": "Stable id"
+      },
+      {
+        "initialValue": 1,
+        "name": "order",
+        "type": "number"
+      },
+      {
+        "initialValue": 1,
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "min",
+                "constraint": 1
+              },
+              {
+                "flag": "max",
+                "constraint": 4
+              }
+            ]
+          }
+        ],
+        "name": "colStart",
+        "type": "number"
+      },
+      {
+        "initialValue": 1,
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "min",
+                "constraint": 1
+              },
+              {
+                "flag": "max",
+                "constraint": 4
+              }
+            ]
+          }
+        ],
+        "name": "colSpan",
+        "type": "number"
+      },
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "min",
+                "constraint": 1
+              }
+            ]
+          }
+        ],
+        "description": "Explicit 1-based row from section-isolated packing (keeps bands from reflowing).",
+        "name": "rowStart",
+        "type": "number",
+        "title": "Row start"
+      },
+      {
+        "initialValue": 1,
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "min",
+                "constraint": 1
+              },
+              {
+                "flag": "max",
+                "constraint": 4
+              }
+            ]
+          }
+        ],
+        "name": "rowSpan",
+        "type": "number"
+      },
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "min",
+                "constraint": 1
+              },
+              {
+                "flag": "max",
+                "constraint": 24
+              }
+            ]
+          }
+        ],
+        "description": "Title-row only: explicit section band height. Omit to hug content.",
+        "name": "sectionRows",
+        "type": "number",
+        "title": "Section rows"
+      },
+      {
+        "initialValue": false,
+        "description": "Title-row only: hide this section (title + band) on the public site. Still visible in admin.",
+        "name": "hidden",
+        "type": "boolean",
+        "title": "Hidden from public"
+      },
+      {
+        "initialValue": false,
+        "description": "Highlight as the section lead (larger type/image). One per section, right after the title row.",
+        "name": "featured",
+        "type": "boolean",
+        "title": "Featured lead"
+      },
+      {
+        "options": {
+          "list": [
+            "rust",
+            "ochre",
+            "sage",
+            "tan",
+            "paper",
+            "ink"
+          ]
+        },
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "valid",
+                "constraint": [
+                  "rust",
+                  "ochre",
+                  "sage",
+                  "tan",
+                  "paper",
+                  "ink"
+                ]
+              }
+            ]
+          }
+        ],
+        "name": "fill",
+        "type": "string"
+      },
+      {
+        "name": "label",
+        "type": "string"
+      },
+      {
+        "description": "Top of card stack (meta → title → image → description)",
+        "name": "meta",
+        "type": "string"
+      },
+      {
+        "name": "headline",
+        "type": "string"
+      },
+      {
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "name": "subtitle",
+        "type": "string"
+      },
+      {
+        "name": "year",
+        "type": "string"
+      },
+      {
+        "description": "Image between title and description — absolute URL or site path (/media/...)",
+        "name": "imageSrc",
+        "type": "string"
+      },
+      {
+        "name": "imageAlt",
+        "type": "string"
+      },
+      {
+        "options": {
+          "list": [
+            "warm",
+            "cool",
+            "ink"
+          ]
+        },
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "valid",
+                "constraint": [
+                  "warm",
+                  "cool",
+                  "ink"
+                ]
+              }
+            ]
+          }
+        ],
+        "description": "Placeholder image tone when imageSrc is empty",
+        "name": "placeholderTone",
+        "type": "string"
+      },
+      {
+        "name": "excerpt",
+        "type": "text"
+      },
+      {
+        "name": "summary",
+        "type": "text"
+      },
+      {
+        "name": "caption",
+        "type": "string"
+      },
+      {
+        "name": "description",
+        "type": "text"
+      },
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "uri",
+                "constraint": {
+                  "options": {
+                    "scheme": [
+                      "/^http$/",
+                      "/^https$/"
+                    ],
+                    "allowRelative": false,
+                    "relativeOnly": false,
+                    "allowCredentials": false
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "description": "Original resource (opens in a new tab on the public grid). Leave empty for non-linked cells.",
+        "name": "href",
+        "type": "url",
+        "title": "Link URL"
+      },
+      {
+        "to": [
+          {
+            "type": "project"
+          }
+        ],
+        "name": "projectRef",
+        "type": "reference"
+      }
+    ],
+    "name": "gridItem",
+    "type": "object",
+    "title": "Grid item"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "options": {
+          "source": "title"
+        },
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "custom"
+              },
+              {
+                "flag": "custom"
+              },
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "slug",
+        "type": "slug"
+      },
+      {
+        "name": "summary",
+        "type": "text"
+      },
+      {
+        "name": "body",
+        "type": "portableBody"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "name": "coverImage",
+        "type": "image"
+      },
+      {
+        "of": [
+          {
+            "options": {
+              "hotspot": true
+            },
+            "type": "image"
+          }
+        ],
+        "name": "gallery",
+        "type": "array"
+      },
+      {
+        "name": "year",
+        "type": "string"
+      },
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "uri",
+                "constraint": {
+                  "options": {
+                    "scheme": [
+                      "/^http$/",
+                      "/^https$/"
+                    ],
+                    "allowRelative": false,
+                    "relativeOnly": false,
+                    "allowCredentials": false
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "description": "Original project / exhibition page (used when linked from the grid).",
+        "name": "url",
+        "type": "url",
+        "title": "External URL"
+      },
+      {
+        "of": [
+          {
+            "type": "string"
+          }
+        ],
+        "name": "collaborators",
+        "type": "array"
+      },
+      {
+        "of": [
+          {
+            "type": "string"
+          }
+        ],
+        "name": "venues",
+        "type": "array"
+      },
+      {
+        "options": {
+          "list": [
+            {
+              "title": "Exhibition",
+              "value": "exhibition"
+            },
+            {
+              "title": "Art",
+              "value": "art"
+            },
+            {
+              "title": "Other",
+              "value": "other"
+            }
+          ]
+        },
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "valid",
+                "constraint": [
+                  "exhibition",
+                  "art",
+                  "other"
+                ]
+              }
+            ]
+          }
+        ],
+        "name": "projectType",
+        "type": "string"
+      },
+      {
+        "of": [
+          {
+            "to": [
+              {
+                "type": "publication"
+              }
+            ],
+            "type": "reference",
+            "title": "Reference to publication"
+          }
+        ],
+        "name": "relatedPublications",
+        "type": "array"
+      }
+    ],
+    "name": "project",
+    "type": "document"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "options": {
+          "source": "title"
+        },
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "custom"
+              },
+              {
+                "flag": "custom"
+              },
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "slug",
+        "type": "slug"
+      },
+      {
+        "name": "summary",
+        "type": "text"
+      },
+      {
+        "name": "body",
+        "type": "portableBody"
+      },
+      {
+        "options": {
+          "list": [
+            {
+              "title": "Academic",
+              "value": "academic"
+            },
+            {
+              "title": "Creative",
+              "value": "creative"
+            },
+            {
+              "title": "Journal / editorial",
+              "value": "journalEditorial"
+            }
+          ]
+        },
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "valid",
+                "constraint": [
+                  "academic",
+                  "creative",
+                  "journalEditorial"
+                ]
+              }
+            ]
+          }
+        ],
+        "name": "publicationType",
+        "type": "string"
+      },
+      {
+        "name": "year",
+        "type": "string"
+      },
+      {
+        "name": "venue",
+        "type": "string",
+        "title": "Venue / publisher"
+      },
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "uri",
+                "constraint": {
+                  "options": {
+                    "scheme": [
+                      "/^http$/",
+                      "/^https$/"
+                    ],
+                    "allowRelative": false,
+                    "relativeOnly": false,
+                    "allowCredentials": false
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "name": "url",
+        "type": "url"
+      },
+      {
+        "name": "pdf",
+        "type": "file"
+      },
+      {
+        "of": [
+          {
+            "to": [
+              {
+                "type": "project"
+              }
+            ],
+            "type": "reference",
+            "title": "Reference to project"
+          }
+        ],
+        "name": "relatedProjects",
+        "type": "array"
+      }
+    ],
+    "name": "publication",
+    "type": "document"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "options": {
+          "source": "title"
+        },
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "custom"
+              },
+              {
+                "flag": "custom"
+              },
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "name": "slug",
+        "type": "slug"
+      },
+      {
+        "name": "summary",
+        "type": "text"
+      },
+      {
+        "name": "body",
+        "type": "portableBody"
+      },
+      {
+        "options": {
+          "list": [
+            {
+              "title": "Award",
+              "value": "award"
+            },
+            {
+              "title": "Grant",
+              "value": "grant"
+            },
+            {
+              "title": "Presentation",
+              "value": "presentation"
+            },
+            {
+              "title": "Study",
+              "value": "study"
+            },
+            {
+              "title": "Other",
+              "value": "other"
+            }
+          ]
+        },
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "valid",
+                "constraint": [
+                  "award",
+                  "grant",
+                  "presentation",
+                  "study",
+                  "other"
+                ]
+              }
+            ]
+          }
+        ],
+        "name": "researchType",
+        "type": "string"
+      },
+      {
+        "name": "year",
+        "type": "string"
+      },
+      {
+        "name": "institution",
+        "type": "string"
+      },
+      {
+        "of": [
+          {
+            "type": "string"
+          }
+        ],
+        "name": "collaborators",
+        "type": "array"
+      },
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "uri",
+                "constraint": {
+                  "options": {
+                    "scheme": [
+                      "/^http$/",
+                      "/^https$/"
+                    ],
+                    "allowRelative": false,
+                    "relativeOnly": false,
+                    "allowCredentials": false
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "name": "url",
+        "type": "url"
+      }
+    ],
+    "name": "researchItem",
+    "type": "document",
+    "title": "Research item"
+  },
+  {
+    "fields": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "headline",
+        "type": "string"
+      },
+      {
+        "name": "phone",
+        "type": "string"
+      },
+      {
+        "name": "email",
+        "type": "string"
+      },
+      {
+        "name": "location",
+        "type": "string"
+      },
+      {
+        "name": "relocationNote",
+        "type": "string"
+      },
+      {
+        "name": "summary",
+        "type": "portableBody"
+      },
+      {
+        "name": "cvPdf",
+        "type": "file",
+        "title": "CV PDF"
+      },
+      {
+        "of": [
+          {
+            "type": "string"
+          }
+        ],
+        "name": "expertiseTags",
+        "type": "array"
+      },
+      {
+        "of": [
+          {
+            "fields": [
+              {
+                "name": "text",
+                "type": "text"
+              }
+            ],
+            "type": "object"
+          }
+        ],
+        "name": "expertiseHighlights",
+        "type": "array"
+      },
+      {
+        "of": [
+          {
+            "fields": [
+              {
+                "name": "title",
+                "type": "string"
+              },
+              {
+                "name": "org",
+                "type": "string"
+              },
+              {
+                "name": "location",
+                "type": "string"
+              },
+              {
+                "name": "startDate",
+                "type": "string"
+              },
+              {
+                "name": "endDate",
+                "type": "string"
+              },
+              {
+                "name": "current",
+                "type": "boolean"
+              },
+              {
+                "name": "summary",
+                "type": "text"
+              },
+              {
+                "of": [
+                  {
+                    "type": "string"
+                  }
+                ],
+                "name": "bullets",
+                "type": "array"
+              },
+              {
+                "to": [
+                  {
+                    "type": "project"
+                  }
+                ],
+                "name": "relatedProject",
+                "type": "reference"
+              }
+            ],
+            "type": "object"
+          }
+        ],
+        "name": "experience",
+        "type": "array"
+      },
+      {
+        "of": [
+          {
+            "fields": [
+              {
+                "name": "title",
+                "type": "string"
+              },
+              {
+                "name": "org",
+                "type": "string"
+              },
+              {
+                "name": "location",
+                "type": "string"
+              },
+              {
+                "name": "date",
+                "type": "string"
+              },
+              {
+                "name": "description",
+                "type": "text"
+              }
+            ],
+            "type": "object"
+          }
+        ],
+        "name": "awards",
+        "type": "array"
+      },
+      {
+        "of": [
+          {
+            "fields": [
+              {
+                "options": {
+                  "list": [
+                    "presenter",
+                    "panelist",
+                    "coFacilitator",
+                    "lecturer"
+                  ]
+                },
+                "validation": [
+                  {
+                    "level": "error",
+                    "rules": [
+                      {
+                        "flag": "valid",
+                        "constraint": [
+                          "presenter",
+                          "panelist",
+                          "coFacilitator",
+                          "lecturer"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "name": "role",
+                "type": "string"
+              },
+              {
+                "name": "eventTitle",
+                "type": "string"
+              },
+              {
+                "name": "org",
+                "type": "string"
+              },
+              {
+                "name": "location",
+                "type": "string"
+              },
+              {
+                "name": "date",
+                "type": "string"
+              },
+              {
+                "name": "description",
+                "type": "text"
+              }
+            ],
+            "type": "object"
+          }
+        ],
+        "name": "speaking",
+        "type": "array"
+      },
+      {
+        "of": [
+          {
+            "fields": [
+              {
+                "options": {
+                  "list": [
+                    "degree",
+                    "certificate"
+                  ]
+                },
+                "validation": [
+                  {
+                    "level": "error",
+                    "rules": [
+                      {
+                        "flag": "valid",
+                        "constraint": [
+                          "degree",
+                          "certificate"
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "name": "credentialType",
+                "type": "string"
+              },
+              {
+                "name": "title",
+                "type": "string"
+              },
+              {
+                "name": "institution",
+                "type": "string"
+              },
+              {
+                "name": "location",
+                "type": "string"
+              },
+              {
+                "name": "startYear",
+                "type": "string"
+              },
+              {
+                "name": "endYear",
+                "type": "string"
+              },
+              {
+                "name": "notes",
+                "type": "text"
+              }
+            ],
+            "type": "object"
+          }
+        ],
+        "name": "education",
+        "type": "array"
+      },
+      {
+        "of": [
+          {
+            "type": "string"
+          }
+        ],
+        "name": "technicalSkills",
+        "type": "array"
+      },
+      {
+        "of": [
+          {
+            "fields": [
+              {
+                "name": "language",
+                "type": "string"
+              },
+              {
+                "name": "level",
+                "type": "string"
+              }
+            ],
+            "type": "object"
+          }
+        ],
+        "name": "languages",
+        "type": "array"
+      },
+      {
+        "of": [
+          {
+            "fields": [
+              {
+                "name": "title",
+                "type": "string"
+              },
+              {
+                "name": "venue",
+                "type": "string"
+              },
+              {
+                "name": "date",
+                "type": "string"
+              },
+              {
+                "validation": [
+                  {
+                    "level": "error",
+                    "rules": [
+                      {
+                        "flag": "uri",
+                        "constraint": {
+                          "options": {
+                            "scheme": [
+                              "/^http$/",
+                              "/^https$/"
+                            ],
+                            "allowRelative": false,
+                            "relativeOnly": false,
+                            "allowCredentials": false
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "name": "url",
+                "type": "url"
+              },
+              {
+                "to": [
+                  {
+                    "type": "publication"
+                  }
+                ],
+                "name": "publicationRef",
+                "type": "reference"
+              }
+            ],
+            "type": "object"
+          }
+        ],
+        "name": "publications",
+        "type": "array"
+      }
+    ],
+    "name": "cv",
+    "type": "document",
+    "title": "CV"
+  },
+  {
+    "fields": [
+      {
+        "initialValue": "Homepage",
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "description": "Large scrolling text used as the Vermeer-style video mask",
+        "name": "introMaskText",
+        "type": "string",
+        "title": "Intro mask text"
+      },
+      {
+        "name": "introSupport",
+        "type": "text",
+        "title": "Intro support line"
+      },
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "uri",
+                "constraint": {
+                  "options": {
+                    "scheme": [
+                      "/^http$/",
+                      "/^https$/"
+                    ],
+                    "allowRelative": false,
+                    "relativeOnly": false,
+                    "allowCredentials": false
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "description": "Prefer Mux / CDN URL — not Sanity file hosting for video",
+        "name": "introVideoUrl",
+        "type": "url",
+        "title": "Intro video URL"
+      },
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "uri",
+                "constraint": {
+                  "options": {
+                    "scheme": [
+                      "/^http$/",
+                      "/^https$/"
+                    ],
+                    "allowRelative": false,
+                    "relativeOnly": false,
+                    "allowCredentials": false
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "name": "introPosterUrl",
+        "type": "url",
+        "title": "Intro poster URL"
+      },
+      {
+        "of": [
+          {
+            "type": "gridItem",
+            "title": "Grid item"
+          }
+        ],
+        "name": "gridItems",
+        "type": "array"
+      }
+    ],
+    "name": "homepage",
+    "type": "document"
+  },
+  {
+    "fields": [
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "presence",
+                "constraint": "required"
+              }
+            ]
+          }
+        ],
+        "description": "Large cover name (e.g. Amanda Smith)",
+        "name": "titleText",
+        "type": "string",
+        "title": "Hero title"
+      },
+      {
+        "rows": 3,
+        "description": "Short line under the title on the cover",
+        "name": "supportText",
+        "type": "text",
+        "title": "Support line"
+      },
+      {
+        "description": "Absolute CDN URL, site path, or YouTube link. Prefer Mux/CDN for large files.",
+        "name": "videoUrl",
+        "type": "string",
+        "title": "Background video URL"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "description": "Still shown while the video loads / on failure. Prefer this Sanity asset so GitHub Pages can load cdn.sanity.io URLs.",
+        "name": "poster",
+        "type": "image",
+        "title": "Video poster"
+      },
+      {
+        "options": {
+          "hotspot": true
+        },
+        "description": "Still cover when there is no video, or alternate poster. Sanity asset preferred for production.",
+        "name": "backgroundImage",
+        "type": "image",
+        "title": "Background image"
+      },
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "uri",
+                "constraint": {
+                  "options": {
+                    "scheme": [
+                      "/^http$/",
+                      "/^https$/"
+                    ],
+                    "allowRelative": true,
+                    "relativeOnly": false,
+                    "allowCredentials": false
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "description": "Optional absolute URL fallback. Ignored when a Poster image asset is set. Do not use local /media/uploads paths for production.",
+        "name": "posterUrl",
+        "type": "url",
+        "title": "Video poster URL (override)"
+      },
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "uri",
+                "constraint": {
+                  "options": {
+                    "scheme": [
+                      "/^http$/",
+                      "/^https$/"
+                    ],
+                    "allowRelative": true,
+                    "relativeOnly": false,
+                    "allowCredentials": false
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "description": "Optional absolute URL fallback. Ignored when a Background image asset is set.",
+        "name": "imageUrl",
+        "type": "url",
+        "title": "Background image URL (override)"
+      },
+      {
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "uri",
+                "constraint": {
+                  "options": {
+                    "scheme": [
+                      "/^http$/",
+                      "/^https$/"
+                    ],
+                    "allowRelative": true,
+                    "relativeOnly": false,
+                    "allowCredentials": false
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "description": "Optional link shown on the cover (“Watch full video”) — opens in a new tab. YouTube, Vimeo, or any absolute URL.",
+        "name": "watchUrl",
+        "type": "url",
+        "title": "Watch full video URL"
+      }
+    ],
+    "name": "homepageHero",
+    "type": "document",
+    "title": "Homepage hero"
+  },
+  {
+    "fields": [
+      {
+        "name": "siteTitle",
+        "type": "string"
+      },
+      {
+        "of": [
+          {
+            "fields": [
+              {
+                "name": "label",
+                "type": "string"
+              },
+              {
+                "name": "href",
+                "type": "string"
+              }
+            ],
+            "type": "object"
+          }
+        ],
+        "name": "nav",
+        "type": "array"
+      },
+      {
+        "name": "contactEmail",
+        "type": "string"
+      },
+      {
+        "name": "contactNote",
+        "type": "text"
+      }
+    ],
+    "name": "siteSettings",
+    "type": "document",
+    "title": "Site settings"
+  }
+]

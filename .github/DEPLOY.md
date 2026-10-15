@@ -28,17 +28,39 @@ Verify: `dig +short portfolio.bittersweetwoman.com CNAME`
 
 ## Sanity Studio (self-hosted on Vercel)
 
-Studio is embedded at `/studio` (`next-sanity` + `sanity@6.19.x`). Manage compatibility (Version / Manifest / Schema) is filled by registering the external studio:
+Studio is embedded at `/studio` (`next-sanity` + `sanity@6.19.x`).
+
+### Register + deploy schema (CLI → Content Lake)
 
 ```bash
 npm run sanity:studio-register
-# → npx sanity deploy --external --url https://portfolio.bittersweetwoman.com/studio --schema-required --yes
+# → sanity deploy --external --url https://portfolio.bittersweetwoman.com/studio --schema-required --yes
 ```
 
-Schema-only refresh (no URL registration):
+Schema-only refresh:
 
 ```bash
+npm run sanity:schema-validate
 npm run sanity:schema-deploy
+```
+
+### Serve Create/Manage static files (required for Schema column)
+
+Manage fetches schema JSON from the live studio host. Those files must be real JSON at:
+
+`https://portfolio.bittersweetwoman.com/studio/static/create-manifest.json`
+
+(and the hashed `*.create-schema.json` / `*.create-tools.json` files it references).
+
+- Extract: `npm run sanity:manifest-extract` → `public/studio/static/`
+- `prebuild` runs extract automatically before `next build`
+- Route handler `src/app/studio/static/[...path]/route.ts` serves them so the Studio catch-all cannot return HTML instead
+
+After a Vercel deploy, verify:
+
+```bash
+curl -sI https://portfolio.bittersweetwoman.com/studio/static/create-manifest.json | head
+# expect: content-type: application/json
 ```
 
 CORS origins (credentials enabled) must include:
@@ -48,6 +70,8 @@ CORS origins (credentials enabled) must include:
 - `http://localhost:3456` (local)
 
 `sanity.cli.ts` stores `deployment.appId` for the production registration.
+
+**Manage UI note:** Schema auto-detect for self-hosted can lag; after JSON is live, use **Refresh table**. If the column still shows `--` with “Unable to detect…”, the CLI path above is the documented manual verification — Dashboard/Media Library use the *registered* schema from `deploy --external`, not only the HTTP files.
 
 ### CI: `SANITY_AUTH_TOKEN`
 
