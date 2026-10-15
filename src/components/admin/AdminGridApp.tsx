@@ -63,6 +63,7 @@ import {
   setSectionRowCount,
 } from "@/lib/grid-layout";
 import {
+  addContentSection,
   addGridItem,
   contentSectionOf,
   listContentSections,
@@ -593,6 +594,33 @@ export function AdminGridApp({
     });
   }
 
+  /** New titleRow band with empty targets — desktop structure only (no layout overrides). */
+  function addSection() {
+    updateItems((prev) => {
+      const currentSection = selectedId
+        ? contentSectionOf(prev, selectedId)
+        : null;
+      const result = addContentSection(prev, {
+        afterTitleId: currentSection?.titleId ?? null,
+        label: "New section",
+        sectionRows: 3,
+      });
+      setSelectedId(result.selectedId);
+      setSidebarTab("section");
+      return result.items;
+    });
+  }
+
+  function renameSection(titleId: string, label: string) {
+    updateItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== titleId || item.kind !== "titleRow") return item;
+        const nextLabel = label.trim() || "Section";
+        return { ...item, label: nextLabel } as TitleRowItem;
+      }),
+    );
+  }
+
   function duplicateSelected() {
     if (!selected) return;
     updateItems((prev) => {
@@ -921,10 +949,18 @@ export function AdminGridApp({
                         Add
                       </button>
                     </div>
+                    <button
+                      type="button"
+                      onClick={addSection}
+                      className="w-full cursor-pointer border border-ink/20 px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-ink uppercase"
+                      title="Add a new content section (title row + empty band)"
+                    >
+                      New section
+                    </button>
                     <p className="font-mono text-[0.55rem] tracking-[0.1em] text-ink/40 uppercase">
                       {selectedId
-                        ? "Fills the selected cell in place"
-                        : "No selection · new section at bottom"}
+                        ? "Add fills the selected cell · New section opens Section tab"
+                        : "No selection · Add starts a section · or use New section"}
                     </p>
                   </div>
                   <SortableContext
@@ -952,12 +988,32 @@ export function AdminGridApp({
                   aria-labelledby="admin-tab-section"
                   className="h-full min-h-0 overflow-y-auto p-4"
                 >
+                  <div className="mb-5 space-y-2 border-b border-ink/12 pb-4">
+                    <button
+                      type="button"
+                      onClick={addSection}
+                      className="w-full cursor-pointer bg-rust px-4 py-2.5 font-mono text-[0.7rem] tracking-[0.16em] text-paper uppercase"
+                      title={
+                        selected
+                          ? "Add a new section after the selected band"
+                          : "Add a new section at the bottom of the grid"
+                      }
+                    >
+                      Add section
+                    </button>
+                    <p className="font-mono text-[0.55rem] tracking-[0.1em] text-ink/40 uppercase">
+                      {selected
+                        ? "Inserts after the selected section · editable title · empty rows for blocks"
+                        : "Appends at the bottom · editable title · empty rows for blocks"}
+                    </p>
+                  </div>
                   {selected && selectedView && selectedHandlers ? (
                     <SectionTab
                       item={selectedView}
                       items={items}
                       columns={editColumns}
                       breakpoint={editBreakpoint}
+                      onSectionLabelChange={renameSection}
                       onSectionRowsChange={selectedHandlers.onSectionRowsChange}
                       onCompactSection={selectedHandlers.onCompactSection}
                       onSectionHiddenChange={
@@ -970,7 +1026,8 @@ export function AdminGridApp({
                     />
                   ) : (
                     <p className="text-sm text-ink/50">
-                      Select a block to edit section and placement.
+                      Select a block to edit that section’s name, visibility, and
+                      placement — or add a section above.
                     </p>
                   )}
                 </div>
@@ -1432,6 +1489,7 @@ function SectionTab({
   items,
   columns = GRID_COLUMNS,
   breakpoint = "desktop",
+  onSectionLabelChange,
   onSectionRowsChange,
   onCompactSection,
   onSectionHiddenChange,
@@ -1444,6 +1502,7 @@ function SectionTab({
   items: GridItem[];
   columns?: number;
   breakpoint?: LayoutBreakpoint;
+  onSectionLabelChange: (titleId: string, label: string) => void;
   onSectionRowsChange: (rows: number) => void;
   onCompactSection: () => void;
   onSectionHiddenChange: (hidden: boolean) => void;
@@ -1475,6 +1534,22 @@ function SectionTab({
           {isHidden ? " · Hidden" : ""}
           {` · ${BREAKPOINT_LABEL[breakpoint]}`}
         </p>
+        {head?.kind === "titleRow" ? (
+          <label className="block space-y-1">
+            <span className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
+              Section name
+            </span>
+            <input
+              type="text"
+              value={head.label}
+              onChange={(event) =>
+                onSectionLabelChange(head.id, event.target.value)
+              }
+              className="w-full border border-ink/20 bg-paper px-2.5 py-2 font-display text-base tracking-tight text-ink"
+              placeholder="Section title"
+            />
+          </label>
+        ) : null}
         {desktopOnlySection ? (
           <p className="text-xs text-ink/50">
             Placement edits apply to {BREAKPOINT_LABEL[breakpoint]} only.

@@ -110,10 +110,7 @@ export function addGridItem(
 
   const next = [...items];
   if (kind === "titleRow") {
-    const title = createGridItem("titleRow", next.length + 1) as TitleRowItem;
-    title.label = "New section";
-    next.push(title);
-    return { items: next, selectedId: title.id };
+    return addContentSection(next, { label: "New section" });
   }
 
   const title = createGridItem("titleRow", next.length + 1) as TitleRowItem;
@@ -121,6 +118,43 @@ export function addGridItem(
   const cell = createGridItem(kind, next.length + 2);
   next.push(title, cell);
   return { items: next, selectedId: cell.id };
+}
+
+/**
+ * Append (or insert after a section) a new titleRow band with empty target rows.
+ * Shared content identity — no tablet/mobile layout overrides (synthesize later).
+ */
+export function addContentSection(
+  items: GridItem[],
+  options?: {
+    /** Insert after this section’s band; default = append at bottom. */
+    afterTitleId?: string | null;
+    label?: string;
+    /** Vacancy height so the band has blank targets ready for blocks. */
+    sectionRows?: number;
+  },
+): { items: GridItem[]; selectedId: string } {
+  const label = options?.label?.trim() || "New section";
+  const sectionRows = Math.min(
+    24,
+    Math.max(2, Math.floor(options?.sectionRows ?? 3)),
+  );
+  const title = createGridItem("titleRow", items.length + 1) as TitleRowItem;
+  title.label = label;
+  title.sectionRows = sectionRows;
+
+  const afterId = options?.afterTitleId;
+  if (afterId) {
+    const sections = listContentSections(items);
+    const dest = sections.find((section) => section.titleId === afterId);
+    if (dest) {
+      const next = [...items];
+      next.splice(dest.end + 1, 0, title);
+      return { items: next, selectedId: title.id };
+    }
+  }
+
+  return { items: [...items, title], selectedId: title.id };
 }
 
 export type SectionTarget =
