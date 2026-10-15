@@ -173,11 +173,12 @@ export function GridCell({
           }
         : {};
       const label = t(item.label);
+      const prose = t(item.prose);
       return (
         <Comp
-          className={`${base} ${fillClass(item.fill)} color-cell flex flex-col justify-between p-6 sm:p-8${
+          className={`${base} ${fillClass(item.fill)} color-cell flex flex-col justify-between gap-4 p-6 sm:p-8${
             linked ? " grid-cell-link" : ""
-          }`}
+          }${prose ? " color-cell--prose" : ""}`}
           style={style}
           data-kind={item.kind}
           data-linked={linked ? "true" : undefined}
@@ -188,9 +189,12 @@ export function GridCell({
               <MetaDot />
               {label}
             </span>
-          ) : (
+          ) : prose ? null : (
             <span className="sr-only">{ui("colorCell")}</span>
           )}
+          {prose ? (
+            <p className="color-cell__prose whitespace-pre-wrap">{prose}</p>
+          ) : null}
           {linked ? <OpenCue /> : null}
         </Comp>
       );

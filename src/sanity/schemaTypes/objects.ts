@@ -183,6 +183,14 @@ export const gridItem = defineType({
       title: "Label",
     }),
     defineField({
+      name: "prose",
+      type: "localeText",
+      title: "Long text / prose",
+      description:
+        "Color cells only — optional poetry or prose. Leave empty to omit from the public grid.",
+      hidden: ({ parent }) => parent?.kind !== "colorCell",
+    }),
+    defineField({
       name: "meta",
       type: "localeString",
       description: "Top of card stack (meta → title → image → description)",

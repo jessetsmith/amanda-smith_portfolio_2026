@@ -98,12 +98,14 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
       };
     }
     if (kind === "colorCell") {
+      const prose = locOpt(row.prose);
       return {
         ...base,
         kind: "colorCell" as const,
         fill: (row.fill as GridItem["fill"]) || "rust",
         label: locOpt(row.label),
         href,
+        ...(prose ? { prose } : {}),
       };
     }
     if (kind === "mediaCell") {
@@ -152,7 +154,12 @@ export function localizeFixtureGridItems(items: GridItem[]): GridItem[] {
         return { ...item, label: loc(item.label, "Section") };
       }
       if (item.kind === "colorCell") {
-        return { ...item, label: locOpt(item.label) };
+        const prose = locOpt(item.prose);
+        return {
+          ...item,
+          label: locOpt(item.label),
+          ...(prose ? { prose } : {}),
+        };
       }
       if (item.kind === "textCell") {
         return {

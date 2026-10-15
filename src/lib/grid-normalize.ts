@@ -97,12 +97,14 @@ export function normalizeGridItem(item: GridItem, order: number): GridItem {
         "fill" in item && FILLS.includes(item.fill as CellFill)
           ? (item.fill as CellFill)
           : "rust";
+      const prose = locOpt((item as { prose?: unknown }).prose);
       return {
         ...base,
         kind: "colorCell",
         fill,
         label: locOpt((item as { label?: unknown }).label),
         href: str((item as { href?: string }).href),
+        ...(prose ? { prose } : {}),
       };
     }
     case "mediaCell": {

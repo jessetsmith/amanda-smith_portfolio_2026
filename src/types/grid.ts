@@ -96,6 +96,11 @@ export interface ColorCellItem extends GridItemBase {
   fill: CellFill;
   href?: string;
   label?: LocaleString;
+  /**
+   * Optional long text (poetry / prose). Omitted by default — only present
+   * when an editor adds it; clear in admin to remove from the public cell.
+   */
+  prose?: LocaleString;
 }
 
 /** Content card stack: meta → title → image → description */

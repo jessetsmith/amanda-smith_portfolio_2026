@@ -41,7 +41,7 @@ import { AdminLocaleSelect, readLocaleField, writeLocaleField } from "@/componen
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { enOf } from "@/lib/i18n/display";
 import { DEFAULT_LOCALE, type LocaleCode } from "@/lib/i18n/locales";
-import type { LocaleString } from "@/lib/i18n/resolve";
+import { toLocaleMap, type LocaleString } from "@/lib/i18n/resolve";
 import {
   BREAKPOINT_COLUMNS,
   GRID_COLUMNS,
@@ -1282,11 +1282,16 @@ export function AdminGridApp({
                 );
               }
               if (Object.keys(patch).length === 0) return next;
-              return next.map((row) =>
-                row.id === selected.id
-                  ? ({ ...row, ...patch } as GridItem)
-                  : row,
-              );
+              return next.map((row) => {
+                if (row.id !== selected.id) return row;
+                const merged = { ...row, ...patch } as GridItem;
+                // Null sentinel clears optional fields (e.g. color-cell prose).
+                const writable = merged as unknown as Record<string, unknown>;
+                for (const [key, value] of Object.entries(patch)) {
+                  if (value == null) delete writable[key];
+                }
+                return merged;
+              });
             });
             setContentOpen(false);
           }}
@@ -1368,7 +1373,12 @@ function SortableRow({
 
 function itemContentPreview(item: GridItem): string {
   if (item.kind === "titleRow") return enOf(item.label);
-  if (item.kind === "colorCell") return enOf(item.label) || item.fill;
+  if (item.kind === "colorCell") {
+    const label = enOf(item.label) || item.fill;
+    return Object.keys(toLocaleMap(item.prose)).length
+      ? `${label} · prose`
+      : label;
+  }
   if (item.kind === "textCell") return enOf(item.headline);
   if (item.kind === "projectCell") return enOf(item.title);
   if (item.kind === "blankCell") return "Spacer";
@@ -1832,12 +1842,16 @@ function ContentEditModal({
   );
   const [newSectionLabel, setNewSectionLabel] = useState("New section");
   const [locale, setLocale] = useState<LocaleCode>(DEFAULT_LOCALE);
+  const [proseEnabled, setProseEnabled] = useState(
+    () => item.kind === "colorCell" && Boolean(enOf(item.prose)),
+  );
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setDraft(structuredClone(item));
     setSectionChoice(currentSectionId ?? NEW_SECTION_VALUE);
     setNewSectionLabel("New section");
+    setProseEnabled(item.kind === "colorCell" && Boolean(enOf(item.prose)));
   }, [item, currentSectionId]);
 
   useEffect(() => {
@@ -1890,7 +1904,17 @@ function ContentEditModal({
       return;
     }
     if (draft.kind === "colorCell") {
-      onApply({ fill: draft.fill, label: draft.label }, sectionTarget);
+      const hasProse =
+        proseEnabled && Object.keys(toLocaleMap(draft.prose)).length > 0;
+      onApply(
+        {
+          fill: draft.fill,
+          label: draft.label,
+          href: draft.href?.trim() || undefined,
+          prose: hasProse ? draft.prose : null,
+        } as Partial<GridItem>,
+        sectionTarget,
+      );
       return;
     }
     if (draft.kind === "mediaCell") {
@@ -2038,6 +2062,41 @@ function ContentEditModal({
                 value={draft.href ?? ""}
                 onChange={(href) => patchDraft({ href } as Partial<GridItem>)}
               />
+              {proseEnabled ? (
+                <div className="space-y-2">
+                  <TextAreaField
+                    label="Long text / prose"
+                    value={readLocaleField(draft.prose, locale)}
+                    onChange={(prose) => setLoc("prose", draft.prose, prose)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProseEnabled(false);
+                      setDraft((prev) => {
+                        if (prev.kind !== "colorCell") return prev;
+                        const { prose: _removed, ...rest } = prev;
+                        return rest as typeof prev;
+                      });
+                    }}
+                    className="border border-ink/20 px-3 py-1.5 font-mono text-[0.6rem] tracking-[0.12em] uppercase"
+                  >
+                    Remove long text
+                  </button>
+                  <p className="text-xs text-ink/45">
+                    Optional poetry or prose inside this color cell. Switch
+                    Editing language above for other locales.
+                  </p>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setProseEnabled(true)}
+                  className="border border-ink/25 bg-paper px-3 py-2 font-mono text-[0.65rem] tracking-[0.14em] text-ink uppercase"
+                >
+                  Add long text
+                </button>
+              )}
             </>
           ) : null}
 

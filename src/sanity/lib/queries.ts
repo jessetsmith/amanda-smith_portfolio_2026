@@ -32,6 +32,7 @@ export const homepageQuery = `*[_type == "homepage" && _id == "homepage"][0]{
     featured,
     fill,
     label,
+    prose,
     headline,
     subtitle,
     excerpt,
