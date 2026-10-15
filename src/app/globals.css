@@ -791,17 +791,18 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   isolation: isolate;
 }
 
-/* Stamp tip — top-right of hero; smoother opacity fade (public only) */
+/* Stamp tip — top-right of hero, inset past sticky nav language dropdown */
 .intro-mask__stamp-hint {
   position: absolute;
   top: max(1rem, env(safe-area-inset-top));
-  right: max(1rem, env(safe-area-inset-right));
+  /* Clear EN dropdown (~2.5rem) + nav pad (1.25rem) + gap */
+  right: max(4.75rem, calc(env(safe-area-inset-right) + 3.5rem));
   left: auto;
   bottom: auto;
   z-index: 6;
   margin: 0;
   padding: 0.45rem 0.85rem;
-  max-width: min(18rem, calc(100% - 2rem));
+  max-width: min(18rem, calc(100% - 6rem));
   pointer-events: none;
   border: 1px solid color-mix(in srgb, var(--color-paper) 35%, transparent);
   background: color-mix(in srgb, var(--color-ink) 72%, transparent);
