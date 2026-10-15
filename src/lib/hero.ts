@@ -1,10 +1,13 @@
 import type { HomepageHero } from "@/types/hero";
 
+export const DEFAULT_STAMP_HINT = "click to leave your mark";
+
 const DEFAULT_HERO: HomepageHero = {
   titleText: "Amanda Smith",
   supportText:
     "Exhibitions, research, and writing — arranged as one connected grid.",
   videoUrl: "/media/intro.mp4",
+  stampHint: DEFAULT_STAMP_HINT,
 };
 
 function str(value: unknown): string {
@@ -37,6 +40,7 @@ export function normalizeHero(
   const posterUrl = str(raw?.posterUrl);
   const imageUrl = str(raw?.imageUrl);
   const watchUrl = str(raw?.watchUrl);
+  const stampHint = str(raw?.stampHint);
   const posterAssetId = str(raw?.posterAssetId);
   const imageAssetId = str(raw?.imageAssetId);
   return {
@@ -48,7 +52,15 @@ export function normalizeHero(
     ...(posterAssetId ? { posterAssetId } : {}),
     ...(imageAssetId ? { imageAssetId } : {}),
     ...(watchUrl ? { watchUrl } : {}),
+    // Persist empty as omit so public falls back to DEFAULT_STAMP_HINT
+    ...(stampHint ? { stampHint } : {}),
   };
+}
+
+/** Resolved tip copy for the public hero (never empty). */
+export function resolveStampHint(hero: Partial<HomepageHero> | null | undefined): string {
+  const tip = str(hero?.stampHint);
+  return tip || DEFAULT_STAMP_HINT;
 }
 
 export function heroSignature(hero: HomepageHero): string {

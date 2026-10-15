@@ -12,6 +12,11 @@ export interface HomepageHero {
   imageAssetId?: string;
   /** External “watch full video” link shown on the cover when set. */
   watchUrl?: string;
+  /**
+   * Public hero hover tip before the first stamp (“click to leave your mark”).
+   * Empty → client uses the default copy.
+   */
+  stampHint?: string;
 }
 
 export type HeroDataSource = "sanity" | "fixture";

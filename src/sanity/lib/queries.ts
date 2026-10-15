@@ -3,6 +3,7 @@ export const homepageHeroQuery = `*[_type == "homepageHero" && _id == "homepageH
   supportText,
   videoUrl,
   watchUrl,
+  stampHint,
   // Prefer Sanity image assets (cdn.sanity.io) so GitHub Pages can load them.
   "posterUrl": coalesce(poster.asset->url, posterUrl),
   "imageUrl": coalesce(backgroundImage.asset->url, imageUrl),

@@ -43,6 +43,7 @@ function seedHero(): HomepageHero {
     posterUrl: str(seed.posterUrl) || undefined,
     imageUrl: str(seed.imageUrl) || undefined,
     watchUrl: str(seed.watchUrl) || undefined,
+    stampHint: str((seed as { stampHint?: string }).stampHint) || undefined,
   });
 }
 
@@ -110,6 +111,7 @@ function heroDocumentFields(hero: HomepageHero) {
     supportText: hero.supportText,
     videoUrl: hero.videoUrl || undefined,
     watchUrl: hero.watchUrl || undefined,
+    stampHint: hero.stampHint || undefined,
     // Absolute URLs only in string overrides — local upload paths stay off Sanity.
     posterUrl: isAbsoluteHttpUrl(hero.posterUrl) ? hero.posterUrl : undefined,
     imageUrl: isAbsoluteHttpUrl(hero.imageUrl) ? hero.imageUrl : undefined,

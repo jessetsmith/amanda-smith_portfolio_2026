@@ -1415,6 +1415,23 @@ function HeroTab({
 
       <label className="block space-y-1">
         <span className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/55 uppercase">
+          Stamp tip
+        </span>
+        <input
+          type="text"
+          value={hero.stampHint ?? ""}
+          onChange={(e) => onChange({ stampHint: e.target.value })}
+          className="w-full border border-ink/20 bg-paper px-2 py-2 text-sm text-ink"
+          placeholder="click to leave your mark"
+        />
+        <span className="block text-xs text-ink/45">
+          Public cover only — shown on first hover, hidden after the first
+          stamp. Leave empty for the default copy.
+        </span>
+      </label>
+
+      <label className="block space-y-1">
+        <span className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/55 uppercase">
           Background video URL
         </span>
         <input

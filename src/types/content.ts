@@ -23,6 +23,8 @@ export interface HomepageContent {
   imageSrc?: string;
   /** Optional “watch full video” link on the cover. */
   watchUrl?: string;
+  /** Hero stamp hover tip (empty → IntroMask default). */
+  stampHint?: string;
   gridItems: GridItem[];
 }
 

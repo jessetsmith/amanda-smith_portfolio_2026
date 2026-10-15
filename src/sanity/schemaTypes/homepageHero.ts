@@ -76,6 +76,14 @@ export const homepageHero = defineType({
           scheme: ["http", "https"],
         }),
     }),
+    defineField({
+      name: "stampHint",
+      type: "string",
+      title: "Handprint stamp tip",
+      description:
+        "Shown on first hover over the public cover (“click to leave your mark”). Clears after the first stamp. Leave empty to use the default copy.",
+      initialValue: "click to leave your mark",
+    }),
   ],
   preview: {
     select: {

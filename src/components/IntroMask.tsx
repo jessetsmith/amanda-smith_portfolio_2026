@@ -9,6 +9,7 @@ import {
   type PointerEvent,
 } from "react";
 import { createPortal } from "react-dom";
+import { DEFAULT_STAMP_HINT } from "@/lib/hero";
 import { resolveHeroMedia, resolveHeroPoster } from "@/lib/hero-media";
 
 interface IntroMaskProps {
@@ -20,6 +21,11 @@ interface IntroMaskProps {
   imageSrc?: string;
   /** Optional “watch full video” link (new tab). */
   watchUrl?: string;
+  /**
+   * First-hover tip before stamping. Empty → default “click to leave your mark”.
+   * Only shown when enableHandCursor is on (public).
+   */
+  stampHint?: string;
   /**
    * Handprint overlay + `cursor: none` on the cover.
    * Public homepage only — leave off in admin live preview.
@@ -102,6 +108,53 @@ function loadYouTubeApi(): Promise<void> {
   return youtubeApiPromise;
 }
 
+/** Session-only hero stamps (public). print-3.png was blank — skipped. */
+const HANDPRINT_SRCS = [
+  "/handprints/print-1.png",
+  "/handprints/print-2.png",
+] as const;
+
+const HANDPRINT_TINTS = [
+  "#1a1512",
+  "#2c241c",
+  "#5c4033",
+  "#8b3a2a",
+  "#a65d3f",
+  "#6b4f3a",
+  "#3d4a3c",
+  "#4a5560",
+] as const;
+
+type HeroHandprint = {
+  id: string;
+  src: string;
+  x: number;
+  y: number;
+  angle: number;
+  scale: number;
+  mirror: boolean;
+  tint: string;
+  opacity: number;
+};
+
+function randomHandprint(
+  xPct: number,
+  yPct: number,
+): HeroHandprint {
+  const jitter = () => (Math.random() - 0.5) * 4;
+  return {
+    id: `hp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+    src: HANDPRINT_SRCS[Math.floor(Math.random() * HANDPRINT_SRCS.length)]!,
+    x: Math.min(96, Math.max(4, xPct + jitter())),
+    y: Math.min(96, Math.max(4, yPct + jitter())),
+    angle: -38 + Math.random() * 76,
+    scale: 0.72 + Math.random() * 0.55,
+    mirror: Math.random() < 0.5,
+    tint: HANDPRINT_TINTS[Math.floor(Math.random() * HANDPRINT_TINTS.length)]!,
+    opacity: 0.55 + Math.random() * 0.35,
+  };
+}
+
 export function IntroMask({
   maskText,
   support,
@@ -109,6 +162,7 @@ export function IntroMask({
   posterSrc,
   imageSrc,
   watchUrl,
+  stampHint,
   enableHandCursor = true,
 }: IntroMaskProps) {
   const sectionRef = useRef<HTMLElement>(null);
@@ -124,20 +178,35 @@ export function IntroMask({
     media.youtubeId,
   );
   const watchHref = watchUrl?.trim() || "";
+  const stampHintText =
+    typeof stampHint === "string" && stampHint.trim()
+      ? stampHint.trim()
+      : DEFAULT_STAMP_HINT;
   const [soundOn, setSoundOn] = useState(false);
   const [handCursorMounted, setHandCursorMounted] = useState(false);
+  /** Public-only session stamps — cleared on refresh (no persistence). */
+  const [handprints, setHandprints] = useState<HeroHandprint[]>([]);
+  /** Show tip after first hover; hide permanently after first stamp (this session). */
+  const [stampHintVisible, setStampHintVisible] = useState(false);
+  const [stampHintDismissed, setStampHintDismissed] = useState(false);
+  const lastStampAtRef = useRef(0);
   const soundApiRef = useRef<{ setMuted: (muted: boolean) => void } | null>(
     null,
   );
 
-  // Warm the handprint asset used by the fixed cursor overlay (public only)
+  // Warm cursor + stamp assets (public only)
   useEffect(() => {
     if (!enableHandCursor) {
       setHandCursorMounted(false);
+      setHandprints([]);
       return;
     }
     const img = new window.Image();
     img.src = "/cursors/handprint.png";
+    for (const src of HANDPRINT_SRCS) {
+      const stamp = new window.Image();
+      stamp.src = src;
+    }
     setHandCursorMounted(true);
   }, [enableHandCursor]);
 
@@ -381,6 +450,45 @@ export function IntroMask({
     soundApiRef.current?.setMuted(!next);
   };
 
+  const revealStampHint = useCallback(() => {
+    if (!enableHandCursor || stampHintDismissed) return;
+    setStampHintVisible(true);
+  }, [enableHandCursor, stampHintDismissed]);
+
+  const stampHandprint = useCallback(
+    (event: PointerEvent<HTMLElement>) => {
+      if (!enableHandCursor) return;
+      if (event.button !== 0) return;
+      const target = event.target as Element | null;
+      if (
+        target?.closest?.(
+          ".intro-mask__media-controls, .intro-mask__sound, .intro-mask__watch, a, button",
+        )
+      ) {
+        return;
+      }
+      const sticky = stickyRef.current;
+      if (!sticky) return;
+      const now = Date.now();
+      // Intentional stamps — avoid accidental spray while dragging
+      if (now - lastStampAtRef.current < 280) return;
+      lastStampAtRef.current = now;
+
+      const rect = sticky.getBoundingClientRect();
+      if (rect.width < 1 || rect.height < 1) return;
+      const xPct = ((event.clientX - rect.left) / rect.width) * 100;
+      const yPct = ((event.clientY - rect.top) / rect.height) * 100;
+      setStampHintDismissed(true);
+      setStampHintVisible(false);
+      setHandprints((prev) => {
+        const next = [...prev, randomHandprint(xPct, yPct)];
+        // Soft cap so a long session doesn’t pile infinitely
+        return next.length > 36 ? next.slice(next.length - 36) : next;
+      });
+    },
+    [enableHandCursor],
+  );
+
   return (
     <section ref={sectionRef} className="intro-mask" aria-label="Introduction">
       {enableHandCursor && handCursorMounted
@@ -393,7 +501,17 @@ export function IntroMask({
             document.body,
           )
         : null}
-      <div ref={stickyRef} className="intro-mask__sticky">
+      <div
+        ref={stickyRef}
+        className="intro-mask__sticky"
+        onPointerEnter={enableHandCursor ? revealStampHint : undefined}
+        onPointerUp={enableHandCursor ? stampHandprint : undefined}
+      >
+        {enableHandCursor && stampHintVisible && !stampHintDismissed ? (
+          <p className="intro-mask__stamp-hint" role="status">
+            {stampHintText}
+          </p>
+        ) : null}
         {/* Alternate under-layer revealed through the text punch */}
         <div className="intro-mask__under" aria-hidden>
           <div className="intro-mask__under-wash" />
@@ -432,6 +550,25 @@ export function IntroMask({
               src={coverPoster || imageSrc || posterSrc}
               alt=""
             />
+          ) : null}
+          {/* Session stamps: above video, under haze. Public only. */}
+          {enableHandCursor && handprints.length > 0 ? (
+            <div className="intro-mask__handprints" aria-hidden>
+              {handprints.map((print) => (
+                <span
+                  key={print.id}
+                  className="intro-mask__handprint"
+                  style={{
+                    left: `${print.x}%`,
+                    top: `${print.y}%`,
+                    opacity: print.opacity,
+                    backgroundColor: print.tint,
+                    ["--hp-src" as string]: `url(${print.src})`,
+                    transform: `translate(-50%, -50%) rotate(${print.angle}deg) scaleX(${print.mirror ? -1 : 1}) scale(${print.scale})`,
+                  }}
+                />
+              ))}
+            </div>
           ) : null}
           <span
             ref={hazeRef}

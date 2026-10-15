@@ -26,6 +26,7 @@ export async function getHomepageContent(): Promise<HomepageContent> {
     posterSrc: hero.posterUrl || hero.imageUrl || undefined,
     imageSrc: hero.imageUrl || undefined,
     watchUrl: hero.watchUrl || undefined,
+    stampHint: hero.stampHint || undefined,
     gridItems: filterPublicGridItems(grid.items),
   };
 
@@ -68,6 +69,7 @@ export async function getHomepageContent(): Promise<HomepageContent> {
       posterSrc,
       imageSrc: hero.imageUrl || undefined,
       watchUrl: hero.watchUrl || undefined,
+      stampHint: hero.stampHint || undefined,
       gridItems: filterPublicGridItems(sanityGrid ?? grid.items),
     };
   } catch {

@@ -29,6 +29,7 @@ export default async function Home() {
           posterSrc={home.posterSrc}
           imageSrc={home.imageSrc}
           watchUrl={home.watchUrl}
+          stampHint={home.stampHint}
         />
         <div id="grid" className="relative z-10 overflow-x-clip bg-paper">
           <div className="mx-auto max-w-[90rem] px-4 pt-10 pb-2 sm:px-6 md:px-8">
