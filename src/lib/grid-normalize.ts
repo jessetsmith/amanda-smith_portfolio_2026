@@ -1,5 +1,6 @@
 import { normalizeItemLayouts } from "@/lib/grid-breakpoints";
 import { finalizeGridLayout } from "@/lib/grid-layout";
+import { toLocaleMap, type LocaleString } from "@/lib/i18n/resolve";
 import type {
   CellFill,
   GridItem,
@@ -24,7 +25,17 @@ function clamp(n: number, min: number, max: number): number {
 }
 
 function str(value: unknown): string | undefined {
-  return typeof value === "string" ? value : undefined;
+  return typeof value === "string" ? value.trim() || undefined : undefined;
+}
+
+function loc(value: unknown, fallback = ""): LocaleString {
+  const map = toLocaleMap(value, fallback);
+  return Object.keys(map).length ? map : fallback ? { en: fallback } : {};
+}
+
+function locOpt(value: unknown): LocaleString | undefined {
+  const map = toLocaleMap(value);
+  return Object.keys(map).length ? map : undefined;
 }
 
 function tone(value: unknown, fallback: PlaceholderTone = "warm"): PlaceholderTone {
@@ -76,7 +87,7 @@ export function normalizeGridItem(item: GridItem, order: number): GridItem {
       return {
         ...base,
         kind: "titleRow",
-        label: str((item as { label?: string }).label) || "Section",
+        label: loc((item as { label?: unknown }).label, "Section"),
         ...(sectionRows ? { sectionRows } : {}),
         ...(hidden ? { hidden: true as const } : {}),
       };
@@ -90,57 +101,38 @@ export function normalizeGridItem(item: GridItem, order: number): GridItem {
         ...base,
         kind: "colorCell",
         fill,
-        label: str((item as { label?: string }).label),
+        label: locOpt((item as { label?: unknown }).label),
         href: str((item as { href?: string }).href),
       };
     }
     case "mediaCell": {
-      const row = item as {
-        meta?: string;
-        title?: string;
-        caption?: string;
-        description?: string;
-        href?: string;
-        imageSrc?: string;
-        imageAlt?: string;
-        placeholderTone?: PlaceholderTone;
-      };
+      const row = item as unknown as Record<string, unknown>;
       return {
         ...base,
         kind: "mediaCell",
-        meta: str(row.meta),
-        title: str(row.title),
-        caption: str(row.caption) || "Media",
-        description: str(row.description),
+        meta: locOpt(row.meta),
+        title: locOpt(row.title),
+        caption: loc(row.caption, "Media"),
+        description: locOpt(row.description),
         href: str(row.href),
         imageSrc: str(row.imageSrc),
-        imageAlt: str(row.imageAlt),
+        imageAlt: locOpt(row.imageAlt),
         placeholderTone: tone(row.placeholderTone, "warm"),
       };
     }
     case "projectCell": {
-      const row = item as {
-        meta?: string;
-        title?: string;
-        subtitle?: string;
-        year?: string;
-        summary?: string;
-        href?: string;
-        imageSrc?: string;
-        imageAlt?: string;
-        placeholderTone?: PlaceholderTone;
-      };
+      const row = item as unknown as Record<string, unknown>;
       return {
         ...base,
         kind: "projectCell",
-        meta: str(row.meta),
-        title: str(row.title) || "Untitled project",
-        subtitle: str(row.subtitle),
+        meta: locOpt(row.meta),
+        title: loc(row.title, "Untitled project"),
+        subtitle: locOpt(row.subtitle),
         year: str(row.year),
-        summary: str(row.summary),
+        summary: locOpt(row.summary),
         href: str(row.href),
         imageSrc: str(row.imageSrc),
-        imageAlt: str(row.imageAlt),
+        imageAlt: locOpt(row.imageAlt),
         placeholderTone: tone(row.placeholderTone, "cool"),
       };
     }
@@ -151,26 +143,17 @@ export function normalizeGridItem(item: GridItem, order: number): GridItem {
       };
     case "textCell":
     default: {
-      const row = item as {
-        meta?: string;
-        headline?: string;
-        subtitle?: string;
-        excerpt?: string;
-        href?: string;
-        imageSrc?: string;
-        imageAlt?: string;
-        placeholderTone?: PlaceholderTone;
-      };
+      const row = item as unknown as Record<string, unknown>;
       return {
         ...base,
         kind: "textCell",
-        meta: str(row.meta),
-        headline: str(row.headline) || "Headline",
-        subtitle: str(row.subtitle),
-        excerpt: str(row.excerpt),
+        meta: locOpt(row.meta),
+        headline: loc(row.headline, "Headline"),
+        subtitle: locOpt(row.subtitle),
+        excerpt: locOpt(row.excerpt),
         href: str(row.href),
         imageSrc: str(row.imageSrc),
-        imageAlt: str(row.imageAlt),
+        imageAlt: locOpt(row.imageAlt),
         placeholderTone: tone(row.placeholderTone, "warm"),
       };
     }
@@ -196,7 +179,7 @@ export function createGridItem(kind: GridItemKind, order: number): GridItem {
         colStart: 1,
         colSpan: 4,
         rowSpan: 1,
-        label: "New section",
+        label: { en: "New section" },
       };
     case "colorCell":
       return {
@@ -207,7 +190,7 @@ export function createGridItem(kind: GridItemKind, order: number): GridItem {
         colSpan: 1,
         rowSpan: 1,
         fill: "rust",
-        label: "Accent",
+        label: { en: "Accent" },
       };
     case "mediaCell":
       return {
@@ -217,10 +200,10 @@ export function createGridItem(kind: GridItemKind, order: number): GridItem {
         colStart: 1,
         colSpan: 1,
         rowSpan: 2,
-        meta: "Media",
-        title: "New media",
-        caption: "Image",
-        description: "Supporting note under the image.",
+        meta: { en: "Media" },
+        title: { en: "New media" },
+        caption: { en: "Image" },
+        description: { en: "Supporting note under the image." },
         placeholderTone: "warm",
       };
     case "projectCell":
@@ -231,11 +214,11 @@ export function createGridItem(kind: GridItemKind, order: number): GridItem {
         colStart: 1,
         colSpan: 1,
         rowSpan: 2,
-        meta: "Project",
-        title: "New project",
-        subtitle: "Subtitle",
+        meta: { en: "Project" },
+        title: { en: "New project" },
+        subtitle: { en: "Subtitle" },
         year: String(new Date().getFullYear()),
-        summary: "Short summary below the image.",
+        summary: { en: "Short summary below the image." },
         placeholderTone: "cool",
       };
     case "blankCell":
@@ -256,10 +239,10 @@ export function createGridItem(kind: GridItemKind, order: number): GridItem {
         colStart: 1,
         colSpan: 1,
         rowSpan: 2,
-        meta: "Meta",
-        headline: "New text block",
-        subtitle: "Subtitle",
-        excerpt: "Description below the image.",
+        meta: { en: "Meta" },
+        headline: { en: "New text block" },
+        subtitle: { en: "Subtitle" },
+        excerpt: { en: "Description below the image." },
         placeholderTone: "warm",
       };
   }

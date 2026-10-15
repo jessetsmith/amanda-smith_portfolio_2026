@@ -9,12 +9,14 @@ import {
   type PointerEvent,
 } from "react";
 import { createPortal } from "react-dom";
-import { DEFAULT_STAMP_HINT } from "@/lib/hero";
+import { useLocaleOptional } from "@/components/i18n/LocaleProvider";
+import { DEFAULT_STAMP_HINT, resolveStampHint } from "@/lib/hero";
 import { resolveHeroMedia, resolveHeroPoster } from "@/lib/hero-media";
+import type { LocaleString } from "@/lib/i18n/resolve";
 
 interface IntroMaskProps {
-  maskText: string;
-  support: string;
+  maskText: LocaleString;
+  support: LocaleString;
   videoSrc: string;
   posterSrc?: string;
   /** Used when videoSrc is empty (still cover). */
@@ -25,7 +27,7 @@ interface IntroMaskProps {
    * First-hover tip before stamping. Empty → default “click to leave your mark”.
    * Only shown when enableHandCursor is on (public).
    */
-  stampHint?: string;
+  stampHint?: LocaleString;
   /**
    * Handprint overlay + `cursor: none` on the cover.
    * Public homepage only — leave off in admin live preview.
@@ -165,6 +167,7 @@ export function IntroMask({
   stampHint,
   enableHandCursor = true,
 }: IntroMaskProps) {
+  const { t, ui, locale } = useLocaleOptional();
   const sectionRef = useRef<HTMLElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
   const handCursorRef = useRef<HTMLDivElement>(null);
@@ -178,10 +181,10 @@ export function IntroMask({
     media.youtubeId,
   );
   const watchHref = watchUrl?.trim() || "";
+  const title = t(maskText);
+  const supportLine = t(support);
   const stampHintText =
-    typeof stampHint === "string" && stampHint.trim()
-      ? stampHint.trim()
-      : DEFAULT_STAMP_HINT;
+    resolveStampHint({ stampHint }, locale) || DEFAULT_STAMP_HINT;
   const [soundOn, setSoundOn] = useState(false);
   const [handCursorMounted, setHandCursorMounted] = useState(false);
   /** Public-only session stamps — cleared on refresh (no persistence). */
@@ -674,7 +677,7 @@ export function IntroMask({
             <span className="intro-mask__haze-cloud intro-mask__haze-cloud--e" />
           </span>
           <h1 className="intro-mask__title" aria-hidden>
-            {maskText}
+            {title}
           </h1>
         </div>
 
@@ -684,17 +687,17 @@ export function IntroMask({
             ref={titleRegionRef}
             className="intro-mask__title-region"
             tabIndex={0}
-            aria-label={maskText}
+            aria-label={title}
             onPointerMove={onPointerMove}
             onPointerLeave={clearSpotlight}
             onBlur={clearSpotlight}
             onFocus={onFocus}
           >
             <p className="intro-mask__title-readable" aria-hidden>
-              {maskText}
+              {title}
             </p>
           </div>
-          <p className="intro-mask__support">{support}</p>
+          <p className="intro-mask__support">{supportLine}</p>
         </div>
 
         {hasPlayable || watchHref ? (
@@ -706,7 +709,7 @@ export function IntroMask({
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Watch full video
+                {ui("watchFullVideo")}
                 <span className="intro-mask__watch-arrow" aria-hidden>
                   ↗
                 </span>
@@ -718,15 +721,11 @@ export function IntroMask({
                 className="intro-mask__sound"
                 onClick={toggleSound}
                 aria-pressed={soundOn}
-                aria-label={soundOn ? "Mute cover video" : "Unmute cover video"}
-                title={
-                  soundOn
-                    ? "Sound on — click to mute"
-                    : "Sound off — click to unmute"
-                }
+                aria-label={soundOn ? ui("muteCover") : ui("unmuteCover")}
+                title={soundOn ? ui("soundOn") : ui("soundOff")}
               >
                 <SoundIcon on={soundOn} />
-                <span>{soundOn ? "Sound on" : "Sound off"}</span>
+                <span>{soundOn ? ui("soundOn") : ui("soundOff")}</span>
               </button>
             ) : null}
           </div>

@@ -6,6 +6,7 @@ import {
   isAbsoluteHttpUrl,
   normalizeHero,
 } from "@/lib/hero";
+import { resolveLocale, toLocaleMap } from "@/lib/i18n/resolve";
 import { sanityFetchOptions } from "@/lib/sanity-fetch";
 import { client } from "@/sanity/lib/client";
 import { getWriteClient } from "@/sanity/lib/write-client";
@@ -37,13 +38,16 @@ function publicMediaUrl(url: string | undefined): string | undefined {
 
 function seedHero(): HomepageHero {
   return normalizeHero({
-    titleText: str(seed.titleText) || defaultHero().titleText,
-    supportText: str(seed.supportText) || defaultHero().supportText,
+    titleText: toLocaleMap(seed.titleText, resolveLocale(defaultHero().titleText)),
+    supportText: toLocaleMap(
+      seed.supportText,
+      resolveLocale(defaultHero().supportText),
+    ),
     videoUrl: str(seed.videoUrl) || defaultHero().videoUrl,
     posterUrl: str(seed.posterUrl) || undefined,
     imageUrl: str(seed.imageUrl) || undefined,
     watchUrl: str(seed.watchUrl) || undefined,
-    stampHint: str((seed as { stampHint?: string }).stampHint) || undefined,
+    stampHint: toLocaleMap((seed as { stampHint?: string }).stampHint) || undefined,
   });
 }
 
@@ -144,8 +148,8 @@ export async function ensureHeroDocument(): Promise<HomepageHeroResult | null> {
   await writeClient
     .patch("homepage")
     .set({
-      introMaskText: seeded.titleText,
-      introSupport: seeded.supportText,
+      introMaskText: resolveLocale(seeded.titleText),
+      introSupport: resolveLocale(seeded.supportText),
       introVideoUrl: seeded.videoUrl || undefined,
       introPosterUrl: isAbsoluteHttpUrl(seeded.posterUrl)
         ? seeded.posterUrl
@@ -193,8 +197,8 @@ export async function saveHero(hero: HomepageHero): Promise<HomepageHeroResult> 
       await writeClient
         .patch("homepage")
         .set({
-          introMaskText: normalized.titleText,
-          introSupport: normalized.supportText,
+          introMaskText: resolveLocale(normalized.titleText),
+          introSupport: resolveLocale(normalized.supportText),
           introVideoUrl: normalized.videoUrl || undefined,
           introPosterUrl: isAbsoluteHttpUrl(normalized.posterUrl)
             ? normalized.posterUrl

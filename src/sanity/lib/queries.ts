@@ -1,3 +1,7 @@
+/**
+ * Locale fields are fetched raw so both legacy plain strings and
+ * localeString / localeText objects work during / after migration.
+ */
 export const homepageHeroQuery = `*[_type == "homepageHero" && _id == "homepageHero"][0]{
   titleText,
   supportText,
@@ -63,6 +67,13 @@ export const siteSettingsQuery = `*[_type == "siteSettings" && _id == "siteSetti
   contactNote
 }`;
 
+export const uiCopyQuery = `*[_type == "uiCopy" && _id == "uiCopy"][0]{
+  open, lead, watchFullVideo, soundOn, soundOff, muteCover, unmuteCover,
+  gridIntro, cvEyebrow, cvExpertise, cvExperience, cvAwards, cvSpeaking,
+  cvEducation, cvSkills, cvPublications, backToPortfolio, present,
+  language, primaryNav, image, media, project, colorCell
+}`;
+
 export const cvQuery = `*[_type == "cv" && _id == "cv"][0]{
   name,
   headline,
@@ -70,6 +81,7 @@ export const cvQuery = `*[_type == "cv" && _id == "cv"][0]{
   email,
   location,
   relocationNote,
+  summary,
   expertiseTags,
   expertiseHighlights[]{ text },
   experience[]{

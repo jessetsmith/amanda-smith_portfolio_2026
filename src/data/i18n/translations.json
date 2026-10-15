@@ -1,0 +1,1162 @@
+{
+  "hero": {
+    "titleText": {
+      "en": "Amanda Smith",
+      "es": "Amanda Smith",
+      "it": "Amanda Smith",
+      "pt": "Amanda Smith",
+      "fr": "Amanda Smith",
+      "de": "Amanda Smith"
+    },
+    "supportText": {
+      "en": "Exhibitions, research, and writing — arranged as one connected grid.",
+      "es": "Exposiciones, investigación y escritura — organizadas como una cuadrícula conectada.",
+      "it": "Mostre, ricerca e scrittura — disposte come una griglia connessa.",
+      "pt": "Exposições, investigação e escrita — organizadas como uma grelha ligada.",
+      "fr": "Expositions, recherche et écriture — assemblées en une grille connectée.",
+      "de": "Ausstellungen, Forschung und Schreiben — als verbundenes Raster angeordnet."
+    },
+    "stampHint": {
+      "en": "click to leave your mark",
+      "es": "haz clic para dejar tu huella",
+      "it": "clicca per lasciare il tuo segno",
+      "pt": "clique para deixar a tua marca",
+      "fr": "cliquez pour laisser votre empreinte",
+      "de": "klicken, um deine Spur zu hinterlassen"
+    }
+  },
+  "site": {
+    "siteTitle": {
+      "en": "Amanda Smith",
+      "es": "Amanda Smith",
+      "it": "Amanda Smith",
+      "pt": "Amanda Smith",
+      "fr": "Amanda Smith",
+      "de": "Amanda Smith"
+    },
+    "nav": [
+      {
+        "href": "/#grid",
+        "label": {
+          "en": "Work",
+          "es": "Obra",
+          "it": "Lavori",
+          "pt": "Obra",
+          "fr": "Travaux",
+          "de": "Arbeit"
+        }
+      },
+      {
+        "href": "/cv",
+        "label": {
+          "en": "CV",
+          "es": "CV",
+          "it": "CV",
+          "pt": "CV",
+          "fr": "CV",
+          "de": "CV"
+        }
+      },
+      {
+        "href": "https://research.bittersweetwoman.com/",
+        "label": {
+          "en": "Research",
+          "es": "Investigación",
+          "it": "Ricerca",
+          "pt": "Investigação",
+          "fr": "Recherche",
+          "de": "Forschung"
+        }
+      },
+      {
+        "href": "mailto:Amandajsmith@arizona.edu",
+        "label": {
+          "en": "Contact",
+          "es": "Contacto",
+          "it": "Contatti",
+          "pt": "Contacto",
+          "fr": "Contact",
+          "de": "Kontakt"
+        }
+      }
+    ],
+    "contactNote": {
+      "en": "Tucson, Arizona — open to relocation. Say hello for exhibitions, research, and writing.",
+      "es": "Tucson, Arizona — abierta a mudarse. Escribe para exposiciones, investigación y escritura.",
+      "it": "Tucson, Arizona — disponibile a trasferirsi. Scrivi per mostre, ricerca e scrittura.",
+      "pt": "Tucson, Arizona — aberta a mudanças. Diz olá para exposições, investigação e escrita.",
+      "fr": "Tucson, Arizona — ouverte à la mobilité. Écrivez pour expositions, recherche et écriture.",
+      "de": "Tucson, Arizona — umzugsbereit. Melde dich für Ausstellungen, Forschung und Schreiben."
+    }
+  },
+  "grid": {
+    "title-practice": {
+      "label": {
+        "en": "Practice",
+        "es": "Práctica",
+        "it": "Pratica",
+        "pt": "Prática",
+        "fr": "Pratique",
+        "de": "Praxis"
+      }
+    },
+    "text-intro": {
+      "meta": {
+        "en": "About",
+        "es": "Acerca de",
+        "it": "Informazioni",
+        "pt": "Sobre",
+        "fr": "À propos",
+        "de": "Über"
+      },
+      "headline": {
+        "en": "Narrative art & curatorial practice",
+        "es": "Arte narrativa y práctica curatorial",
+        "it": "Arte narrativa e pratica curatoriale",
+        "pt": "Arte narrativa e prática curatorial",
+        "fr": "Art narratif et pratique curatoriale",
+        "de": "Narrative Kunst & kuratorische Praxis"
+      },
+      "subtitle": {
+        "en": "Writing · visual art · exhibitions",
+        "es": "Escritura · arte visual · exposiciones",
+        "it": "Scrittura · arte visiva · mostre",
+        "pt": "Escrita · arte visual · exposições",
+        "fr": "Écriture · art visuel · expositions",
+        "de": "Schreiben · Bildende Kunst · Ausstellungen"
+      },
+      "excerpt": {
+        "en": "Stories that reflect personal, cultural, and universal experience — bridging written and visual storytelling to invite empathy, healing, and connection.",
+        "es": "Historias que reflejan la experiencia personal, cultural y universal — uniendo relato escrito y visual para invitar a la empatía, la sanación y la conexión.",
+        "it": "Storie che riflettono l’esperienza personale, culturale e universale — collegando narrazione scritta e visiva per invitare empatia, guarigione e connessione.",
+        "pt": "Histórias que reflectem a experiência pessoal, cultural e universal — ligando narrativa escrita e visual para convidar empatia, cura e ligação.",
+        "fr": "Des histoires qui reflètent l’expérience personnelle, culturelle et universelle — reliant récit écrit et visuel pour inviter empathie, guérison et lien.",
+        "de": "Geschichten, die persönliche, kulturelle und universelle Erfahrung spiegeln — geschriebenes und visuelles Erzählen verbinden Empathie, Heilung und Verbindung."
+      },
+      "imageAlt": {
+        "en": "Teatro delle Relazioni street installation",
+        "es": "Instalación callejera Teatro delle Relazioni",
+        "it": "Installazione urbana Teatro delle Relazioni",
+        "pt": "Instalação de rua Teatro delle Relazioni",
+        "fr": "Installation de rue Teatro delle Relazioni",
+        "de": "Straßeninstallation Teatro delle Relazioni"
+      }
+    },
+    "color-rust-1": {
+      "label": {
+        "en": "Care",
+        "es": "Cuidado",
+        "it": "Cura",
+        "pt": "Cuidado",
+        "fr": "Soin",
+        "de": "Fürsorge"
+      }
+    },
+    "text-writing": {
+      "meta": {
+        "en": "Creative writing",
+        "es": "Escritura creativa",
+        "it": "Scrittura creativa",
+        "pt": "Escrita criativa",
+        "fr": "Écriture créative",
+        "de": "Kreatives Schreiben"
+      },
+      "headline": {
+        "en": "Bittersweet Woman",
+        "es": "Bittersweet Woman",
+        "it": "Bittersweet Woman",
+        "pt": "Bittersweet Woman",
+        "fr": "Bittersweet Woman",
+        "de": "Bittersweet Woman"
+      },
+      "subtitle": {
+        "en": "Memoir · poetry · criticism",
+        "es": "Memorias · poesía · crítica",
+        "it": "Memorie · poesia · critica",
+        "pt": "Memórias · poesia · crítica",
+        "fr": "Mémoires · poésie · critique",
+        "de": "Memoir · Lyrik · Kritik"
+      },
+      "excerpt": {
+        "en": "Language as a site of inquiry rather than resolution — examining how memory, trauma, and interior life are shaped by social conditions and cultural form.",
+        "es": "El lenguaje como lugar de indagación más que de resolución — examinar cómo la memoria, el trauma y la vida interior se forman por condiciones sociales y forma cultural.",
+        "it": "Il linguaggio come luogo di indagine piuttosto che di risoluzione — esaminare come memoria, trauma e vita interiore siano plasmati da condizioni sociali e forma culturale.",
+        "pt": "A linguagem como lugar de indagação em vez de resolução — examinar como memória, trauma e vida interior são moldados por condições sociais e forma cultural.",
+        "fr": "Le langage comme lieu d’enquête plutôt que de résolution — examiner comment mémoire, trauma et vie intérieure sont façonnés par les conditions sociales et la forme culturelle.",
+        "de": "Sprache als Ort der Untersuchung statt der Auflösung — wie Gedächtnis, Trauma und Innenleben von sozialen Bedingungen und kultureller Form geprägt werden."
+      },
+      "imageAlt": {
+        "en": "Bittersweet Woman writing practice",
+        "es": "Práctica de escritura Bittersweet Woman",
+        "it": "Pratica di scrittura Bittersweet Woman",
+        "pt": "Prática de escrita Bittersweet Woman",
+        "fr": "Pratique d’écriture Bittersweet Woman",
+        "de": "Schreibpraxis Bittersweet Woman"
+      }
+    },
+    "text-visual": {
+      "meta": {
+        "en": "Visual art",
+        "es": "Arte visual",
+        "it": "Arte visiva",
+        "pt": "Arte visual",
+        "fr": "Art visuel",
+        "de": "Bildende Kunst"
+      },
+      "headline": {
+        "en": "Collage & assemblage",
+        "es": "Collage y ensamblaje",
+        "it": "Collage e assemblage",
+        "pt": "Colagem e assemblage",
+        "fr": "Collage et assemblage",
+        "de": "Collage & Assemblage"
+      },
+      "subtitle": {
+        "en": "Image as narrative thinking",
+        "es": "La imagen como pensamiento narrativo",
+        "it": "L’immagine come pensiero narrativo",
+        "pt": "A imagem como pensamento narrativo",
+        "fr": "L’image comme pensée narrative",
+        "de": "Bild als narratives Denken"
+      },
+      "excerpt": {
+        "en": "Visual fields where memory and symbolism accumulate rather than resolve — residue, fractured time, and meaning through juxtaposition.",
+        "es": "Campos visuales donde la memoria y el simbolismo se acumulan en lugar de resolverse — residuo, tiempo fracturado y sentido por yuxtaposición.",
+        "it": "Campi visuali dove memoria e simbolismo si accumulano invece di risolversi — residuo, tempo fratturato e senso per giustapposizione.",
+        "pt": "Campos visuais onde memória e simbolismo se acumulam em vez de se resolverem — resíduo, tempo fracturado e sentido por justaposição.",
+        "fr": "Des champs visuels où mémoire et symbolisme s’accumulent plutôt que de se résoudre — résidu, temps fracturé et sens par juxtaposition.",
+        "de": "Visuelle Felder, in denen Gedächtnis und Symbolik sich anreichern statt sich aufzulösen — Residuum, gebrochene Zeit und Sinn durch Gegenüberstellung."
+      },
+      "imageAlt": {
+        "en": "Primavera collage study",
+        "es": "Estudio de collage Primavera",
+        "it": "Studio di collage Primavera",
+        "pt": "Estudo de colagem Primavera",
+        "fr": "Étude de collage Primavera",
+        "de": "Collage-Studie Primavera"
+      }
+    },
+    "title-projects": {
+      "label": {
+        "en": "Projects",
+        "es": "Proyectos",
+        "it": "Progetti",
+        "pt": "Projetos",
+        "fr": "Projets",
+        "de": "Projekte"
+      }
+    },
+    "project-echos": {
+      "meta": {
+        "en": "Exhibition",
+        "es": "Exposición",
+        "it": "Mostra",
+        "pt": "Exposição",
+        "fr": "Exposition",
+        "de": "Ausstellung"
+      },
+      "title": {
+        "en": "Echos of Migration: Where We Go Together",
+        "es": "Ecos de la migración: Adonde vamos juntos",
+        "it": "Echi della migrazione: Dove andiamo insieme",
+        "pt": "Ecos da migração: Para onde vamos juntos",
+        "fr": "Échos de la migration : Où nous allons ensemble",
+        "de": "Echos der Migration: Wohin wir gemeinsam gehen"
+      },
+      "subtitle": {
+        "en": "Reflections on care, consciousness, and community",
+        "es": "Reflexiones sobre cuidado, conciencia y comunidad",
+        "it": "Riflessioni su cura, consapevolezza e comunità",
+        "pt": "Reflexões sobre cuidado, consciência e comunidade",
+        "fr": "Réflexions sur le soin, la conscience et la communauté",
+        "de": "Reflexionen über Fürsorge, Bewusstsein und Gemeinschaft"
+      },
+      "summary": {
+        "en": "Binational PhotoVoice exhibition with Andrew Julo — wellness, belonging, and resilience through movement and shared space, made with nursing students from the University of Arizona, Universidad de Sonora, and IIIES.",
+        "es": "Exposición binacional PhotoVoice con Andrew Julo — bienestar, pertenencia y resiliencia a través del movimiento y el espacio compartido, creada con estudiantes de enfermería de la University of Arizona, Universidad de Sonora e IIIES.",
+        "it": "Mostra binazionale PhotoVoice con Andrew Julo — benessere, appartenenza e resilienza attraverso movimento e spazio condiviso, realizzata con studentesse e studenti di nursing di University of Arizona, Universidad de Sonora e IIIES.",
+        "pt": "Exposição binacional PhotoVoice com Andrew Julo — bem-estar, pertença e resiliência através do movimento e do espaço partilhado, feita com estudantes de enfermagem da University of Arizona, Universidad de Sonora e IIIES.",
+        "fr": "Exposition binational PhotoVoice avec Andrew Julo — bien-être, appartenance et résilience par le mouvement et l’espace partagé, réalisée avec des étudiant·es en soins infirmiers de l’University of Arizona, Universidad de Sonora et IIIES.",
+        "de": "Binational PhotoVoice-Ausstellung mit Andrew Julo — Wohlbefinden, Zugehörigkeit und Resilienz durch Bewegung und geteilten Raum, mit Pflege-Studierenden der University of Arizona, Universidad de Sonora und IIIES."
+      },
+      "imageAlt": {
+        "en": "Echos of Migration exhibition view",
+        "es": "Vista de la exposición Ecos de la migración",
+        "it": "Vista della mostra Echi della migrazione",
+        "pt": "Vista da exposição Ecos da migração",
+        "fr": "Vue de l’exposition Échos de la migration",
+        "de": "Ausstellungsansicht Echos der Migration"
+      }
+    },
+    "color-sage-1": {
+      "label": {
+        "en": "PhotoVoice",
+        "es": "PhotoVoice",
+        "it": "PhotoVoice",
+        "pt": "PhotoVoice",
+        "fr": "PhotoVoice",
+        "de": "PhotoVoice"
+      }
+    },
+    "project-theater": {
+      "meta": {
+        "en": "Curatorial",
+        "es": "Curatorial",
+        "it": "Curatoriale",
+        "pt": "Curatorial",
+        "fr": "Curatorial",
+        "de": "Kuratorisch"
+      },
+      "title": {
+        "en": "Teatro delle Relazioni",
+        "es": "Teatro delle Relazioni",
+        "it": "Teatro delle Relazioni",
+        "pt": "Teatro delle Relazioni",
+        "fr": "Teatro delle Relazioni",
+        "de": "Teatro delle Relazioni"
+      },
+      "subtitle": {
+        "en": "Theater of Relations · IED Firenze",
+        "es": "Teatro de las relaciones · IED Firenze",
+        "it": "Teatro delle Relazioni · IED Firenze",
+        "pt": "Teatro das relações · IED Firenze",
+        "fr": "Théâtre des relations · IED Firenze",
+        "de": "Theater der Beziehungen · IED Firenze"
+      },
+      "summary": {
+        "en": "Community as belonging and as artistic production — encounter, staged proximity, and shared authorship.",
+        "es": "La comunidad como pertenencia y como producción artística — encuentro, proximidad escénica y autoría compartida.",
+        "it": "La comunità come appartenenza e come produzione artistica — incontro, prossimità messa in scena e autorialità condivisa.",
+        "pt": "A comunidade como pertença e como produção artística — encontro, proximidade encenada e autoria partilhada.",
+        "fr": "La communauté comme appartenance et comme production artistique — rencontre, proximité mise en scène et autorité partagée.",
+        "de": "Gemeinschaft als Zugehörigkeit und als künstlerische Produktion — Begegnung, inszenierte Nähe und geteilte Autorschaft."
+      },
+      "imageAlt": {
+        "en": "Teatro delle Relazioni exhibition",
+        "es": "Exposición Teatro delle Relazioni",
+        "it": "Mostra Teatro delle Relazioni",
+        "pt": "Exposição Teatro delle Relazioni",
+        "fr": "Exposition Teatro delle Relazioni",
+        "de": "Ausstellung Teatro delle Relazioni"
+      }
+    },
+    "media-photovoice": {
+      "meta": {
+        "en": "Still",
+        "es": "Imagen",
+        "it": "Immagine",
+        "pt": "Imagem",
+        "fr": "Image",
+        "de": "Standbild"
+      },
+      "title": {
+        "en": "Opening reception",
+        "es": "Recepción inaugural",
+        "it": "Vernissage",
+        "pt": "Receção de abertura",
+        "fr": "Vernissage",
+        "de": "Eröffnung"
+      },
+      "caption": {
+        "en": "Where we go together",
+        "es": "Adonde vamos juntos",
+        "it": "Dove andiamo insieme",
+        "pt": "Para onde vamos juntos",
+        "fr": "Où nous allons ensemble",
+        "de": "Wohin wir gemeinsam gehen"
+      },
+      "description": {
+        "en": "Dora Rodriguez reception and PhotoVoice exhibit — participatory imagery as advocacy and storytelling.",
+        "es": "Recepción de Dora Rodriguez y exposición PhotoVoice — imagen participativa como defensa y relato.",
+        "it": "Reception di Dora Rodriguez e mostra PhotoVoice — immaginario partecipativo come advocacy e narrazione.",
+        "pt": "Receção de Dora Rodriguez e exposição PhotoVoice — imagem participativa como advocacy e narrativa.",
+        "fr": "Réception Dora Rodriguez et exposition PhotoVoice — imagerie participative comme plaidoyer et récit.",
+        "de": "Empfang Dora Rodriguez und PhotoVoice-Ausstellung — partizipative Bilder als Advocacy und Erzählung."
+      },
+      "imageAlt": {
+        "en": "PhotoVoice exhibit opening reception",
+        "es": "Apertura de la exposición PhotoVoice",
+        "it": "Vernissage della mostra PhotoVoice",
+        "pt": "Abertura da exposição PhotoVoice",
+        "fr": "Vernissage de l’exposition PhotoVoice",
+        "de": "Eröffnung der PhotoVoice-Ausstellung"
+      }
+    },
+    "project-stodulky": {
+      "meta": {
+        "en": "Proposal",
+        "es": "Propuesta",
+        "it": "Proposta",
+        "pt": "Proposta",
+        "fr": "Proposition",
+        "de": "Vorschlag"
+      },
+      "title": {
+        "en": "Spojme Stodůlky",
+        "es": "Spojme Stodůlky",
+        "it": "Spojme Stodůlky",
+        "pt": "Spojme Stodůlky",
+        "fr": "Spojme Stodůlky",
+        "de": "Spojme Stodůlky"
+      },
+      "subtitle": {
+        "en": "Connecting Stodůlky · Prague",
+        "es": "Conectando Stodůlky · Praga",
+        "it": "Connettere Stodůlky · Praga",
+        "pt": "Ligar Stodůlky · Praga",
+        "fr": "Relier Stodůlky · Prague",
+        "de": "Stodůlky verbinden · Prag"
+      },
+      "summary": {
+        "en": "Community art proposal bridging Czech, Russian, and Ukrainian residents through shared art experiences.",
+        "es": "Propuesta de arte comunitario que une a residentes checos, rusos y ucranianos a través de experiencias artísticas compartidas.",
+        "it": "Proposta di arte di comunità che collega residenti cechi, russi e ucraini attraverso esperienze artistiche condivise.",
+        "pt": "Proposta de arte comunitária que liga residentes checos, russos e ucranianos através de experiências artísticas partilhadas.",
+        "fr": "Proposition d’art communautaire reliant résident·es tchèques, russes et ukrainien·nes par des expériences artistiques partagées.",
+        "de": "Gemeinschaftskunst-Vorschlag, der tschechische, russische und ukrainische Bewohner:innen durch geteilte Kunsterfahrungen verbindet."
+      },
+      "imageAlt": {
+        "en": "Connecting Stodůlky project visual",
+        "es": "Visual del proyecto Conectando Stodůlky",
+        "it": "Visual del progetto Connettere Stodůlky",
+        "pt": "Visual do projeto Ligar Stodůlky",
+        "fr": "Visuel du projet Relier Stodůlky",
+        "de": "Projektvisual Stodůlky verbinden"
+      }
+    },
+    "project-vita": {
+      "meta": {
+        "en": "Feature",
+        "es": "Destacado",
+        "it": "In evidenza",
+        "pt": "Destaque",
+        "fr": "À la une",
+        "de": "Feature"
+      },
+      "title": {
+        "en": "Vita d’Arte and Other Works",
+        "es": "Vita d’Arte y otras obras",
+        "it": "Vita d’Arte e altre opere",
+        "pt": "Vita d’Arte e outras obras",
+        "fr": "Vita d’Arte et autres œuvres",
+        "de": "Vita d’Arte und andere Werke"
+      },
+      "subtitle": {
+        "en": "Saint Louis Art Gallery · Oxford, UK",
+        "es": "Saint Louis Art Gallery · Oxford, Reino Unido",
+        "it": "Saint Louis Art Gallery · Oxford, Regno Unito",
+        "pt": "Saint Louis Art Gallery · Oxford, Reino Unido",
+        "fr": "Saint Louis Art Gallery · Oxford, Royaume-Uni",
+        "de": "Saint Louis Art Gallery · Oxford, UK"
+      },
+      "summary": {
+        "en": "Featured artist in a virtual exhibition presenting selected works from the Vita d’Arte practice.",
+        "es": "Artista destacada en una exposición virtual con obras seleccionadas de la práctica Vita d’Arte.",
+        "it": "Artista in evidenza in una mostra virtuale con opere selezionate dalla pratica Vita d’Arte.",
+        "pt": "Artista em destaque numa exposição virtual com obras selecionadas da prática Vita d’Arte.",
+        "fr": "Artiste mise en avant dans une exposition virtuelle présentant des œuvres choisies de la pratique Vita d’Arte.",
+        "de": "Ausgestellte Künstlerin in einer virtuellen Ausstellung mit ausgewählten Arbeiten der Vita-d’Arte-Praxis."
+      },
+      "imageAlt": {
+        "en": "Vita d’Arte exhibition feature",
+        "es": "Destacado de la exposición Vita d’Arte",
+        "it": "Feature della mostra Vita d’Arte",
+        "pt": "Destaque da exposição Vita d’Arte",
+        "fr": "Mise en avant Vita d’Arte",
+        "de": "Feature der Ausstellung Vita d’Arte"
+      }
+    },
+    "project-portfolio-sample": {
+      "meta": {
+        "en": "Collective",
+        "es": "Colectivo",
+        "it": "Collettivo",
+        "pt": "Coletivo",
+        "fr": "Collectif",
+        "de": "Kollektiv"
+      },
+      "title": {
+        "en": "Repose as Resistance",
+        "es": "El reposo como resistencia",
+        "it": "Il riposo come resistenza",
+        "pt": "O repouso como resistência",
+        "fr": "Le repos comme résistance",
+        "de": "Ruhe als Widerstand"
+      },
+      "subtitle": {
+        "en": "Terra Foundation / The Recovery Plan",
+        "es": "Terra Foundation / The Recovery Plan",
+        "it": "Terra Foundation / The Recovery Plan",
+        "pt": "Terra Foundation / The Recovery Plan",
+        "fr": "Terra Foundation / The Recovery Plan",
+        "de": "Terra Foundation / The Recovery Plan"
+      },
+      "summary": {
+        "en": "Collective formed from a Terra Foundation symposium and retreat.",
+        "es": "Colectivo surgido de un simposio y retiro de la Terra Foundation.",
+        "it": "Collettivo nato da un simposio e ritiro della Terra Foundation.",
+        "pt": "Coletivo formado a partir de um simpósio e retiro da Terra Foundation.",
+        "fr": "Collectif né d’un symposium et d’une retraite de la Terra Foundation.",
+        "de": "Kollektiv aus einem Symposium und Retreat der Terra Foundation."
+      },
+      "imageAlt": {
+        "en": "Exhibition portfolio sample",
+        "es": "Muestra del portafolio de exposiciones",
+        "it": "Campione di portfolio espositivo",
+        "pt": "Amostra do portefólio de exposições",
+        "fr": "Échantillon de portfolio d’exposition",
+        "de": "Ausstellungsportfolio-Beispiel"
+      }
+    },
+    "color-ochre-1": {
+      "label": {
+        "en": "Belonging",
+        "es": "Pertenencia",
+        "it": "Appartenenza",
+        "pt": "Pertença",
+        "fr": "Appartenance",
+        "de": "Zugehörigkeit"
+      }
+    },
+    "title-publications": {
+      "label": {
+        "en": "Publications",
+        "es": "Publicaciones",
+        "it": "Pubblicazioni",
+        "pt": "Publicações",
+        "fr": "Publications",
+        "de": "Publikationen"
+      }
+    },
+    "media-schema-lead": {
+      "meta": {
+        "en": "Musée Magazine",
+        "es": "Musée Magazine",
+        "it": "Musée Magazine",
+        "pt": "Musée Magazine",
+        "fr": "Musée Magazine",
+        "de": "Musée Magazine"
+      },
+      "title": {
+        "en": "Schema: World as Diagram",
+        "es": "Schema: el mundo como diagrama",
+        "it": "Schema: il mondo come diagramma",
+        "pt": "Schema: o mundo como diagrama",
+        "fr": "Schema : le monde comme diagramme",
+        "de": "Schema: Welt als Diagramm"
+      },
+      "caption": {
+        "en": "Exhibition review · 2023",
+        "es": "Crítica de exposición · 2023",
+        "it": "Recensione di mostra · 2023",
+        "pt": "Crítica de exposição · 2023",
+        "fr": "Critique d’exposition · 2023",
+        "de": "Ausstellungsrezension · 2023"
+      },
+      "description": {
+        "en": "Symbolism, abstraction, and figuration — challenging conventional artistic boundaries through visual synthesis. Critical writing for Musée Magazine.",
+        "es": "Simbolismo, abstracción y figuración — desafiar los límites artísticos convencionales mediante la síntesis visual. Escritura crítica para Musée Magazine.",
+        "it": "Simbolismo, astrazione e figurazione — sfidare i confini artistici convenzionali attraverso la sintesi visiva. Scrittura critica per Musée Magazine.",
+        "pt": "Simbolismo, abstração e figuração — desafiar os limites artísticos convencionais através da síntese visual. Escrita crítica para Musée Magazine.",
+        "fr": "Symbolisme, abstraction et figuration — défier les frontières artistiques conventionnelles par la synthèse visuelle. Écriture critique pour Musée Magazine.",
+        "de": "Symbolik, Abstraktion und Figuration — konventionelle künstlerische Grenzen durch visuelle Synthese herausfordern. Kritik für Musée Magazine."
+      },
+      "imageAlt": {
+        "en": "Schema: World as Diagram",
+        "es": "Schema: el mundo como diagrama",
+        "it": "Schema: il mondo come diagramma",
+        "pt": "Schema: o mundo como diagrama",
+        "fr": "Schema : le monde comme diagramme",
+        "de": "Schema: Welt als Diagramm"
+      }
+    },
+    "color-ink-1": {
+      "label": {
+        "en": "Criticism",
+        "es": "Crítica",
+        "it": "Critica",
+        "pt": "Crítica",
+        "fr": "Critique",
+        "de": "Kritik"
+      }
+    },
+    "media-vik-muniz": {
+      "meta": {
+        "en": "Review",
+        "es": "Crítica",
+        "it": "Recensione",
+        "pt": "Crítica",
+        "fr": "Critique",
+        "de": "Rezension"
+      },
+      "title": {
+        "en": "Vik Muniz | Fotocubismo",
+        "es": "Vik Muniz | Fotocubismo",
+        "it": "Vik Muniz | Fotocubismo",
+        "pt": "Vik Muniz | Fotocubismo",
+        "fr": "Vik Muniz | Fotocubismo",
+        "de": "Vik Muniz | Fotocubismo"
+      },
+      "caption": {
+        "en": "Musée Magazine",
+        "es": "Musée Magazine",
+        "it": "Musée Magazine",
+        "pt": "Musée Magazine",
+        "fr": "Musée Magazine",
+        "de": "Musée Magazine"
+      },
+      "description": {
+        "en": "Cubist reimaginings through collage, photograph, and hand manipulation.",
+        "es": "Reimaginaciones cubistas mediante collage, fotografía y manipulación manual.",
+        "it": "Reimmaginazioni cubiste attraverso collage, fotografia e manipolazione manuale.",
+        "pt": "Reimaginções cubistas através de colagem, fotografia e manipulação manual.",
+        "fr": "Réinventions cubistes par collage, photographie et manipulation manuelle.",
+        "de": "Kubistische Neuinterpretationen durch Collage, Fotografie und Handmanipulation."
+      },
+      "imageAlt": {
+        "en": "Exhibition review: Vik Muniz",
+        "es": "Crítica de exposición: Vik Muniz",
+        "it": "Recensione: Vik Muniz",
+        "pt": "Crítica de exposição: Vik Muniz",
+        "fr": "Critique d’exposition : Vik Muniz",
+        "de": "Ausstellungsrezension: Vik Muniz"
+      }
+    },
+    "media-wiley": {
+      "meta": {
+        "en": "Review",
+        "es": "Crítica",
+        "it": "Recensione",
+        "pt": "Crítica",
+        "fr": "Critique",
+        "de": "Rezension"
+      },
+      "title": {
+        "en": "Kehinde Wiley | Havana",
+        "es": "Kehinde Wiley | La Habana",
+        "it": "Kehinde Wiley | L’Avana",
+        "pt": "Kehinde Wiley | Havana",
+        "fr": "Kehinde Wiley | La Havane",
+        "de": "Kehinde Wiley | Havanna"
+      },
+      "caption": {
+        "en": "Musée Magazine",
+        "es": "Musée Magazine",
+        "it": "Musée Magazine",
+        "pt": "Musée Magazine",
+        "fr": "Musée Magazine",
+        "de": "Musée Magazine"
+      },
+      "description": {
+        "en": "Portraits that challenge traditional representations of power — classical form meeting the African diaspora.",
+        "es": "Retratos que desafían las representaciones tradicionales del poder — la forma clásica encuentra la diáspora africana.",
+        "it": "Ritratti che sfidano le rappresentazioni tradizionali del potere — la forma classica incontra la diaspora africana.",
+        "pt": "Retratos que desafiam as representações tradicionais do poder — a forma clássica encontra a diáspora africana.",
+        "fr": "Des portraits qui défient les représentations traditionnelles du pouvoir — la forme classique rencontre la diaspora africaine.",
+        "de": "Porträts, die traditionelle Machtbilder herausfordern — klassische Form trifft afrikanische Diaspora."
+      },
+      "imageAlt": {
+        "en": "Exhibition review: Kehinde Wiley",
+        "es": "Crítica: Kehinde Wiley",
+        "it": "Recensione: Kehinde Wiley",
+        "pt": "Crítica: Kehinde Wiley",
+        "fr": "Critique : Kehinde Wiley",
+        "de": "Rezension: Kehinde Wiley"
+      }
+    },
+    "media-gosta": {
+      "meta": {
+        "en": "Review",
+        "es": "Crítica",
+        "it": "Recensione",
+        "pt": "Crítica",
+        "fr": "Critique",
+        "de": "Rezension"
+      },
+      "title": {
+        "en": "Gösta Peterson",
+        "es": "Gösta Peterson",
+        "it": "Gösta Peterson",
+        "pt": "Gösta Peterson",
+        "fr": "Gösta Peterson",
+        "de": "Gösta Peterson"
+      },
+      "caption": {
+        "en": "1960s–70s fashion",
+        "es": "Moda de los 60–70",
+        "it": "Moda anni ’60–’70",
+        "pt": "Moda dos anos 60–70",
+        "fr": "Mode des années 60–70",
+        "de": "Mode der 1960er–70er"
+      },
+      "description": {
+        "en": "Deborah Bell Photographs.",
+        "es": "Fotografías de Deborah Bell.",
+        "it": "Fotografie di Deborah Bell.",
+        "pt": "Fotografias de Deborah Bell.",
+        "fr": "Photographies Deborah Bell.",
+        "de": "Fotografien von Deborah Bell."
+      },
+      "imageAlt": {
+        "en": "Exhibition review: Gösta Peterson",
+        "es": "Crítica: Gösta Peterson",
+        "it": "Recensione: Gösta Peterson",
+        "pt": "Crítica: Gösta Peterson",
+        "fr": "Critique : Gösta Peterson",
+        "de": "Rezension: Gösta Peterson"
+      }
+    },
+    "media-expo": {
+      "meta": {
+        "en": "Review",
+        "es": "Crítica",
+        "it": "Recensione",
+        "pt": "Crítica",
+        "fr": "Critique",
+        "de": "Rezension"
+      },
+      "title": {
+        "en": "Expo Chicago",
+        "es": "Expo Chicago",
+        "it": "Expo Chicago",
+        "pt": "Expo Chicago",
+        "fr": "Expo Chicago",
+        "de": "Expo Chicago"
+      },
+      "caption": {
+        "en": "2023",
+        "es": "2023",
+        "it": "2023",
+        "pt": "2023",
+        "fr": "2023",
+        "de": "2023"
+      },
+      "description": {
+        "en": "Fair notes including Southern Guild debut.",
+        "es": "Notas de feria, incluido el debut de Southern Guild.",
+        "it": "Note di fiera incluso il debutto di Southern Guild.",
+        "pt": "Notas da feira incluindo a estreia da Southern Guild.",
+        "fr": "Notes de foire dont les débuts de Southern Guild.",
+        "de": "Messe-Notizen inklusive Debüt von Southern Guild."
+      },
+      "imageAlt": {
+        "en": "Exhibition review: Expo Chicago 2023",
+        "es": "Crítica: Expo Chicago 2023",
+        "it": "Recensione: Expo Chicago 2023",
+        "pt": "Crítica: Expo Chicago 2023",
+        "fr": "Critique : Expo Chicago 2023",
+        "de": "Rezension: Expo Chicago 2023"
+      }
+    },
+    "media-azuma": {
+      "meta": {
+        "en": "Review",
+        "es": "Crítica",
+        "it": "Recensione",
+        "pt": "Crítica",
+        "fr": "Critique",
+        "de": "Rezension"
+      },
+      "title": {
+        "en": "Azuma Makoto",
+        "es": "Azuma Makoto",
+        "it": "Azuma Makoto",
+        "pt": "Azuma Makoto",
+        "fr": "Azuma Makoto",
+        "de": "Azuma Makoto"
+      },
+      "caption": {
+        "en": "Frozen Flowers",
+        "es": "Flores congeladas",
+        "it": "Fiori congelati",
+        "pt": "Flores congeladas",
+        "fr": "Fleurs gelées",
+        "de": "Gefrorene Blumen"
+      },
+      "description": {
+        "en": "Botanical arrangements with AMKK studio.",
+        "es": "Arreglos botánicos con el estudio AMKK.",
+        "it": "Composizioni botaniche con lo studio AMKK.",
+        "pt": "Arranjos botânicos com o estúdio AMKK.",
+        "fr": "Arrangements botaniques avec le studio AMKK.",
+        "de": "Botanische Arrangements mit dem AMKK-Studio."
+      },
+      "imageAlt": {
+        "en": "Exhibition review: Azuma Makoto",
+        "es": "Crítica: Azuma Makoto",
+        "it": "Recensione: Azuma Makoto",
+        "pt": "Crítica: Azuma Makoto",
+        "fr": "Critique : Azuma Makoto",
+        "de": "Rezension: Azuma Makoto"
+      }
+    },
+    "media-chelbin": {
+      "meta": {
+        "en": "Review",
+        "es": "Crítica",
+        "it": "Recensione",
+        "pt": "Crítica",
+        "fr": "Critique",
+        "de": "Rezension"
+      },
+      "title": {
+        "en": "Michal Chelbin",
+        "es": "Michal Chelbin",
+        "it": "Michal Chelbin",
+        "pt": "Michal Chelbin",
+        "fr": "Michal Chelbin",
+        "de": "Michal Chelbin"
+      },
+      "caption": {
+        "en": "Sailboats and Swans",
+        "es": "Veleros y cisnes",
+        "it": "Barche a vela e cigni",
+        "pt": "Veleiros e cisnes",
+        "fr": "Voiliers et cygnes",
+        "de": "Segelboote und Schwäne"
+      },
+      "description": {
+        "en": "Prison portraits and complex gaze.",
+        "es": "Retratos carcelarios y mirada compleja.",
+        "it": "Ritratti carcerari e sguardo complesso.",
+        "pt": "Retratos prisionais e olhar complexo.",
+        "fr": "Portraits de prison et regard complexe.",
+        "de": "Gefängnisporträts und komplexer Blick."
+      },
+      "imageAlt": {
+        "en": "Exhibition review: Michal Chelbin",
+        "es": "Crítica: Michal Chelbin",
+        "it": "Recensione: Michal Chelbin",
+        "pt": "Crítica: Michal Chelbin",
+        "fr": "Critique : Michal Chelbin",
+        "de": "Rezension: Michal Chelbin"
+      }
+    },
+    "title-ventures": {
+      "label": {
+        "en": "Ventures",
+        "es": "Emprendimientos",
+        "it": "Iniziative",
+        "pt": "Empreendimentos",
+        "fr": "Initiatives",
+        "de": "Vorhaben"
+      }
+    },
+    "project-bw-site": {
+      "meta": {
+        "en": "Site",
+        "es": "Sitio",
+        "it": "Sito",
+        "pt": "Site",
+        "fr": "Site",
+        "de": "Website"
+      },
+      "title": {
+        "en": "Bittersweet Woman",
+        "es": "Bittersweet Woman",
+        "it": "Bittersweet Woman",
+        "pt": "Bittersweet Woman",
+        "fr": "Bittersweet Woman",
+        "de": "Bittersweet Woman"
+      },
+      "subtitle": {
+        "en": "bittersweetwoman.com",
+        "es": "bittersweetwoman.com",
+        "it": "bittersweetwoman.com",
+        "pt": "bittersweetwoman.com",
+        "fr": "bittersweetwoman.com",
+        "de": "bittersweetwoman.com"
+      },
+      "summary": {
+        "en": "Author platform for memoir, poetry, and criticism within a broader ethical and aesthetic framework — personal experience as research method.",
+        "es": "Plataforma de autora para memorias, poesía y crítica dentro de un marco ético y estético más amplio — la experiencia personal como método de investigación.",
+        "it": "Piattaforma d’autrice per memorie, poesia e critica entro un quadro etico ed estetico più ampio — l’esperienza personale come metodo di ricerca.",
+        "pt": "Plataforma de autora para memórias, poesia e crítica num quadro ético e estético mais amplo — a experiência pessoal como método de investigação.",
+        "fr": "Plateforme d’auteure pour mémoires, poésie et critique dans un cadre éthique et esthétique plus large — l’expérience personnelle comme méthode de recherche.",
+        "de": "Autorinnen-Plattform für Memoir, Lyrik und Kritik in einem ethischen und ästhetischen Rahmen — persönliche Erfahrung als Forschungsmethode."
+      },
+      "imageAlt": {
+        "en": "Bittersweet Woman site",
+        "es": "Sitio Bittersweet Woman",
+        "it": "Sito Bittersweet Woman",
+        "pt": "Site Bittersweet Woman",
+        "fr": "Site Bittersweet Woman",
+        "de": "Website Bittersweet Woman"
+      }
+    },
+    "color-tan-1": {
+      "label": {
+        "en": "Platform",
+        "es": "Plataforma",
+        "it": "Piattaforma",
+        "pt": "Plataforma",
+        "fr": "Plateforme",
+        "de": "Plattform"
+      }
+    },
+    "project-remaining-bw": {
+      "meta": {
+        "en": "Substack",
+        "es": "Substack",
+        "it": "Substack",
+        "pt": "Substack",
+        "fr": "Substack",
+        "de": "Substack"
+      },
+      "title": {
+        "en": "Remaining Bittersweet",
+        "es": "Remaining Bittersweet",
+        "it": "Remaining Bittersweet",
+        "pt": "Remaining Bittersweet",
+        "fr": "Remaining Bittersweet",
+        "de": "Remaining Bittersweet"
+      },
+      "subtitle": {
+        "en": "Essays on trauma-informed curating",
+        "es": "Ensayos sobre curaduría sensible al trauma",
+        "it": "Saggi su una curatela trauma-informed",
+        "pt": "Ensaios sobre curadoria sensível ao trauma",
+        "fr": "Essais sur une curation attentive au trauma",
+        "de": "Essays zu traumainformiertem Kuratieren"
+      },
+      "summary": {
+        "en": "Essays on resilience, creative recovery, and architectures of care — trauma-informed design, storytelling, and the practice of remaining bittersweet.",
+        "es": "Ensayos sobre resiliencia, recuperación creativa y arquitecturas del cuidado — diseño sensible al trauma, relato y la práctica de permanecer agridulce.",
+        "it": "Saggi su resilienza, recupero creativo e architetture della cura — design trauma-informed, narrazione e la pratica di restare agrodolci.",
+        "pt": "Ensaios sobre resiliência, recuperação criativa e arquiteturas de cuidado — design sensível ao trauma, narrativa e a prática de permanecer agridoce.",
+        "fr": "Essais sur la résilience, la récupération créative et les architectures du soin — design attentif au trauma, récit et la pratique de rester doux-amer.",
+        "de": "Essays über Resilienz, kreative Erholung und Architekturen der Fürsorge — traumainformiertes Design, Erzählen und die Praxis, bittersweet zu bleiben."
+      },
+      "imageAlt": {
+        "en": "Remaining Bittersweet Substack",
+        "es": "Substack Remaining Bittersweet",
+        "it": "Substack Remaining Bittersweet",
+        "pt": "Substack Remaining Bittersweet",
+        "fr": "Substack Remaining Bittersweet",
+        "de": "Substack Remaining Bittersweet"
+      }
+    },
+    "project-dolce": {
+      "meta": {
+        "en": "Visual venture",
+        "es": "Emprendimiento visual",
+        "it": "Iniziativa visiva",
+        "pt": "Empreendimento visual",
+        "fr": "Initiative visuelle",
+        "de": "Visuelles Vorhaben"
+      },
+      "title": {
+        "en": "[Dolce) + (amara ]",
+        "es": "[Dolce) + (amara ]",
+        "it": "[Dolce) + (amara ]",
+        "pt": "[Dolce) + (amara ]",
+        "fr": "[Dolce) + (amara ]",
+        "de": "[Dolce) + (amara ]"
+      },
+      "subtitle": {
+        "en": "A visual art venture by M.J. Smith",
+        "es": "Un emprendimiento de arte visual de M.J. Smith",
+        "it": "Un’iniziativa di arte visiva di M.J. Smith",
+        "pt": "Um empreendimento de arte visual de M.J. Smith",
+        "fr": "Une initiative d’art visuel de M.J. Smith",
+        "de": "Ein visuelles Kunstvorhaben von M.J. Smith"
+      },
+      "summary": {
+        "en": "DolceAmara captures moments where joy and pain coexist — a delicate dance of contrasts.",
+        "es": "DolceAmara captura momentos en que la alegría y el dolor coexisten — una danza delicada de contrastes.",
+        "it": "DolceAmara cattura momenti in cui gioia e dolore coesistono — una danza delicata di contrasti.",
+        "pt": "DolceAmara captura momentos em que a alegria e a dor coexistem — uma dança delicada de contrastes.",
+        "fr": "DolceAmara capture des moments où joie et douleur coexistent — une danse délicate de contrastes.",
+        "de": "DolceAmara hält Momente fest, in denen Freude und Schmerz koexistieren — ein zarter Tanz der Kontraste."
+      },
+      "imageAlt": {
+        "en": "Dolce Amara visual venture",
+        "es": "Emprendimiento visual Dolce Amara",
+        "it": "Iniziativa visiva Dolce Amara",
+        "pt": "Empreendimento visual Dolce Amara",
+        "fr": "Initiative visuelle Dolce Amara",
+        "de": "Visuelles Vorhaben Dolce Amara"
+      }
+    },
+    "title-research": {
+      "label": {
+        "en": "Research",
+        "es": "Investigación",
+        "it": "Ricerca",
+        "pt": "Investigação",
+        "fr": "Recherche",
+        "de": "Forschung"
+      }
+    },
+    "text-research": {
+      "meta": {
+        "en": "Archive",
+        "es": "Archivo",
+        "it": "Archivio",
+        "pt": "Arquivo",
+        "fr": "Archives",
+        "de": "Archiv"
+      },
+      "headline": {
+        "en": "Qualitative research & trauma-informed museum practice",
+        "es": "Investigación cualitativa y práctica museística sensible al trauma",
+        "it": "Ricerca qualitativa e pratica museale trauma-informed",
+        "pt": "Investigação qualitativa e prática museológica sensível ao trauma",
+        "fr": "Recherche qualitative et pratique muséale attentive au trauma",
+        "de": "Qualitative Forschung & traumainformierte Museumspraxis"
+      },
+      "subtitle": {
+        "en": "research.bittersweetwoman.com",
+        "es": "research.bittersweetwoman.com",
+        "it": "research.bittersweetwoman.com",
+        "pt": "research.bittersweetwoman.com",
+        "fr": "research.bittersweetwoman.com",
+        "de": "research.bittersweetwoman.com"
+      },
+      "excerpt": {
+        "en": "Digital archive of field observations, media documentation, academic analysis, and theoretical frameworks on designing spaces for healing and connection.",
+        "es": "Archivo digital de observaciones de campo, documentación mediática, análisis académico y marcos teóricos sobre el diseño de espacios para la sanación y la conexión.",
+        "it": "Archivio digitale di osservazioni sul campo, documentazione mediatica, analisi accademica e cornici teoriche sulla progettazione di spazi per guarigione e connessione.",
+        "pt": "Arquivo digital de observações de campo, documentação mediática, análise académica e enquadramentos teóricos sobre o desenho de espaços para cura e ligação.",
+        "fr": "Archives numériques d’observations de terrain, documentation médiatique, analyse académique et cadres théoriques sur la conception d’espaces de guérison et de lien.",
+        "de": "Digitales Archiv aus Feldbeobachtungen, Mediendokumentation, akademischer Analyse und theoretischen Rahmen zum Gestalten von Räumen für Heilung und Verbindung."
+      },
+      "imageAlt": {
+        "en": "Research archive — resilience",
+        "es": "Archivo de investigación — resiliencia",
+        "it": "Archivio di ricerca — resilienza",
+        "pt": "Arquivo de investigação — resiliência",
+        "fr": "Archives de recherche — résilience",
+        "de": "Forschungsarchiv — Resilienz"
+      }
+    },
+    "color-sage-2": {
+      "label": {
+        "en": "Study",
+        "es": "Estudio",
+        "it": "Studio",
+        "pt": "Estudo",
+        "fr": "Étude",
+        "de": "Studie"
+      }
+    },
+    "media-research-bus": {
+      "meta": {
+        "en": "Field",
+        "es": "Campo",
+        "it": "Campo",
+        "pt": "Campo",
+        "fr": "Terrain",
+        "de": "Feld"
+      },
+      "title": {
+        "en": "Field notes",
+        "es": "Notas de campo",
+        "it": "Appunti di campo",
+        "pt": "Notas de campo",
+        "fr": "Notes de terrain",
+        "de": "Feldnotizen"
+      },
+      "caption": {
+        "en": "Research archive",
+        "es": "Archivo de investigación",
+        "it": "Archivio di ricerca",
+        "pt": "Arquivo de investigação",
+        "fr": "Archives de recherche",
+        "de": "Forschungsarchiv"
+      },
+      "description": {
+        "en": "Documentation from qualitative research and trauma-informed curatorial inquiry.",
+        "es": "Documentación de investigación cualitativa e indagación curatorial sensible al trauma.",
+        "it": "Documentazione da ricerca qualitativa e indagine curatoriale trauma-informed.",
+        "pt": "Documentação de investigação qualitativa e indagação curatorial sensível ao trauma.",
+        "fr": "Documentation issue de la recherche qualitative et de l’enquête curatoriale attentive au trauma.",
+        "de": "Dokumentation aus qualitativer Forschung und traumainformierter kuratorischer Untersuchung."
+      },
+      "imageAlt": {
+        "en": "Research field documentation",
+        "es": "Documentación de investigación de campo",
+        "it": "Documentazione di ricerca sul campo",
+        "pt": "Documentação de investigação de campo",
+        "fr": "Documentation de terrain",
+        "de": "Felddokumentation der Forschung"
+      }
+    },
+    "media-romantic": {
+      "meta": {
+        "en": "Archive",
+        "es": "Archivo",
+        "it": "Archivio",
+        "pt": "Arquivo",
+        "fr": "Archives",
+        "de": "Archiv"
+      },
+      "title": {
+        "en": "Romantic exhibition still",
+        "es": "Fotograma de exposición romántica",
+        "it": "Still di mostra romantica",
+        "pt": "Still de exposição romântica",
+        "fr": "Photogramme d’exposition romantique",
+        "de": "Romantisches Ausstellungsstill"
+      },
+      "caption": {
+        "en": "Studio archive",
+        "es": "Archivo del estudio",
+        "it": "Archivio di studio",
+        "pt": "Arquivo do estúdio",
+        "fr": "Archives d’atelier",
+        "de": "Studioarchiv"
+      },
+      "description": {
+        "en": "Selected exhibition photography from the practice archive.",
+        "es": "Fotografía de exposición seleccionada del archivo de la práctica.",
+        "it": "Fotografia di mostra selezionata dall’archivio della pratica.",
+        "pt": "Fotografia de exposição selecionada do arquivo da prática.",
+        "fr": "Photographie d’exposition sélectionnée dans les archives de la pratique.",
+        "de": "Ausgewählte Ausstellungsfotografie aus dem Praxisarchiv."
+      },
+      "imageAlt": {
+        "en": "Romantic exhibition still",
+        "es": "Fotograma de exposición romántica",
+        "it": "Still di mostra romantica",
+        "pt": "Still de exposição romântica",
+        "fr": "Photogramme d’exposition romantique",
+        "de": "Romantisches Ausstellungsstill"
+      }
+    }
+  },
+  "cv": {
+    "headline": {
+      "en": "Curator, Artist, & Art Educator",
+      "es": "Curadora, artista y educadora de arte",
+      "it": "Curatrice, artista e educatrice d’arte",
+      "pt": "Curadora, artista e educadora de arte",
+      "fr": "Commissaire, artiste et éducatrice d’art",
+      "de": "Kuratorin, Künstlerin & Kunstvermittlerin"
+    },
+    "location": {
+      "en": "Tucson, Arizona",
+      "es": "Tucson, Arizona",
+      "it": "Tucson, Arizona",
+      "pt": "Tucson, Arizona",
+      "fr": "Tucson, Arizona",
+      "de": "Tucson, Arizona"
+    },
+    "relocationNote": {
+      "en": "Open to Relocation",
+      "es": "Abierta a mudarse",
+      "it": "Disponibile a trasferirsi",
+      "pt": "Aberta a mudanças",
+      "fr": "Ouverte à la mobilité",
+      "de": "Umzugsbereit"
+    },
+    "summary": {
+      "en": "Curatorial practice, arts education, and research spanning exhibitions, archives, and public programming. Writing and visual work treat language and image as sites of inquiry — trauma-informed, relational, and research-driven across Musée Magazine, Bittersweet Woman, and binational exhibition projects.",
+      "es": "Práctica curatorial, educación artística e investigación en exposiciones, archivos y programación pública. La escritura y la obra visual tratan lenguaje e imagen como lugares de indagación — sensibles al trauma, relacionales e impulsadas por la investigación en Musée Magazine, Bittersweet Woman y proyectos expositivos binacionales.",
+      "it": "Pratica curatoriale, educazione artistica e ricerca tra mostre, archivi e programmazione pubblica. Scrittura e lavoro visivo trattano linguaggio e immagine come luoghi di indagine — trauma-informed, relazionali e guidati dalla ricerca tra Musée Magazine, Bittersweet Woman e progetti espositivi binazionali.",
+      "pt": "Prática curatorial, educação artística e investigação entre exposições, arquivos e programação pública. Escrita e trabalho visual tratam linguagem e imagem como lugares de indagação — sensíveis ao trauma, relacionais e orientados pela investigação em Musée Magazine, Bittersweet Woman e projetos expositivos binacionais.",
+      "fr": "Pratique curatoriale, éducation artistique et recherche à travers expositions, archives et programmation publique. L’écriture et le travail visuel traitent langage et image comme lieux d’enquête — attentifs au trauma, relationnels et portés par la recherche entre Musée Magazine, Bittersweet Woman et projets d’exposition binational.",
+      "de": "Kuratorische Praxis, Kunstvermittlung und Forschung in Ausstellungen, Archiven und öffentlichem Programm. Schreiben und visuelle Arbeit behandeln Sprache und Bild als Orte der Untersuchung — traumainformiert, relational und forschungsgetrieben bei Musée Magazine, Bittersweet Woman und binationalen Ausstellungsprojekten."
+    }
+  }
+}

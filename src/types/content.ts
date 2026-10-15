@@ -1,22 +1,24 @@
+import type { LocaleString } from "@/lib/i18n/resolve";
+import type { UiCopyDoc } from "@/lib/i18n/ui-copy";
 import type { GridItem } from "@/types/grid";
 
 export interface NavItem {
-  label: string;
+  label: LocaleString;
   href: string;
 }
 
 export interface SiteSettings {
   source: "fixture" | "sanity";
-  siteTitle: string;
+  siteTitle: LocaleString;
   nav: NavItem[];
   contactEmail?: string;
-  contactNote?: string;
+  contactNote?: LocaleString;
 }
 
 export interface HomepageContent {
   source: "fixture" | "sanity";
-  maskText: string;
-  support: string;
+  maskText: LocaleString;
+  support: LocaleString;
   videoSrc: string;
   posterSrc?: string;
   /** Still used when video is empty (image-only cover). */
@@ -24,55 +26,57 @@ export interface HomepageContent {
   /** Optional “watch full video” link on the cover. */
   watchUrl?: string;
   /** Hero stamp hover tip (empty → IntroMask default). */
-  stampHint?: string;
+  stampHint?: LocaleString;
   gridItems: GridItem[];
+  /** Optional Sanity-overridden chrome strings. */
+  uiCopy?: UiCopyDoc;
 }
 
 export interface CvHighlight {
-  text: string;
+  text: LocaleString;
 }
 
 export interface CvExperience {
-  title: string;
+  title: LocaleString;
   org: string;
-  location?: string;
+  location?: LocaleString;
   startDate?: string;
   endDate?: string;
   current?: boolean;
-  summary?: string;
-  bullets?: string[];
+  summary?: LocaleString;
+  bullets?: LocaleString[];
 }
 
 export interface CvAward {
-  title: string;
+  title: LocaleString;
   org: string;
-  location?: string;
+  location?: LocaleString;
   date?: string;
-  description?: string;
+  description?: LocaleString;
 }
 
 export interface CvSpeaking {
   role?: string;
-  eventTitle: string;
+  eventTitle: LocaleString;
   org?: string;
-  location?: string;
+  location?: LocaleString;
   date?: string;
-  description?: string;
+  description?: LocaleString;
 }
 
 export interface CvEducation {
   credentialType?: string;
-  title: string;
+  title: LocaleString;
   institution: string;
-  location?: string;
+  location?: LocaleString;
   startYear?: string;
   endYear?: string;
-  notes?: string;
+  notes?: LocaleString;
 }
 
 export interface CvLanguage {
-  language: string;
-  level: string;
+  language: LocaleString;
+  level: LocaleString;
 }
 
 export interface CvPublication {
@@ -85,19 +89,20 @@ export interface CvPublication {
 export interface CvData {
   source: "fixture" | "sanity";
   name: string;
-  headline: string;
+  headline: LocaleString;
   phone?: string;
   email?: string;
-  location?: string;
-  relocationNote?: string;
-  summary?: string;
-  expertiseTags: string[];
+  location?: LocaleString;
+  relocationNote?: LocaleString;
+  summary?: LocaleString;
+  expertiseTags: LocaleString[];
   expertiseHighlights: CvHighlight[];
   experience: CvExperience[];
   awards: CvAward[];
   speaking: CvSpeaking[];
   education: CvEducation[];
-  technicalSkills: string[];
+  technicalSkills: LocaleString[];
   languages: CvLanguage[];
   publications: CvPublication[];
+  uiCopy?: UiCopyDoc;
 }

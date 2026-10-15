@@ -3,7 +3,7 @@
 Fresh redesign of Amanda Smith’s portfolio. Sibling of `portfolio_2024` (reference only).
 
 **Stack:** Next.js App Router · TypeScript · Tailwind CSS · Sanity (scaffolded)  
-**Live locally:** 4-col grid, fixture `/admin`, Vermeer intro, hazy nav, CV, translate stub  
+**Live locally:** 4-col grid, fixture `/admin`, Vermeer intro, hazy nav, CV, self-hosted i18n (EN/ES/IT/PT/FR/DE)  
 
 Build plan (project store): `docs/portfolio-2026-plan.md`
 
@@ -46,7 +46,7 @@ Do **not** put plaintext passwords in Studio — the `passwordHash` field is rea
 
 ## Sanity
 
-Schemas live in `src/sanity/schemaTypes` (`project`, `publication`, `researchItem`, `cv`, `homepage`, `siteSettings`, 4-col `gridItem`). Studio mounts at `/studio` via `sanity.config.ts`.
+Schemas live in `src/sanity/schemaTypes` (`project`, `publication`, `researchItem`, `cv`, `homepage`, `homepageHero`, `siteSettings`, `uiCopy`, 4-col `gridItem`, `localeString` / `localeText`). Studio mounts at `/studio` via `sanity.config.ts`.
 
 **Without real IDs:** leave `NEXT_PUBLIC_SANITY_PROJECT_ID` empty — `/studio` shows a setup message; public + `/admin` keep using fixtures / `.data`.
 
@@ -57,14 +57,22 @@ Schemas live in `src/sanity/schemaTypes` (`project`, `publication`, `researchIte
 - `NEXT_PUBLIC_SANITY_API_VERSION`
 - `SANITY_API_READ_TOKEN` (and optionally `SANITY_API_WRITE_TOKEN` for seeding)
 
-Then restart the dev server. Seed fixtures once with `npm run sanity:seed`. Homepage/CV/nav fetch Sanity when configured, else fall back.
+Then restart the dev server. Seed fixtures once with `npm run sanity:seed`, then locale overlays with `npm run sanity:seed-i18n`. Homepage/CV/nav fetch Sanity when configured, else fall back (fixtures still apply authored overlays from `src/data/i18n/translations.json`).
+
+### Languages (self-hosted)
+
+- Navbar **language dropdown** (EN / ES / IT / PT / FR / DE); choice persists in `localStorage`.
+- Missing locale strings fall back to **English**.
+- **Studio:** open Homepage hero, Site settings, Homepage (grid), CV, or **UI copy (translations)**. Localized fields show a **Language** dropdown — switch locale, edit that language’s copy.
+- **Admin:** Hero + Content editors include an **Editing language** switcher; full multi-locale polish is easiest in Studio.
+- Re-seed translations: `npm run sanity:seed-i18n`
 
 ## Intro / chrome
 
 - Full-bleed intro video: `public/media/intro.mp4` (placeholder from 2024 banner)
 - Scroll text mask punches through video to an under-layer
 - Hazy nav clears on hover/focus; definition tooltips on selected phrases
-- Language control calls `/api/translate` (stub without `GOOGLE_TRANSLATE_API_KEY`)
+- Language dropdown switches Sanity/fixture locale copy for the session (no paid translate API)
 
 ## Environment
 

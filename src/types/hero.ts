@@ -1,6 +1,8 @@
+import type { LocaleString } from "@/lib/i18n/resolve";
+
 export interface HomepageHero {
-  titleText: string;
-  supportText: string;
+  titleText: LocaleString;
+  supportText: LocaleString;
   videoUrl: string;
   /** Resolved absolute poster URL (prefer Sanity CDN). */
   posterUrl?: string;
@@ -16,7 +18,7 @@ export interface HomepageHero {
    * Public hero hover tip before the first stamp (“click to leave your mark”).
    * Empty → client uses the default copy.
    */
-  stampHint?: string;
+  stampHint?: LocaleString;
 }
 
 export type HeroDataSource = "sanity" | "fixture";

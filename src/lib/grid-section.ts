@@ -3,6 +3,7 @@ import {
   createGridItem,
   normalizeGridItem,
 } from "@/lib/grid-normalize";
+import { enOf } from "@/lib/i18n/display";
 import {
   GRID_COLUMNS,
   type GridItem,
@@ -29,7 +30,7 @@ export function listContentSections(items: GridItem[]): ContentSection[] {
     }
     sections.push({
       titleId: item.id,
-      label: item.label || "Section",
+      label: enOf(item.label) || "Section",
       start: i,
       end,
     });
@@ -48,7 +49,7 @@ export function contentSectionOf(
   if (head?.kind !== "titleRow") return null;
   return {
     titleId: head.id,
-    label: head.label || "Section",
+    label: enOf(head.label) || "Section",
     start: range.start,
     end: range.end,
   };
@@ -114,7 +115,7 @@ export function addGridItem(
   }
 
   const title = createGridItem("titleRow", next.length + 1) as TitleRowItem;
-  title.label = "New section";
+  title.label = { en: "New section" };
   const cell = createGridItem(kind, next.length + 2);
   next.push(title, cell);
   return { items: next, selectedId: cell.id };
@@ -140,7 +141,7 @@ export function addContentSection(
     Math.max(2, Math.floor(options?.sectionRows ?? 3)),
   );
   const title = createGridItem("titleRow", items.length + 1) as TitleRowItem;
-  title.label = label;
+  title.label = { en: label };
   title.sectionRows = sectionRows;
 
   const afterId = options?.afterTitleId;
@@ -189,7 +190,7 @@ export function moveItemToContentSection(
   if (target.type === "new") {
     const label = target.label.trim() || "New section";
     const title = createGridItem("titleRow", next.length + 1) as TitleRowItem;
-    title.label = label;
+    title.label = { en: label };
     next.push(title, moved);
     return next;
   }

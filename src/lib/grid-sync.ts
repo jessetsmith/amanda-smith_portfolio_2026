@@ -6,6 +6,7 @@ import {
 } from "@/lib/grid-store";
 import { normalizeItemLayouts } from "@/lib/grid-breakpoints";
 import { normalizeGridItems } from "@/lib/grid-normalize";
+import { toLocaleMap, type LocaleString } from "@/lib/i18n/resolve";
 import { sanityFetchOptions } from "@/lib/sanity-fetch";
 import type { GridItem } from "@/types/grid";
 import { client } from "@/sanity/lib/client";
@@ -23,6 +24,16 @@ export interface GridSyncResult {
 function sanitizeKey(id: string, order: number): string {
   const cleaned = id.replace(/[^a-zA-Z0-9_-]/g, "-").replace(/^-+|-+$/g, "");
   return cleaned || `item-${order}`;
+}
+
+function loc(value: unknown, fallback = ""): LocaleString {
+  const map = toLocaleMap(value, fallback);
+  return Object.keys(map).length ? map : fallback ? { en: fallback } : {};
+}
+
+function locOpt(value: unknown): LocaleString | undefined {
+  const map = toLocaleMap(value);
+  return Object.keys(map).length ? map : undefined;
 }
 
 export function mapSanityGridItems(raw: unknown): GridItem[] | null {
@@ -61,14 +72,14 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
       return {
         ...base,
         kind: "projectCell" as const,
-        meta: row.meta as string | undefined,
-        title: String(row.title || projectRef?.title || "Untitled"),
-        subtitle: row.subtitle as string | undefined,
-        year: (row.year as string) || projectRef?.year,
-        summary: (row.summary as string) || projectRef?.summary,
+        meta: locOpt(row.meta),
+        title: loc(row.title || projectRef?.title, "Untitled"),
+        subtitle: locOpt(row.subtitle),
+        year: (typeof row.year === "string" ? row.year : undefined) || projectRef?.year,
+        summary: locOpt(row.summary || projectRef?.summary),
         href,
         imageSrc: row.imageSrc as string | undefined,
-        imageAlt: row.imageAlt as string | undefined,
+        imageAlt: locOpt(row.imageAlt),
         placeholderTone:
           (row.placeholderTone as "warm" | "cool" | "ink") || "cool",
       };
@@ -79,7 +90,7 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
       return {
         ...base,
         kind: "titleRow" as const,
-        label: String(row.label || "Section"),
+        label: loc(row.label, "Section"),
         ...(Number.isFinite(sectionRowsNum) && sectionRowsNum >= 1
           ? { sectionRows: Math.floor(sectionRowsNum) }
           : {}),
@@ -91,7 +102,7 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
         ...base,
         kind: "colorCell" as const,
         fill: (row.fill as GridItem["fill"]) || "rust",
-        label: row.label as string | undefined,
+        label: locOpt(row.label),
         href,
       };
     }
@@ -99,13 +110,13 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
       return {
         ...base,
         kind: "mediaCell" as const,
-        meta: row.meta as string | undefined,
-        title: row.title as string | undefined,
-        caption: (row.caption as string) || "Media",
-        description: row.description as string | undefined,
+        meta: locOpt(row.meta),
+        title: locOpt(row.title),
+        caption: loc(row.caption, "Media"),
+        description: locOpt(row.description),
         href,
         imageSrc: row.imageSrc as string | undefined,
-        imageAlt: row.imageAlt as string | undefined,
+        imageAlt: locOpt(row.imageAlt),
         placeholderTone:
           (row.placeholderTone as "warm" | "cool" | "ink") || "warm",
       };
@@ -119,18 +130,63 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
     return {
       ...base,
       kind: "textCell" as const,
-      meta: row.meta as string | undefined,
-      headline: String(row.headline || "Headline"),
-      subtitle: row.subtitle as string | undefined,
-      excerpt: row.excerpt as string | undefined,
+      meta: locOpt(row.meta),
+      headline: loc(row.headline, "Headline"),
+      subtitle: locOpt(row.subtitle),
+      excerpt: locOpt(row.excerpt),
       href,
       imageSrc: row.imageSrc as string | undefined,
-      imageAlt: row.imageAlt as string | undefined,
+      imageAlt: locOpt(row.imageAlt),
       placeholderTone:
         (row.placeholderTone as "warm" | "cool" | "ink") || "warm",
     };
   });
   return normalizeGridItems(mapped as GridItem[]);
+}
+
+/** Expand fixture plain strings into locale maps (EN) so public + admin share types. */
+export function localizeFixtureGridItems(items: GridItem[]): GridItem[] {
+  return normalizeGridItems(
+    items.map((item) => {
+      if (item.kind === "titleRow") {
+        return { ...item, label: loc(item.label, "Section") };
+      }
+      if (item.kind === "colorCell") {
+        return { ...item, label: locOpt(item.label) };
+      }
+      if (item.kind === "textCell") {
+        return {
+          ...item,
+          meta: locOpt(item.meta),
+          headline: loc(item.headline, "Headline"),
+          subtitle: locOpt(item.subtitle),
+          excerpt: locOpt(item.excerpt),
+          imageAlt: locOpt(item.imageAlt),
+        };
+      }
+      if (item.kind === "mediaCell") {
+        return {
+          ...item,
+          meta: locOpt(item.meta),
+          title: locOpt(item.title),
+          caption: loc(item.caption, "Media"),
+          description: locOpt(item.description),
+          imageAlt: locOpt(item.imageAlt),
+        };
+      }
+      if (item.kind === "projectCell") {
+        return {
+          ...item,
+          meta: locOpt(item.meta),
+          title: loc(item.title, "Untitled"),
+          subtitle: locOpt(item.subtitle),
+          summary: locOpt(item.summary),
+          imageAlt: locOpt(item.imageAlt),
+        };
+      }
+      return item;
+    }),
+  );
 }
 
 export function toSanityGridItems(items: GridItem[]) {
@@ -159,7 +215,8 @@ export async function loadGridItems(): Promise<GridSyncResult> {
       // fall through
     }
   }
-  return { items: await readLocalGridItems(), source: "fixture" };
+  const local = await readLocalGridItems();
+  return { items: localizeFixtureGridItems(local), source: "fixture" };
 }
 
 export async function saveGridItems(
@@ -203,7 +260,9 @@ export async function saveGridItems(
 }
 
 export async function resetGridToSeed(): Promise<GridSyncResult> {
-  const seeded = normalizeGridItems(seed as GridItem[]);
+  const seeded = localizeFixtureGridItems(
+    normalizeGridItems(seed as GridItem[]),
+  );
   return saveGridItems(seeded);
 }
 

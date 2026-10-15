@@ -3,6 +3,7 @@ import { defineField, defineType } from "sanity";
 /**
  * Singleton cover / IntroMask content — kept separate from homepage.gridItems
  * so hero copy + media are a clear CMS category.
+ * Localized fields use localeString/localeText (Studio language dropdown).
  */
 export const homepageHero = defineType({
   name: "homepageHero",
@@ -11,16 +12,15 @@ export const homepageHero = defineType({
   fields: [
     defineField({
       name: "titleText",
-      type: "string",
+      type: "localeString",
       title: "Hero title",
       description: "Large cover name (e.g. Amanda Smith)",
       validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: "supportText",
-      type: "text",
+      type: "localeText",
       title: "Support line",
-      rows: 3,
       description: "Short line under the title on the cover",
     }),
     defineField({
@@ -78,16 +78,15 @@ export const homepageHero = defineType({
     }),
     defineField({
       name: "stampHint",
-      type: "string",
+      type: "localeString",
       title: "Handprint stamp tip",
       description:
         "Shown on first hover over the public cover (“click to leave your mark”). Clears after the first stamp. Leave empty to use the default copy.",
-      initialValue: "click to leave your mark",
     }),
   ],
   preview: {
     select: {
-      title: "titleText",
+      title: "titleText.en",
       subtitle: "videoUrl",
       media: "poster",
     },

@@ -1,3 +1,5 @@
+import type { LocaleString } from "@/lib/i18n/resolve";
+
 export type CellFill = "rust" | "ochre" | "sage" | "tan" | "paper" | "ink";
 
 export type PlaceholderTone = "warm" | "cool" | "ink";
@@ -79,7 +81,7 @@ export interface GridItemBase {
 
 export interface TitleRowItem extends GridItemBase {
   kind: "titleRow";
-  label: string;
+  label: LocaleString;
   /**
    * Explicit section band height in rows (title + content). When set, vacancy
    * blanks fill up to this height; when omitted, the band hugs content.
@@ -93,46 +95,46 @@ export interface ColorCellItem extends GridItemBase {
   kind: "colorCell";
   fill: CellFill;
   href?: string;
-  label?: string;
+  label?: LocaleString;
 }
 
 /** Content card stack: meta → title → image → description */
 export interface MediaCellItem extends GridItemBase {
   kind: "mediaCell";
-  meta?: string;
-  title?: string;
-  caption?: string;
-  description?: string;
+  meta?: LocaleString;
+  title?: LocaleString;
+  caption?: LocaleString;
+  description?: LocaleString;
   /** Original resource URL (public click-through). */
   href?: string;
   imageSrc?: string;
-  imageAlt?: string;
+  imageAlt?: LocaleString;
   placeholderTone?: PlaceholderTone;
 }
 
 export interface TextCellItem extends GridItemBase {
   kind: "textCell";
-  meta?: string;
-  headline: string;
-  subtitle?: string;
-  excerpt?: string;
+  meta?: LocaleString;
+  headline: LocaleString;
+  subtitle?: LocaleString;
+  excerpt?: LocaleString;
   /** Original resource URL (public click-through). */
   href?: string;
   imageSrc?: string;
-  imageAlt?: string;
+  imageAlt?: LocaleString;
   placeholderTone?: PlaceholderTone;
 }
 
 export interface ProjectCellItem extends GridItemBase {
   kind: "projectCell";
-  meta?: string;
-  title: string;
-  subtitle?: string;
+  meta?: LocaleString;
+  title: LocaleString;
+  subtitle?: LocaleString;
   year?: string;
-  summary?: string;
+  summary?: LocaleString;
   href?: string;
   imageSrc?: string;
-  imageAlt?: string;
+  imageAlt?: LocaleString;
   placeholderTone?: PlaceholderTone;
 }
 

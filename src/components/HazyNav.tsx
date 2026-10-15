@@ -2,38 +2,41 @@
 
 import Link from "next/link";
 import type { NavItem } from "@/types/content";
-import { LanguageToggle } from "@/components/LanguageToggle";
+import { LanguageDropdown } from "@/components/LanguageDropdown";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 interface HazyNavProps {
-  brand: string;
+  brand: NavItem["label"] | string;
   items: NavItem[];
 }
 
 export function HazyNav({ brand, items }: HazyNavProps) {
+  const { t, ui } = useLocale();
+
   return (
     <header className="hazy-nav">
       <div className="hazy-nav__bar">
         <Link href="/" className="hazy-nav__brand">
-          {brand}
+          {t(brand)}
         </Link>
-        <nav className="hazy-nav__menu" aria-label="Primary">
+        <nav className="hazy-nav__menu" aria-label={ui("primaryNav")}>
           <ul className="hazy-nav__list">
             {items.map((item) => (
-              <li key={`${item.label}-${item.href}`}>
+              <li key={`${t(item.label)}-${item.href}`}>
                 {item.href.startsWith("mailto:") || item.href.startsWith("http") ? (
                   <a href={item.href} className="hazy-nav__link">
-                    {item.label}
+                    {t(item.label)}
                   </a>
                 ) : (
                   <Link href={item.href} className="hazy-nav__link">
-                    {item.label}
+                    {t(item.label)}
                   </Link>
                 )}
               </li>
             ))}
           </ul>
         </nav>
-        <LanguageToggle />
+        <LanguageDropdown />
       </div>
     </header>
   );

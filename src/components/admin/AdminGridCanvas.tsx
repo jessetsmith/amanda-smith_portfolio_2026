@@ -10,6 +10,7 @@ import {
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GridCell } from "@/components/grid/GridCell";
+import { enOf } from "@/lib/i18n/display";
 import { packGridSectioned } from "@/lib/grid-layout";
 import { gridPlacementStyle, sortGridItems } from "@/lib/grid";
 import { GRID_COLUMNS, type GridItem } from "@/types/grid";
@@ -508,16 +509,16 @@ function AdminSortableCell({
 export function AdminDragOverlayCard({ item }: { item: GridItem }) {
   const label =
     item.kind === "titleRow"
-      ? item.label
+      ? enOf(item.label)
       : item.kind === "textCell"
-        ? item.headline
+        ? enOf(item.headline)
         : item.kind === "projectCell"
-          ? item.title
+          ? enOf(item.title)
           : item.kind === "colorCell"
-            ? item.label || item.fill
+            ? enOf(item.label) || item.fill
             : item.kind === "blankCell"
               ? "Spacer"
-              : item.title || item.caption || "Media";
+              : enOf(item.title) || enOf(item.caption) || "Media";
 
   return (
     <div className="admin-drag-overlay">

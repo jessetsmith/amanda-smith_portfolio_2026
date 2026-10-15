@@ -11,6 +11,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "sanity:seed": "node scripts/seed-sanity.mjs",
+    "sanity:seed-i18n": "node scripts/seed-i18n.mjs",
     "sanity:seed-admin": "node scripts/seed-admin-auth.mjs",
     "sanity:migrate-hero-poster": "node scripts/migrate-hero-poster-to-sanity.mjs",
     "sanity:schema-extract": "sanity schemas extract --path ./schema.json --force",

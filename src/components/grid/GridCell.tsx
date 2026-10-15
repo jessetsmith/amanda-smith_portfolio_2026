@@ -1,5 +1,6 @@
 import type { CSSProperties, ElementType, ReactNode } from "react";
 import type { GridItem, PlaceholderTone } from "@/types/grid";
+import { useLocaleOptional } from "@/components/i18n/LocaleProvider";
 import { fillClass, gridPlacementStyle } from "@/lib/grid";
 
 interface GridCellProps {
@@ -72,9 +73,10 @@ function itemHref(item: GridItem): string | undefined {
 }
 
 function OpenCue() {
+  const { ui } = useLocaleOptional();
   return (
     <span className="card-open font-mono tracking-[0.16em] text-ink/45 uppercase">
-      Open
+      {ui("open")}
       <span className="card-open__arrow" aria-hidden>
         ↗
       </span>
@@ -134,11 +136,15 @@ export function GridCell({
   className = "",
   style: styleOverride,
 }: GridCellProps) {
+  const { t, ui } = useLocaleOptional();
   const style = {
     ...(omitPlacement ? {} : gridPlacementStyle(item)),
     ...styleOverride,
   };
   const base = `grid-cell relative ${className}`.trim();
+  const leadMark = (
+    <span className="card-featured-mark"> · {ui("lead")}</span>
+  );
 
   switch (item.kind) {
     case "titleRow":
@@ -150,7 +156,7 @@ export function GridCell({
         >
           <p className="font-mono text-[0.7rem] tracking-[0.22em] text-ink uppercase">
             <MetaDot />
-            {item.label}
+            {t(item.label)}
           </p>
         </div>
       );
@@ -166,6 +172,7 @@ export function GridCell({
             rel: "noopener noreferrer",
           }
         : {};
+      const label = t(item.label);
       return (
         <Comp
           className={`${base} ${fillClass(item.fill)} color-cell flex flex-col justify-between p-6 sm:p-8${
@@ -176,13 +183,13 @@ export function GridCell({
           data-linked={linked ? "true" : undefined}
           {...linkProps}
         >
-          {item.label ? (
+          {label ? (
             <span className="font-mono text-[0.65rem] tracking-[0.18em] uppercase opacity-80">
               <MetaDot />
-              {item.label}
+              {label}
             </span>
           ) : (
-            <span className="sr-only">Color cell</span>
+            <span className="sr-only">{ui("colorCell")}</span>
           )}
           {linked ? <OpenCue /> : null}
         </Comp>
@@ -199,7 +206,12 @@ export function GridCell({
         />
       );
 
-    case "mediaCell":
+    case "mediaCell": {
+      const meta = t(item.meta) || t(item.caption) || ui("media");
+      const title = t(item.title);
+      const caption = t(item.caption);
+      const description = t(item.description);
+      const alt = t(item.imageAlt) || title || caption;
       return (
         <CellShell
           item={item}
@@ -210,29 +222,33 @@ export function GridCell({
         >
           <p className="card-meta font-mono tracking-[0.18em] text-ink uppercase">
             <MetaDot />
-            {item.meta || item.caption || "Media"}
-            {item.featured ? (
-              <span className="card-featured-mark"> · Lead</span>
-            ) : null}
+            {meta}
+            {item.featured ? leadMark : null}
           </p>
-          {item.title ? (
-            <h2 className="card-title font-display text-ink">{item.title}</h2>
+          {title ? (
+            <h2 className="card-title font-display text-ink">{title}</h2>
           ) : null}
           <CardImage
             src={item.imageSrc}
-            alt={item.imageAlt || item.title || item.caption}
+            alt={alt}
             tone={item.placeholderTone ?? "warm"}
-            label={item.caption || "Image"}
+            label={caption || ui("image")}
           />
-          {item.description ? (
+          {description ? (
             <p className="card-desc leading-relaxed text-ink/70">
-              {item.description}
+              {description}
             </p>
           ) : null}
         </CellShell>
       );
+    }
 
-    case "textCell":
+    case "textCell": {
+      const meta = t(item.meta);
+      const headline = t(item.headline);
+      const subtitle = t(item.subtitle);
+      const excerpt = t(item.excerpt);
+      const alt = t(item.imageAlt) || headline;
       return (
         <CellShell
           item={item}
@@ -241,34 +257,38 @@ export function GridCell({
           style={style}
           kindClass={contentCardClass(item, "text-cell")}
         >
-          {item.meta ? (
+          {meta ? (
             <p className="card-meta font-mono tracking-[0.18em] text-ink uppercase">
               <MetaDot />
-              {item.meta}
-              {item.featured ? (
-                <span className="card-featured-mark"> · Lead</span>
-              ) : null}
+              {meta}
+              {item.featured ? leadMark : null}
             </p>
           ) : null}
-          <h2 className="card-title font-display text-ink">{item.headline}</h2>
-          {item.subtitle ? (
+          <h2 className="card-title font-display text-ink">{headline}</h2>
+          {subtitle ? (
             <p className="card-subtitle leading-snug text-ink/55">
-              {item.subtitle}
+              {subtitle}
             </p>
           ) : null}
           <CardImage
             src={item.imageSrc}
-            alt={item.imageAlt || item.headline}
+            alt={alt}
             tone={item.placeholderTone ?? "warm"}
-            label="Image"
+            label={ui("image")}
           />
-          {item.excerpt ? (
-            <p className="card-desc leading-relaxed text-ink/70">{item.excerpt}</p>
+          {excerpt ? (
+            <p className="card-desc leading-relaxed text-ink/70">{excerpt}</p>
           ) : null}
         </CellShell>
       );
+    }
 
-    case "projectCell":
+    case "projectCell": {
+      const meta = t(item.meta) || ui("project");
+      const title = t(item.title);
+      const subtitle = t(item.subtitle);
+      const summary = t(item.summary);
+      const alt = t(item.imageAlt) || title;
       return (
         <CellShell
           item={item}
@@ -280,10 +300,8 @@ export function GridCell({
           <div className="card-meta flex items-baseline justify-between gap-3">
             <p className="font-mono tracking-[0.18em] text-ink uppercase">
               <MetaDot />
-              {item.meta || "Project"}
-              {item.featured ? (
-                <span className="card-featured-mark"> · Lead</span>
-              ) : null}
+              {meta}
+              {item.featured ? leadMark : null}
             </p>
             {item.year ? (
               <p className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/45">
@@ -291,22 +309,23 @@ export function GridCell({
               </p>
             ) : null}
           </div>
-          <h2 className="card-title font-display text-ink">{item.title}</h2>
-          {item.subtitle ? (
+          <h2 className="card-title font-display text-ink">{title}</h2>
+          {subtitle ? (
             <p className="card-subtitle leading-snug text-ink/55">
-              {item.subtitle}
+              {subtitle}
             </p>
           ) : null}
           <CardImage
             src={item.imageSrc}
-            alt={item.imageAlt || item.title}
+            alt={alt}
             tone={item.placeholderTone ?? "cool"}
-            label="Image"
+            label={ui("image")}
           />
-          {item.summary ? (
-            <p className="card-desc leading-relaxed text-ink/65">{item.summary}</p>
+          {summary ? (
+            <p className="card-desc leading-relaxed text-ink/65">{summary}</p>
           ) : null}
         </CellShell>
       );
+    }
   }
 }

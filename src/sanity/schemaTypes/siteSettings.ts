@@ -5,7 +5,11 @@ export const siteSettings = defineType({
   title: "Site settings",
   type: "document",
   fields: [
-    defineField({ name: "siteTitle", type: "string" }),
+    defineField({
+      name: "siteTitle",
+      type: "localeString",
+      title: "Site / brand title",
+    }),
     defineField({
       name: "nav",
       type: "array",
@@ -13,13 +17,20 @@ export const siteSettings = defineType({
         defineArrayMember({
           type: "object",
           fields: [
-            { name: "label", type: "string" },
-            { name: "href", type: "string" },
+            { name: "label", type: "localeString", title: "Label" },
+            { name: "href", type: "string", title: "Href" },
           ],
+          preview: {
+            select: { title: "label.en", subtitle: "href" },
+          },
         }),
       ],
     }),
     defineField({ name: "contactEmail", type: "string" }),
-    defineField({ name: "contactNote", type: "text" }),
+    defineField({
+      name: "contactNote",
+      type: "localeText",
+      title: "Contact note",
+    }),
   ],
 });

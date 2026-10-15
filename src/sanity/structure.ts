@@ -27,6 +27,10 @@ export const structure: StructureResolver = (S) =>
         .id("cv")
         .child(S.document().schemaType("cv").documentId("cv")),
       S.listItem()
+        .title("UI copy (translations)")
+        .id("uiCopy")
+        .child(S.document().schemaType("uiCopy").documentId("uiCopy")),
+      S.listItem()
         .title("Admin auth")
         .id("adminAuth")
         .child(
@@ -40,6 +44,7 @@ export const structure: StructureResolver = (S) =>
             "homepageHero",
             "siteSettings",
             "cv",
+            "uiCopy",
             "adminAuth",
           ].includes(item.getId() ?? ""),
       ),

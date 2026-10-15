@@ -1,13 +1,20 @@
+import { DEFAULT_LOCALE } from "@/lib/i18n/locales";
+import {
+  resolveLocale,
+  toLocaleMap,
+  type LocaleString,
+} from "@/lib/i18n/resolve";
 import type { HomepageHero } from "@/types/hero";
 
 export const DEFAULT_STAMP_HINT = "click to leave your mark";
 
 const DEFAULT_HERO: HomepageHero = {
-  titleText: "Amanda Smith",
-  supportText:
-    "Exhibitions, research, and writing — arranged as one connected grid.",
+  titleText: { en: "Amanda Smith" },
+  supportText: {
+    en: "Exhibitions, research, and writing — arranged as one connected grid.",
+  },
   videoUrl: "/media/intro.mp4",
-  stampHint: DEFAULT_STAMP_HINT,
+  stampHint: { en: DEFAULT_STAMP_HINT },
 };
 
 function str(value: unknown): string {
@@ -27,20 +34,28 @@ export function isAbsoluteHttpUrl(value: string | undefined | null): boolean {
 
 /** Client-safe defaults (mirrors src/data/homepage-hero.json). */
 export function defaultHero(): HomepageHero {
-  return { ...DEFAULT_HERO };
+  return {
+    ...DEFAULT_HERO,
+    titleText: toLocaleMap(DEFAULT_HERO.titleText),
+    supportText: toLocaleMap(DEFAULT_HERO.supportText),
+    stampHint: toLocaleMap(DEFAULT_HERO.stampHint),
+  };
 }
 
 export function normalizeHero(
   raw: Partial<HomepageHero> | null | undefined,
 ): HomepageHero {
   const fallback = defaultHero();
-  const titleText = str(raw?.titleText) || fallback.titleText;
-  const supportText = str(raw?.supportText) || fallback.supportText;
+  const titleText = toLocaleMap(raw?.titleText, resolveLocale(fallback.titleText));
+  const supportText = toLocaleMap(
+    raw?.supportText,
+    resolveLocale(fallback.supportText),
+  );
   const videoUrl = str(raw?.videoUrl);
   const posterUrl = str(raw?.posterUrl);
   const imageUrl = str(raw?.imageUrl);
   const watchUrl = str(raw?.watchUrl);
-  const stampHint = str(raw?.stampHint);
+  const stampHint = toLocaleMap(raw?.stampHint);
   const posterAssetId = str(raw?.posterAssetId);
   const imageAssetId = str(raw?.imageAssetId);
   return {
@@ -52,14 +67,16 @@ export function normalizeHero(
     ...(posterAssetId ? { posterAssetId } : {}),
     ...(imageAssetId ? { imageAssetId } : {}),
     ...(watchUrl ? { watchUrl } : {}),
-    // Persist empty as omit so public falls back to DEFAULT_STAMP_HINT
-    ...(stampHint ? { stampHint } : {}),
+    ...(Object.keys(stampHint).length ? { stampHint } : {}),
   };
 }
 
 /** Resolved tip copy for the public hero (never empty). */
-export function resolveStampHint(hero: Partial<HomepageHero> | null | undefined): string {
-  const tip = str(hero?.stampHint);
+export function resolveStampHint(
+  hero: Partial<HomepageHero> | null | undefined,
+  locale = DEFAULT_LOCALE,
+): string {
+  const tip = resolveLocale(hero?.stampHint as LocaleString | undefined, locale);
   return tip || DEFAULT_STAMP_HINT;
 }
 

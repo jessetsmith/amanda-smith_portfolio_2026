@@ -37,6 +37,11 @@ import type {
   LayoutBreakpoint,
   TitleRowItem,
 } from "@/types/grid";
+import { AdminLocaleSelect, readLocaleField, writeLocaleField } from "@/components/admin/AdminLocaleSelect";
+import { LocaleProvider } from "@/components/i18n/LocaleProvider";
+import { enOf } from "@/lib/i18n/display";
+import { DEFAULT_LOCALE, type LocaleCode } from "@/lib/i18n/locales";
+import type { LocaleString } from "@/lib/i18n/resolve";
 import {
   BREAKPOINT_COLUMNS,
   GRID_COLUMNS,
@@ -159,7 +164,7 @@ interface AdminGridAppProps {
   initialSource?: DataSource;
   initialHero?: HomepageHero;
   initialHeroSource?: DataSource;
-  siteTitle?: string;
+  siteTitle?: LocaleString;
   siteNav?: NavItem[];
 }
 
@@ -194,12 +199,12 @@ export function AdminGridApp({
   initialSource = "fixture",
   initialHero,
   initialHeroSource = "fixture",
-  siteTitle = "Amanda Smith",
+  siteTitle = { en: "Amanda Smith" },
   siteNav = [
-    { label: "Work", href: "/#grid" },
-    { label: "CV", href: "/cv" },
-    { label: "Research", href: "/#grid" },
-    { label: "Contact", href: "mailto:hello@example.com" },
+    { label: { en: "Work" }, href: "/#grid" },
+    { label: { en: "CV" }, href: "/cv" },
+    { label: { en: "Research" }, href: "/#grid" },
+    { label: { en: "Contact" }, href: "mailto:hello@example.com" },
   ],
 }: AdminGridAppProps) {
   const router = useRouter();
@@ -616,7 +621,7 @@ export function AdminGridApp({
       prev.map((item) => {
         if (item.id !== titleId || item.kind !== "titleRow") return item;
         const nextLabel = label.trim() || "Section";
-        return { ...item, label: nextLabel } as TitleRowItem;
+        return { ...item, label: { en: nextLabel } } as TitleRowItem;
       }),
     );
   }
@@ -789,6 +794,7 @@ export function AdminGridApp({
   );
 
   return (
+    <LocaleProvider>
     <div className="admin-shell flex h-dvh max-h-dvh flex-col overflow-hidden">
       <header className="admin-shell__header flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-ink/15 px-4 py-3 sm:px-6">
         <div>
@@ -1214,7 +1220,7 @@ export function AdminGridApp({
                     <HazyNav brand={siteTitle} items={siteNav} />
                   </div>
                   <IntroMask
-                    key={`hero-${previewKey}-${hero.titleText}-${hero.videoUrl}-${hero.imageUrl ?? ""}-${hero.watchUrl ?? ""}`}
+                    key={`hero-${previewKey}-${enOf(hero.titleText)}-${hero.videoUrl}-${hero.imageUrl ?? ""}-${hero.watchUrl ?? ""}`}
                     maskText={hero.titleText}
                     support={hero.supportText}
                     videoSrc={hero.videoUrl}
@@ -1288,6 +1294,7 @@ export function AdminGridApp({
         />
       ) : null}
     </div>
+    </LocaleProvider>
   );
 }
 
@@ -1315,16 +1322,16 @@ function SortableRow({
 
   const label =
     item.kind === "titleRow"
-      ? `${item.label}${item.hidden ? " · Hidden" : ""}`
+      ? `${enOf(item.label)}${item.hidden ? " · Hidden" : ""}`
       : item.kind === "textCell"
-        ? item.headline
+        ? enOf(item.headline)
         : item.kind === "projectCell"
-          ? item.title
+          ? enOf(item.title)
           : item.kind === "colorCell"
-            ? item.label || item.fill
+            ? enOf(item.label) || item.fill
             : item.kind === "blankCell"
               ? "Spacer"
-              : item.caption || "Media";
+              : enOf(item.caption) || "Media";
 
   return (
     <li
@@ -1360,12 +1367,12 @@ function SortableRow({
 }
 
 function itemContentPreview(item: GridItem): string {
-  if (item.kind === "titleRow") return item.label;
-  if (item.kind === "colorCell") return item.label || item.fill;
-  if (item.kind === "textCell") return item.headline;
-  if (item.kind === "projectCell") return item.title;
+  if (item.kind === "titleRow") return enOf(item.label);
+  if (item.kind === "colorCell") return enOf(item.label) || item.fill;
+  if (item.kind === "textCell") return enOf(item.headline);
+  if (item.kind === "projectCell") return enOf(item.title);
   if (item.kind === "blankCell") return "Spacer";
-  return item.title || item.caption || "Media";
+  return enOf(item.title) || enOf(item.caption) || "Media";
 }
 
 function HeroTab({
@@ -1375,6 +1382,7 @@ function HeroTab({
   hero: HomepageHero;
   onChange: (patch: Partial<HomepageHero>) => void;
 }) {
+  const [locale, setLocale] = useState<LocaleCode>(DEFAULT_LOCALE);
   return (
     <div className="space-y-4">
       <div>
@@ -1383,9 +1391,12 @@ function HeroTab({
         </p>
         <p className="mt-1 text-xs text-ink/50">
           Edits stay local until Save publishes to Sanity{" "}
-          <code className="font-mono">homepageHero</code>.
+          <code className="font-mono">homepageHero</code>. Locale fields use the
+          language switcher below (Studio also has a per-field language dropdown).
         </p>
       </div>
+
+      <AdminLocaleSelect value={locale} onChange={setLocale} />
 
       <label className="block space-y-1">
         <span className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/55 uppercase">
@@ -1393,8 +1404,12 @@ function HeroTab({
         </span>
         <input
           type="text"
-          value={hero.titleText}
-          onChange={(e) => onChange({ titleText: e.target.value })}
+          value={readLocaleField(hero.titleText, locale)}
+          onChange={(e) =>
+            onChange({
+              titleText: writeLocaleField(hero.titleText, locale, e.target.value),
+            })
+          }
           className="w-full border border-ink/20 bg-paper px-2 py-2 text-sm text-ink"
           placeholder="Amanda Smith"
         />
@@ -1405,8 +1420,16 @@ function HeroTab({
           Support line
         </span>
         <textarea
-          value={hero.supportText}
-          onChange={(e) => onChange({ supportText: e.target.value })}
+          value={readLocaleField(hero.supportText, locale)}
+          onChange={(e) =>
+            onChange({
+              supportText: writeLocaleField(
+                hero.supportText,
+                locale,
+                e.target.value,
+              ),
+            })
+          }
           rows={3}
           className="w-full border border-ink/20 bg-paper px-2 py-2 text-sm text-ink"
           placeholder="Exhibitions, research, and writing…"
@@ -1419,8 +1442,12 @@ function HeroTab({
         </span>
         <input
           type="text"
-          value={hero.stampHint ?? ""}
-          onChange={(e) => onChange({ stampHint: e.target.value })}
+          value={readLocaleField(hero.stampHint, locale)}
+          onChange={(e) =>
+            onChange({
+              stampHint: writeLocaleField(hero.stampHint, locale, e.target.value),
+            })
+          }
           className="w-full border border-ink/20 bg-paper px-2 py-2 text-sm text-ink"
           placeholder="click to leave your mark"
         />
@@ -1537,7 +1564,7 @@ function SectionTab({
   const band = range ? measureSectionBand(items, range, packed) : null;
   const head = range ? items[range.start] : null;
   const sectionLabel =
-    head?.kind === "titleRow" ? head.label || "Section" : "Section";
+    head?.kind === "titleRow" ? enOf(head.label) || "Section" : "Section";
   const isHidden =
     head?.kind === "titleRow" ? Boolean(head.hidden) : false;
   const canHide = head?.kind === "titleRow";
@@ -1558,7 +1585,7 @@ function SectionTab({
             </span>
             <input
               type="text"
-              value={head.label}
+              value={enOf(head.label)}
               onChange={(event) =>
                 onSectionLabelChange(head.id, event.target.value)
               }
@@ -1804,6 +1831,7 @@ function ContentEditModal({
     () => currentSectionId ?? NEW_SECTION_VALUE,
   );
   const [newSectionLabel, setNewSectionLabel] = useState("New section");
+  const [locale, setLocale] = useState<LocaleCode>(DEFAULT_LOCALE);
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -1828,6 +1856,14 @@ function ContentEditModal({
 
   function patchDraft(patch: Partial<GridItem>) {
     setDraft((prev) => ({ ...prev, ...patch } as GridItem));
+  }
+
+  function setLoc(
+    key: string,
+    current: LocaleString | undefined,
+    next: string,
+  ) {
+    patchDraft({ [key]: writeLocaleField(current, locale, next) } as Partial<GridItem>);
   }
 
   function resolveSectionTarget(): SectionTarget | undefined {
@@ -1939,6 +1975,9 @@ function ContentEditModal({
         </div>
 
         <div className="admin-content-modal__fields space-y-3 py-4">
+          {draft.kind !== "blankCell" ? (
+            <AdminLocaleSelect value={locale} onChange={setLocale} />
+          ) : null}
           {draft.kind !== "titleRow" ? (
             <div className="space-y-2">
               <SelectField
@@ -1974,8 +2013,8 @@ function ContentEditModal({
           {draft.kind === "titleRow" ? (
             <TextField
               label="Content section"
-              value={draft.label}
-              onChange={(label) => patchDraft({ label } as Partial<GridItem>)}
+              value={readLocaleField(draft.label, locale)}
+              onChange={(label) => setLoc("label", draft.label, label)}
             />
           ) : null}
 
@@ -1991,8 +2030,8 @@ function ContentEditModal({
               />
               <TextField
                 label="Label"
-                value={draft.label ?? ""}
-                onChange={(label) => patchDraft({ label } as Partial<GridItem>)}
+                value={readLocaleField(draft.label, locale)}
+                onChange={(label) => setLoc("label", draft.label, label)}
               />
               <TextField
                 label="Link URL"
@@ -2006,20 +2045,18 @@ function ContentEditModal({
             <>
               <TextField
                 label="Meta"
-                value={draft.meta ?? ""}
-                onChange={(meta) => patchDraft({ meta } as Partial<GridItem>)}
+                value={readLocaleField(draft.meta, locale)}
+                onChange={(meta) => setLoc("meta", draft.meta, meta)}
               />
               <TextField
                 label="Title"
-                value={draft.title ?? ""}
-                onChange={(title) => patchDraft({ title } as Partial<GridItem>)}
+                value={readLocaleField(draft.title, locale)}
+                onChange={(title) => setLoc("title", draft.title, title)}
               />
               <TextField
                 label="Caption"
-                value={draft.caption ?? ""}
-                onChange={(caption) =>
-                  patchDraft({ caption } as Partial<GridItem>)
-                }
+                value={readLocaleField(draft.caption, locale)}
+                onChange={(caption) => setLoc("caption", draft.caption, caption)}
               />
               <ImagePickerField
                 value={draft.imageSrc ?? ""}
@@ -2037,9 +2074,9 @@ function ContentEditModal({
               />
               <TextAreaField
                 label="Description"
-                value={draft.description ?? ""}
+                value={readLocaleField(draft.description, locale)}
                 onChange={(description) =>
-                  patchDraft({ description } as Partial<GridItem>)
+                  setLoc("description", draft.description, description)
                 }
               />
               <TextField
@@ -2054,22 +2091,18 @@ function ContentEditModal({
             <>
               <TextField
                 label="Meta"
-                value={draft.meta ?? ""}
-                onChange={(meta) => patchDraft({ meta } as Partial<GridItem>)}
+                value={readLocaleField(draft.meta, locale)}
+                onChange={(meta) => setLoc("meta", draft.meta, meta)}
               />
               <TextField
                 label="Title"
-                value={draft.headline}
-                onChange={(headline) =>
-                  patchDraft({ headline } as Partial<GridItem>)
-                }
+                value={readLocaleField(draft.headline, locale)}
+                onChange={(headline) => setLoc("headline", draft.headline, headline)}
               />
               <TextField
                 label="Subtitle"
-                value={draft.subtitle ?? ""}
-                onChange={(subtitle) =>
-                  patchDraft({ subtitle } as Partial<GridItem>)
-                }
+                value={readLocaleField(draft.subtitle, locale)}
+                onChange={(subtitle) => setLoc("subtitle", draft.subtitle, subtitle)}
               />
               <ImagePickerField
                 value={draft.imageSrc ?? ""}
@@ -2087,10 +2120,8 @@ function ContentEditModal({
               />
               <TextAreaField
                 label="Description"
-                value={draft.excerpt ?? ""}
-                onChange={(excerpt) =>
-                  patchDraft({ excerpt } as Partial<GridItem>)
-                }
+                value={readLocaleField(draft.excerpt, locale)}
+                onChange={(excerpt) => setLoc("excerpt", draft.excerpt, excerpt)}
               />
               <TextField
                 label="Link URL"
@@ -2104,20 +2135,18 @@ function ContentEditModal({
             <>
               <TextField
                 label="Meta"
-                value={draft.meta ?? ""}
-                onChange={(meta) => patchDraft({ meta } as Partial<GridItem>)}
+                value={readLocaleField(draft.meta, locale)}
+                onChange={(meta) => setLoc("meta", draft.meta, meta)}
               />
               <TextField
                 label="Title"
-                value={draft.title}
-                onChange={(title) => patchDraft({ title } as Partial<GridItem>)}
+                value={readLocaleField(draft.title, locale)}
+                onChange={(title) => setLoc("title", draft.title, title)}
               />
               <TextField
                 label="Subtitle"
-                value={draft.subtitle ?? ""}
-                onChange={(subtitle) =>
-                  patchDraft({ subtitle } as Partial<GridItem>)
-                }
+                value={readLocaleField(draft.subtitle, locale)}
+                onChange={(subtitle) => setLoc("subtitle", draft.subtitle, subtitle)}
               />
               <TextField
                 label="Year"
@@ -2140,10 +2169,8 @@ function ContentEditModal({
               />
               <TextAreaField
                 label="Description"
-                value={draft.summary ?? ""}
-                onChange={(summary) =>
-                  patchDraft({ summary } as Partial<GridItem>)
-                }
+                value={readLocaleField(draft.summary, locale)}
+                onChange={(summary) => setLoc("summary", draft.summary, summary)}
               />
               <TextField
                 label="Link URL"
