@@ -129,13 +129,12 @@ const FILLS: CellFill[] = ["rust", "ochre", "sage", "tan", "paper", "ink"];
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 type DataSource = "sanity" | "fixture";
-type SidebarTab = "hero" | "blocks" | "section" | "placement" | "content";
+type SidebarTab = "hero" | "blocks" | "section" | "content";
 
 const SIDEBAR_TABS: { id: SidebarTab; label: string }[] = [
   { id: "hero", label: "Hero" },
   { id: "blocks", label: "Blocks" },
   { id: "section", label: "Section" },
-  { id: "placement", label: "Placement" },
   { id: "content", label: "Content" },
 ];
 
@@ -872,25 +871,6 @@ export function AdminGridApp({
                       onSectionHiddenChange={
                         selectedHandlers.onSectionHiddenChange
                       }
-                    />
-                  ) : (
-                    <p className="text-sm text-ink/50">
-                      Select a block to edit its section size.
-                    </p>
-                  )}
-                </div>
-              ) : null}
-
-              {sidebarTab === "placement" ? (
-                <div
-                  id="admin-panel-placement"
-                  role="tabpanel"
-                  aria-labelledby="admin-tab-placement"
-                  className="h-full min-h-0 overflow-y-auto p-4"
-                >
-                  {selected && selectedHandlers ? (
-                    <PlacementTab
-                      item={selected}
                       onResize={selectedHandlers.onResize}
                       onFeaturedChange={selectedHandlers.onFeaturedChange}
                       onDuplicate={selectedHandlers.onDuplicate}
@@ -898,7 +878,7 @@ export function AdminGridApp({
                     />
                   ) : (
                     <p className="text-sm text-ink/50">
-                      Select a block to edit placement.
+                      Select a block to edit section and placement.
                     </p>
                   )}
                 </div>
@@ -1296,12 +1276,24 @@ function SectionTab({
   onSectionRowsChange,
   onCompactSection,
   onSectionHiddenChange,
+  onResize,
+  onFeaturedChange,
+  onDuplicate,
+  onRemove,
 }: {
   item: GridItem;
   items: GridItem[];
   onSectionRowsChange: (rows: number) => void;
   onCompactSection: () => void;
   onSectionHiddenChange: (hidden: boolean) => void;
+  onResize: (
+    patch: Partial<
+      Pick<GridItem, "colStart" | "colSpan" | "rowSpan" | "rowStart">
+    >,
+  ) => void;
+  onFeaturedChange: (featured: boolean) => void;
+  onDuplicate: () => void;
+  onRemove: () => void;
 }) {
   const range = sectionIndexRange(items, item.id);
   const packed = packGridSectioned(items);
@@ -1314,63 +1306,78 @@ function SectionTab({
   const canHide = head?.kind === "titleRow";
 
   return (
-    <div className="space-y-3">
-      <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
-        {sectionLabel}
-        {isHidden ? " · Hidden" : ""}
-      </p>
-      {canHide ? (
-        <label className="flex cursor-pointer items-start justify-between gap-3 border border-ink/12 px-3 py-2.5">
-          <span className="min-w-0">
-            <span className="block font-mono text-[0.6rem] tracking-[0.14em] text-ink uppercase">
-              Hide from public
-            </span>
-            <span className="mt-1 block text-xs text-ink/45">
-              {isHidden
-                ? "Hidden on the public site · still visible here (dimmed)"
-                : "Section stays on the public homepage until you Save"}
-            </span>
-          </span>
-          <input
-            type="checkbox"
-            className="mt-1 size-4 accent-[var(--color-rust)]"
-            checked={isHidden}
-            onChange={(event) => onSectionHiddenChange(event.target.checked)}
-          />
-        </label>
-      ) : (
-        <p className="text-xs text-ink/45">
-          Add a title row to hide this band from the public site.
+    <div className="space-y-5">
+      <div className="space-y-3">
+        <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
+          {sectionLabel}
+          {isHidden ? " · Hidden" : ""}
         </p>
-      )}
-      {band ? (
-        <div className="space-y-2">
-          <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
-            Section size · {band.sectionRows} rows (content {band.contentHeight})
-          </p>
-          <NumberField
-            label="Section rows"
-            value={band.sectionRows}
-            min={band.contentHeight}
-            max={MAX_SECTION_ROWS}
-            onChange={onSectionRowsChange}
-          />
+        {canHide ? (
+          <label className="flex cursor-pointer items-start justify-between gap-3 border border-ink/12 px-3 py-2.5">
+            <span className="min-w-0">
+              <span className="block font-mono text-[0.6rem] tracking-[0.14em] text-ink uppercase">
+                Hide from public
+              </span>
+              <span className="mt-1 block text-xs text-ink/45">
+                {isHidden
+                  ? "Hidden on the public site · still visible here (dimmed)"
+                  : "Section stays on the public homepage until you Save"}
+              </span>
+            </span>
+            <input
+              type="checkbox"
+              className="mt-1 size-4 accent-[var(--color-rust)]"
+              checked={isHidden}
+              onChange={(event) => onSectionHiddenChange(event.target.checked)}
+            />
+          </label>
+        ) : (
           <p className="text-xs text-ink/45">
-            Grow adds empty target rows; shrink removes trailing blanks. Cannot
-            go below content height.
+            Add a title row to hide this band from the public site.
           </p>
-        </div>
-      ) : (
-        <p className="text-sm text-ink/50">No section metrics for this block.</p>
-      )}
-      <button
-        type="button"
-        onClick={onCompactSection}
-        className="border border-ink/20 px-2 py-1.5 font-mono text-[0.6rem] tracking-[0.12em] uppercase"
-        title="Trim trailing blank rows in this section"
-      >
-        Compact section
-      </button>
+        )}
+        {band ? (
+          <div className="space-y-2">
+            <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
+              Section size · {band.sectionRows} rows (content{" "}
+              {band.contentHeight})
+            </p>
+            <NumberField
+              label="Section rows"
+              value={band.sectionRows}
+              min={band.contentHeight}
+              max={MAX_SECTION_ROWS}
+              onChange={onSectionRowsChange}
+            />
+            <p className="text-xs text-ink/45">
+              Grow adds empty target rows; shrink removes trailing blanks.
+              Cannot go below content height.
+            </p>
+          </div>
+        ) : (
+          <p className="text-sm text-ink/50">
+            No section metrics for this block.
+          </p>
+        )}
+        <button
+          type="button"
+          onClick={onCompactSection}
+          className="border border-ink/20 px-2 py-1.5 font-mono text-[0.6rem] tracking-[0.12em] uppercase"
+          title="Trim trailing blank rows in this section"
+        >
+          Compact section
+        </button>
+      </div>
+
+      <div className="border-t border-ink/12 pt-4">
+        <PlacementTab
+          item={item}
+          onResize={onResize}
+          onFeaturedChange={onFeaturedChange}
+          onDuplicate={onDuplicate}
+          onRemove={onRemove}
+        />
+      </div>
     </div>
   );
 }
@@ -1396,23 +1403,6 @@ function PlacementTab({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={onDuplicate}
-          className="border border-ink/20 px-2 py-1 font-mono text-[0.6rem] tracking-[0.12em] uppercase"
-        >
-          Duplicate
-        </button>
-        <button
-          type="button"
-          onClick={onRemove}
-          className="border border-rust/40 px-2 py-1 font-mono text-[0.6rem] tracking-[0.12em] text-rust uppercase"
-        >
-          Remove
-        </button>
-      </div>
-
       <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
         Placement · {item.kind}
       </p>
@@ -1459,6 +1449,23 @@ function PlacementTab({
           Featured lead · span 2
         </label>
       ) : null}
+
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={onDuplicate}
+          className="border border-ink/20 px-2 py-1 font-mono text-[0.6rem] tracking-[0.12em] uppercase"
+        >
+          Duplicate
+        </button>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="border border-rust/40 px-2 py-1 font-mono text-[0.6rem] tracking-[0.12em] text-rust uppercase"
+        >
+          Remove
+        </button>
+      </div>
     </div>
   );
 }
