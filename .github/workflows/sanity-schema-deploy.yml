@@ -1,0 +1,66 @@
+# Register the self-hosted Studio URL and deploy schema/manifest to Sanity Manage.
+# Requires secret SANITY_AUTH_TOKEN (Manage → API → Tokens → deploy token).
+
+name: Sanity schema deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "sanity.config.ts"
+      - "sanity.cli.ts"
+      - "src/sanity/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/sanity-schema-deploy.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: sanity-schema-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  register:
+    name: Register studio + deploy schema
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Require SANITY_AUTH_TOKEN
+        env:
+          SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
+        run: |
+          if [ -z "$SANITY_AUTH_TOKEN" ]; then
+            echo "::error::SANITY_AUTH_TOKEN is not set. Create a deploy token in Sanity Manage → API → Tokens, then add it as a GitHub Actions secret. See .github/DEPLOY.md"
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Deploy external studio + schema
+        env:
+          SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
+          NEXT_PUBLIC_SANITY_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_SANITY_PROJECT_ID }}
+          NEXT_PUBLIC_SANITY_DATASET: ${{ vars.NEXT_PUBLIC_SANITY_DATASET || 'production' }}
+        run: npm run sanity:studio-register
+
+      - name: Summary
+        run: |
+          {
+            echo "## Sanity studio registration"
+            echo ""
+            echo "- **Studio URL:** https://portfolio.bittersweetwoman.com/studio"
+            echo "- **Command:** \`npm run sanity:studio-register\`"
+            echo "- **Manage:** https://www.sanity.io/manage/project/00c2spwm"
+            echo "- Refresh **Studio compatibility** in Manage if Version/Manifest/Schema still show \`--\`."
+          } >> "$GITHUB_STEP_SUMMARY"

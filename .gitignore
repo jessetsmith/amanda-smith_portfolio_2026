@@ -54,6 +54,8 @@ next-env.d.ts
 
 # sanity
 .sanity/
+/dist/
+/public/studio/static/
 
 # temporary stash while building GitHub Pages static export
 .pages-export-stash/
