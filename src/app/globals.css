@@ -1157,12 +1157,12 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 
 @media (max-height: 700px) and (orientation: landscape) {
   .intro-mask__title {
-    bottom: 28%;
+    bottom: 32%;
     font-size: clamp(2.25rem, 8vw, 4.5rem);
   }
 
   .intro-mask__content {
-    padding-bottom: max(4.75rem, calc(env(safe-area-inset-bottom) + 3.5rem));
+    padding-bottom: max(5.5rem, calc(env(safe-area-inset-bottom) + 4.25rem));
   }
 }
 
