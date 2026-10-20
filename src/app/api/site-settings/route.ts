@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { isAdminAuthenticated } from "@/lib/auth";
-import {
-  loadSiteSettings,
-  normalizeSiteSettings,
-  saveSiteSettings,
-} from "@/lib/site-sync";
+import { normalizeSiteSettings } from "@/lib/site";
+import { loadSiteSettings, saveSiteSettings } from "@/lib/site-sync";
 import type { SiteSettings } from "@/types/content";
 
 function revalidatePublicViews() {

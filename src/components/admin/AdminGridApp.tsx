@@ -81,10 +81,7 @@ import {
 import { HazyNav } from "@/components/HazyNav";
 import { IntroMask } from "@/components/IntroMask";
 import { defaultHero, heroSignature, normalizeHero } from "@/lib/hero";
-import {
-  normalizeSiteSettings,
-  siteSignature,
-} from "@/lib/site-sync";
+import { normalizeSiteSettings, siteSignature } from "@/lib/site";
 import type { NavItem, SiteSettings } from "@/types/content";
 import type { HomepageHero } from "@/types/hero";
 import {

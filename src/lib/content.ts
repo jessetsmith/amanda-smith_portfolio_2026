@@ -7,7 +7,7 @@ import {
 } from "@/lib/grid-sync";
 import { defaultHero } from "@/lib/hero";
 import { loadHero } from "@/lib/hero-sync";
-import { normalizeSiteSettings } from "@/lib/site-sync";
+import { normalizeSiteSettings } from "@/lib/site";
 import {
   applyCvOverlays,
   applyGridOverlays,
