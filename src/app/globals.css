@@ -1131,27 +1131,38 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   Twin name stack — solid punch + outline share a clip window at
   --intro-title-bottom (staggered overlap on the inner layers). Support/quote
   anchors just above that clip. Name rises through an invisible hard clip
-  line as --intro-progress goes 0 → 1.
+  line as --intro-reveal goes 0 → 1 (mapped from --intro-progress).
 */
 .intro-mask {
   --intro-title-bottom: 36%;
   --intro-title-size: clamp(2.75rem, 12vw, 9rem);
-  /* ~1 line of display type (+ a little) — clip box + quote clearance */
-  --intro-title-clip-height: calc(var(--intro-title-size) * 0.9 * 1.2);
+  /*
+    Full single-line glyph box + outline stroke + down-stagger so nothing
+    is cut when reveal completes (translateY hits 0).
+  */
+  --intro-title-clip-height: calc(
+    var(--intro-title-size) * 1.12 + var(--intro-title-stagger-y) + 0.35rem
+  );
   /* rem — shared by title-region transform + support anchor (not em of body) */
   --intro-title-stagger-x: 0.28rem;
   /* Slight down-right offset; keep most of the outline under the solid fill */
   --intro-title-stagger-y: 0.38rem;
   --intro-support-gap: 0.65rem;
+  /*
+    Reveal completes ~halfway through the intro runway, then holds at 1 so
+    the full name is never left mid-clip at rest.
+  */
+  --intro-reveal: clamp(0, calc(var(--intro-progress) * 2), 1);
 }
 
 /* Shared clip window — hard invisible line; letters rise into view on scroll */
 .intro-mask__title-clip {
   position: absolute;
   left: max(1.25rem, env(safe-area-inset-left));
-  right: max(1.25rem, env(safe-area-inset-right));
   bottom: var(--intro-title-bottom);
-  max-width: 14ch;
+  /* Wide enough for “Amanda Smith” on one line (14ch was wrapping) */
+  width: max-content;
+  max-width: min(22ch, calc(100vw - 2.5rem));
   height: var(--intro-title-clip-height);
   overflow: hidden;
   pointer-events: none;
@@ -1169,6 +1180,7 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 @media (prefers-reduced-motion: reduce) {
   .intro-mask {
     --intro-progress: 1;
+    --intro-reveal: 1;
   }
 
   .intro-mask__title,
@@ -1181,22 +1193,22 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 .intro-mask__title {
   position: relative;
   z-index: 2;
+  display: block;
   margin: 0;
-  max-width: 14ch;
+  max-width: none;
+  white-space: nowrap;
   font-family: var(--font-display);
   font-size: var(--intro-title-size);
   font-weight: var(--weight-display);
-  line-height: 0.9;
+  line-height: 1;
   letter-spacing: var(--tracking-display);
   color: #000;
   mix-blend-mode: destination-out;
   /*
-    progress 0 → mostly below the clip line (hard cut through glyphs)
-    progress 1 → fully revealed + light upward drift
+    reveal 0 → mostly below the clip line (hard cut through glyphs)
+    reveal 1 → translateY(0), fully inside the clip — no leftover cut-off
   */
-  transform: translateY(
-    calc((1 - var(--intro-progress)) * 72% + var(--intro-progress) * -4vh)
-  );
+  transform: translateY(calc((1 - var(--intro-reveal)) * 90%));
   will-change: transform;
 }
 
@@ -1208,7 +1220,7 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 
   .intro-mask__title-clip {
     left: 2.5rem;
-    right: 2.5rem;
+    max-width: min(22ch, calc(100vw - 5rem));
   }
 }
 
@@ -1259,17 +1271,15 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   position: relative;
   z-index: 3;
   display: block;
-  max-width: 14ch;
+  max-width: none;
+  white-space: nowrap;
   font-size: var(--intro-title-size);
-  line-height: 0.9;
+  line-height: 1;
   pointer-events: auto;
   outline: none;
   transform: translate(
     var(--intro-title-stagger-x),
-    calc(
-      (1 - var(--intro-progress)) * 72% + var(--intro-progress) * -4vh +
-        var(--intro-title-stagger-y)
-    )
+    calc((1 - var(--intro-reveal)) * 90% + var(--intro-title-stagger-y))
   );
   will-change: transform;
 }
@@ -1435,8 +1445,10 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 .intro-mask__title-readable {
   position: relative;
   z-index: 1;
+  display: block;
   margin: 0;
-  max-width: 14ch;
+  max-width: none;
+  white-space: nowrap;
   font-family: var(--font-display);
   font-size: 1em;
   font-weight: var(--weight-display);
@@ -2170,6 +2182,7 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 /* Admin: title fully revealed (no scroll-scrubbed clip) while editing */
 .admin-hero-preview .intro-mask {
   --intro-progress: 1;
+  --intro-reveal: 1;
 }
 
 /* Compact blurb under hero so the preview frame stays usable */

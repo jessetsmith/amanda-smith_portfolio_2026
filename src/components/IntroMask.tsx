@@ -381,6 +381,7 @@ export function IntroMask({
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!enableHandCursor || reduce) {
       section.style.setProperty("--intro-progress", "1");
+      section.style.setProperty("--intro-reveal", "1");
       return;
     }
 
@@ -389,11 +390,19 @@ export function IntroMask({
       const total = Math.max(rect.height - window.innerHeight, 1);
       const raw = Math.min(1, Math.max(0, -rect.top / total));
       section.style.setProperty("--intro-progress", String(raw));
+      // CSS maps progress → --intro-reveal (completes by ~50%); mirror for
+      // any JS/readouts. Clamp so we always hit a clean fully-revealed end.
+      const reveal = Math.min(1, raw * 2);
+      section.style.setProperty("--intro-reveal", String(reveal));
     };
 
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("resize", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, [enableHandCursor]);
 
   // Reset sound when media source changes (always start muted for autoplay)
