@@ -52,7 +52,8 @@ export function readLocaleField(
     return locale === "en" ? value : "";
   }
   if (Object.prototype.hasOwnProperty.call(value, locale)) {
-    return (value[locale] ?? "").trim();
+    // Do not trim — trailing spaces must survive while typing.
+    return value[locale] ?? "";
   }
   return "";
 }

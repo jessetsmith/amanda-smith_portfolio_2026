@@ -102,13 +102,17 @@ export function mergeLocaleMaps(
   return out;
 }
 
-/** Set one locale on a value, preserving siblings. Empty string = intentional blank. */
+/**
+ * Set one locale on a value, preserving siblings.
+ * All-whitespace → intentional blank `""`.
+ * Otherwise keep the raw string (including spaces) so inputs don’t eat Space mid-typing.
+ */
 export function setLocaleValue(
   current: LocaleString | null | undefined,
   locale: LocaleCode,
   next: string,
 ): Partial<Record<LocaleCode, string>> {
   const map = toLocaleMap(current);
-  map[locale] = next.trim();
+  map[locale] = next.trim() === "" ? "" : next;
   return map;
 }
