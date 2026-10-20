@@ -106,8 +106,9 @@ export interface ColorCellItem extends GridItemBase {
   href?: string;
   label?: LocaleString;
   /**
-   * Optional subcategory (or ·-separated chain). Shown after the label with
-   * a middle-dot, e.g. PHOTOVOICE · WORKSHOP. Omitted when empty.
+   * Optional subcategory chain. Admins enter comma-separated values; public
+   * render joins them with middle-dots after the label
+   * (e.g. Channel, Happenings → LABEL · Channel · Happenings). Omitted when empty.
    */
   subcategory?: LocaleString;
   /**

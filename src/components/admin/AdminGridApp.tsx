@@ -56,6 +56,7 @@ import {
   reorderBreakpointLayouts,
   writeBreakpointPlacement,
 } from "@/lib/grid-breakpoints";
+import { formatColorCellMeta } from "@/lib/grid";
 import { duplicateGridItem, normalizeGridItems } from "@/lib/grid-normalize";
 import { reorderGridItems } from "@/lib/grid-reorder";
 import { applyGridResize } from "@/lib/grid-resize";
@@ -1376,9 +1377,9 @@ function SortableRow({
 function itemContentPreview(item: GridItem): string {
   if (item.kind === "titleRow") return enOf(item.label);
   if (item.kind === "colorCell") {
-    const label = enOf(item.label) || item.fill;
-    const sub = enOf(item.subcategory);
-    const base = sub ? `${label} · ${sub}` : label;
+    const base =
+      formatColorCellMeta(enOf(item.label) || item.fill, enOf(item.subcategory)) ||
+      item.fill;
     return Object.keys(toLocaleMap(item.prose)).length
       ? `${base} · prose`
       : base;
@@ -2082,8 +2083,9 @@ function ContentEditModal({
                 }
               />
               <p className="-mt-1 text-xs text-ink/45">
-                Optional. Shown after the label with a middle-dot (e.g. Workshop).
-                Chain segments with · if needed.
+                Optional. Separate each value with a comma — commas become
+                middle-dots (·) on the live site (e.g. Channel, Happenings →
+                Channel · Happenings).
               </p>
               <TextField
                 label="Link URL"

@@ -1,7 +1,7 @@
 import type { CSSProperties, ElementType, ReactNode } from "react";
 import type { CellTextSize, GridItem, PlaceholderTone } from "@/types/grid";
 import { useLocaleOptional } from "@/components/i18n/LocaleProvider";
-import { fillClass, gridPlacementStyle } from "@/lib/grid";
+import { fillClass, formatColorCellMeta, gridPlacementStyle } from "@/lib/grid";
 
 function cellTextStyle(item: GridItem): CSSProperties {
   const color =
@@ -18,18 +18,6 @@ function cellTextSizeAttr(item: GridItem): CellTextSize | undefined {
     return undefined;
   }
   return item.textSize;
-}
-
-/** Join label + optional subcategory segments with middle-dot separators. */
-function metaParts(...parts: Array<string | undefined>): string {
-  return parts
-    .flatMap((part) =>
-      (part || "")
-        .split(/\s*·\s*/)
-        .map((s) => s.trim())
-        .filter(Boolean),
-    )
-    .join(" · ");
 }
 
 interface GridCellProps {
@@ -208,7 +196,7 @@ export function GridCell({
         : {};
       const label = t(item.label);
       const subcategory = t(item.subcategory);
-      const metaLine = metaParts(label, subcategory);
+      const metaLine = formatColorCellMeta(label, subcategory);
       const prose = t(item.prose);
       return (
         <Comp

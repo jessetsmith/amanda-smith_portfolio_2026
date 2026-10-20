@@ -18,6 +18,30 @@ export function fillClass(fill?: CellFill): string {
   return FILL_CLASS[fill];
 }
 
+/**
+ * Color-cell meta line: label, then subcategory segments.
+ * Admins enter comma-separated subcategory values; commas (and legacy ·)
+ * become middle-dots on the public site.
+ */
+export function formatColorCellMeta(
+  label?: string,
+  subcategory?: string,
+): string {
+  const segments: string[] = [];
+  const trimmedLabel = label?.trim();
+  if (trimmedLabel) segments.push(trimmedLabel);
+
+  const rawSub = subcategory?.trim();
+  if (rawSub) {
+    for (const part of rawSub.split(/[,·]+/)) {
+      const segment = part.trim();
+      if (segment) segments.push(segment);
+    }
+  }
+
+  return segments.join(" · ");
+}
+
 function clamp(n: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, n));
 }

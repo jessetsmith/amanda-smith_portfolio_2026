@@ -208,7 +208,7 @@ export const gridItem = defineType({
       type: "localeString",
       title: "Subcategory",
       description:
-        "Color cells only — optional segment(s) after the label, shown with a middle-dot (e.g. Workshop, or Workshop · Series). Leave empty to omit.",
+        "Color cells only — optional segments after the label. Separate values with commas; commas become middle-dots (·) on the live site (e.g. Channel, Happenings → Channel · Happenings). Leave empty to omit.",
       hidden: ({ parent }) => parent?.kind !== "colorCell",
     }),
     defineField({
