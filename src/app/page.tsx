@@ -21,7 +21,12 @@ export default async function Home() {
 
   return (
     <SiteShell uiCopy={home.uiCopy}>
-      <HazyNav brand={site.siteTitle} items={site.nav} />
+      <HazyNav
+        brand={site.siteTitle}
+        items={site.nav}
+        textColor={site.navTextColor}
+        textSize={site.navTextSize}
+      />
       <main className="flex flex-1 flex-col">
         <IntroMask
           maskText={home.maskText}

@@ -11,6 +11,10 @@ export interface SiteSettings {
   source: "fixture" | "sanity";
   siteTitle: LocaleString;
   nav: NavItem[];
+  /** Optional CSS color for nav brand + links. Empty → ink default. */
+  navTextColor?: string;
+  /** Optional size for nav brand + links. Empty/md → current look. */
+  navTextSize?: CellTextSize;
   contactEmail?: string;
   contactNote?: LocaleString;
 }

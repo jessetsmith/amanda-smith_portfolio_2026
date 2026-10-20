@@ -26,6 +26,27 @@ export const siteSettings = defineType({
         }),
       ],
     }),
+    defineField({
+      name: "navTextColor",
+      type: "string",
+      title: "Nav text color",
+      description:
+        "Optional CSS color for brand + nav links (e.g. #1a1a1a). Empty = ink default.",
+    }),
+    defineField({
+      name: "navTextSize",
+      type: "string",
+      title: "Nav text size",
+      description: "Optional size for brand + nav links. Empty = medium (current look).",
+      options: {
+        list: [
+          { title: "Small", value: "sm" },
+          { title: "Medium (default)", value: "md" },
+          { title: "Large", value: "lg" },
+          { title: "Extra large", value: "xl" },
+        ],
+      },
+    }),
     defineField({ name: "contactEmail", type: "string" }),
     defineField({
       name: "contactNote",

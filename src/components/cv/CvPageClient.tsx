@@ -26,7 +26,12 @@ function CvView({ cv, site }: { cv: CvData; site: SiteSettings }) {
 
   return (
     <>
-      <HazyNav brand={site.siteTitle} items={site.nav} />
+      <HazyNav
+        brand={site.siteTitle}
+        items={site.nav}
+        textColor={site.navTextColor}
+        textSize={site.navTextSize}
+      />
       <main className="cv-page mx-auto w-full max-w-[52rem] px-4 pb-24 pt-10 sm:px-6 md:px-8">
         <header className="border-b border-ink/20 pb-8">
           <p className="font-mono text-[0.65rem] tracking-[0.22em] text-rust uppercase">

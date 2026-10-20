@@ -176,7 +176,7 @@ export function GridCell({
           data-kind={item.kind}
           data-text-size={textSize}
         >
-          <p className="font-mono text-[0.7rem] tracking-[0.22em] uppercase">
+          <p className="title-row__label font-mono tracking-[0.22em] uppercase">
             <MetaDot />
             {t(item.label)}
           </p>

@@ -81,7 +81,11 @@ import {
 import { HazyNav } from "@/components/HazyNav";
 import { IntroMask } from "@/components/IntroMask";
 import { defaultHero, heroSignature, normalizeHero } from "@/lib/hero";
-import type { NavItem } from "@/types/content";
+import {
+  normalizeSiteSettings,
+  siteSignature,
+} from "@/lib/site-sync";
+import type { NavItem, SiteSettings } from "@/types/content";
 import type { HomepageHero } from "@/types/hero";
 import {
   AdminDragOverlayCard,
@@ -153,13 +157,13 @@ const FILLS: CellFill[] = ["rust", "ochre", "sage", "tan", "paper", "ink"];
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 type DataSource = "sanity" | "fixture";
-type SidebarTab = "hero" | "blocks" | "section" | "content";
+type SidebarTab = "nav" | "hero" | "blocks" | "section";
 
 const SIDEBAR_TABS: { id: SidebarTab; label: string }[] = [
+  { id: "nav", label: "Nav" },
   { id: "hero", label: "Hero" },
   { id: "blocks", label: "Blocks" },
   { id: "section", label: "Section" },
-  { id: "content", label: "Content" },
 ];
 
 interface AdminGridAppProps {
@@ -167,8 +171,7 @@ interface AdminGridAppProps {
   initialSource?: DataSource;
   initialHero?: HomepageHero;
   initialHeroSource?: DataSource;
-  siteTitle?: LocaleString;
-  siteNav?: NavItem[];
+  initialSite?: SiteSettings;
 }
 
 const HISTORY_CAP = 40;
@@ -202,13 +205,7 @@ export function AdminGridApp({
   initialSource = "fixture",
   initialHero,
   initialHeroSource = "fixture",
-  siteTitle = { en: "Amanda Smith" },
-  siteNav = [
-    { label: { en: "Work" }, href: "/#grid" },
-    { label: { en: "CV" }, href: "/cv" },
-    { label: { en: "Research" }, href: "/#grid" },
-    { label: { en: "Contact" }, href: "mailto:hello@example.com" },
-  ],
+  initialSite,
 }: AdminGridAppProps) {
   const router = useRouter();
   const [items, setItems] = useState(() => normalizeGridItems(initialItems));
@@ -222,10 +219,13 @@ export function AdminGridApp({
     normalizeHero(initialHero ?? defaultHero()),
   );
   const [heroSource, setHeroSource] = useState<DataSource>(initialHeroSource);
+  const [site, setSite] = useState<SiteSettings>(() =>
+    normalizeSiteSettings(initialSite ?? { source: "fixture", siteTitle: { en: "Amanda Smith" }, nav: [] }),
+  );
   const [previewKey, setPreviewKey] = useState(0);
   const [contentOpen, setContentOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
-  const [sidebarTab, setSidebarTab] = useState<SidebarTab>("blocks");
+  const [sidebarTab, setSidebarTab] = useState<SidebarTab>("nav");
   const [editBreakpoint, setEditBreakpoint] =
     useState<LayoutBreakpoint>("desktop");
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
@@ -237,6 +237,11 @@ export function AdminGridApp({
   const heroRef = useRef(hero);
   heroRef.current = hero;
   const savedHeroRef = useRef(normalizeHero(initialHero ?? defaultHero()));
+  const siteRef = useRef(site);
+  siteRef.current = site;
+  const savedSiteRef = useRef(
+    normalizeSiteSettings(initialSite ?? site, initialSite?.source ?? "fixture"),
+  );
   const pastRef = useRef<GridItem[][]>([]);
   const futureRef = useRef<GridItem[][]>([]);
   const resizeHistoryArmed = useRef(true);
@@ -252,7 +257,11 @@ export function AdminGridApp({
     void dirtyTick;
     return heroSignature(hero) !== heroSignature(savedHeroRef.current);
   }, [hero, dirtyTick]);
-  const isDirty = isGridDirty || isHeroDirty;
+  const isSiteDirty = useMemo(() => {
+    void dirtyTick;
+    return siteSignature(site) !== siteSignature(savedSiteRef.current);
+  }, [site, dirtyTick]);
+  const isDirty = isGridDirty || isHeroDirty || isSiteDirty;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -319,71 +328,105 @@ export function AdminGridApp({
     [viewItems, selectedId, selected],
   );
 
-  const persist = useCallback(async (next: GridItem[], nextHero: HomepageHero) => {
-    setSaveState("saving");
-    try {
-      const gridDirty =
-        gridSignature(next) !== gridSignature(savedItemsRef.current);
-      const heroDirty =
-        heroSignature(nextHero) !== heroSignature(savedHeroRef.current);
+  const persist = useCallback(
+    async (
+      next: GridItem[],
+      nextHero: HomepageHero,
+      nextSite: SiteSettings,
+    ) => {
+      setSaveState("saving");
+      try {
+        const gridDirty =
+          gridSignature(next) !== gridSignature(savedItemsRef.current);
+        const heroDirty =
+          heroSignature(nextHero) !== heroSignature(savedHeroRef.current);
+        const siteDirty =
+          siteSignature(nextSite) !== siteSignature(savedSiteRef.current);
 
-      const tasks: Promise<Response>[] = [];
-      if (gridDirty) {
-        tasks.push(
-          fetch("/api/homepage-grid", {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ items: next }),
-          }),
-        );
-      }
-      if (heroDirty) {
-        tasks.push(
-          fetch("/api/homepage-hero", {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ hero: nextHero }),
-          }),
-        );
-      }
-      if (tasks.length === 0) {
+        const tasks: {
+          kind: "grid" | "hero" | "site";
+          promise: Promise<Response>;
+        }[] = [];
+        if (gridDirty) {
+          tasks.push({
+            kind: "grid",
+            promise: fetch("/api/homepage-grid", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ items: next }),
+            }),
+          });
+        }
+        if (heroDirty) {
+          tasks.push({
+            kind: "hero",
+            promise: fetch("/api/homepage-hero", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ hero: nextHero }),
+            }),
+          });
+        }
+        if (siteDirty) {
+          tasks.push({
+            kind: "site",
+            promise: fetch("/api/site-settings", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ site: nextSite }),
+            }),
+          });
+        }
+        if (tasks.length === 0) {
+          setSaveState("saved");
+          return;
+        }
+
+        const results = await Promise.all(tasks.map((t) => t.promise));
+        if (results.some((res) => !res.ok)) throw new Error("save failed");
+
+        for (let i = 0; i < tasks.length; i++) {
+          const kind = tasks[i].kind;
+          const data = await results[i].json();
+          if (kind === "grid") {
+            const published = normalizeGridItems(
+              (data as { items?: GridItem[] }).items ?? next,
+            );
+            savedItemsRef.current = cloneItems(published);
+            if ((data as { source?: DataSource }).source) {
+              setSource((data as { source: DataSource }).source);
+            }
+          } else if (kind === "hero") {
+            const publishedHero = normalizeHero(
+              (data as { hero?: HomepageHero }).hero ?? nextHero,
+            );
+            savedHeroRef.current = publishedHero;
+            setHero(publishedHero);
+            heroRef.current = publishedHero;
+            if ((data as { source?: DataSource }).source) {
+              setHeroSource((data as { source: DataSource }).source);
+            }
+          } else {
+            const publishedSite = normalizeSiteSettings(
+              (data as { site?: SiteSettings }).site ?? nextSite,
+              ((data as { source?: DataSource }).source as SiteSettings["source"]) ||
+                nextSite.source,
+            );
+            savedSiteRef.current = publishedSite;
+            setSite(publishedSite);
+            siteRef.current = publishedSite;
+          }
+        }
+
         setSaveState("saved");
-        return;
+        setDirtyTick((tick) => tick + 1);
+        router.refresh();
+      } catch {
+        setSaveState("error");
       }
-
-      const results = await Promise.all(tasks);
-      if (results.some((res) => !res.ok)) throw new Error("save failed");
-
-      if (gridDirty) {
-        const gridRes = results[0];
-        const data = (await gridRes.json()) as {
-          items: GridItem[];
-          source?: DataSource;
-        };
-        const published = normalizeGridItems(data.items ?? next);
-        savedItemsRef.current = cloneItems(published);
-        if (data.source) setSource(data.source);
-      }
-      if (heroDirty) {
-        const heroRes = results[gridDirty ? 1 : 0];
-        const data = (await heroRes.json()) as {
-          hero: HomepageHero;
-          source?: DataSource;
-        };
-        const publishedHero = normalizeHero(data.hero ?? nextHero);
-        savedHeroRef.current = publishedHero;
-        setHero(publishedHero);
-        heroRef.current = publishedHero;
-        if (data.source) setHeroSource(data.source);
-      }
-
-      setSaveState("saved");
-      setDirtyTick((tick) => tick + 1);
-      router.refresh();
-    } catch {
-      setSaveState("error");
-    }
-  }, [router]);
+    },
+    [router],
+  );
 
   const pushHistory = useCallback((snapshot: GridItem[]) => {
     pastRef.current = [...pastRef.current, cloneItems(snapshot)].slice(
@@ -413,7 +456,7 @@ export function AdminGridApp({
   );
 
   const saveDraft = useCallback(() => {
-    void persist(itemsRef.current, heroRef.current);
+    void persist(itemsRef.current, heroRef.current, siteRef.current);
   }, [persist]);
 
   const discardDraft = useCallback(() => {
@@ -429,6 +472,9 @@ export function AdminGridApp({
     const previousHero = normalizeHero(savedHeroRef.current);
     setHero(previousHero);
     heroRef.current = previousHero;
+    const previousSite = normalizeSiteSettings(savedSiteRef.current);
+    setSite(previousSite);
+    siteRef.current = previousSite;
     setPreviewKey((key) => key + 1);
     setSaveState("idle");
     setDirtyTick((tick) => tick + 1);
@@ -438,6 +484,16 @@ export function AdminGridApp({
     setHero((prev) => {
       const next = normalizeHero({ ...prev, ...patch });
       heroRef.current = next;
+      return next;
+    });
+    setSaveState("idle");
+    setDirtyTick((tick) => tick + 1);
+  }, []);
+
+  const patchSite = useCallback((patch: Partial<SiteSettings>) => {
+    setSite((prev) => {
+      const next = normalizeSiteSettings({ ...prev, ...patch }, prev.source);
+      siteRef.current = next;
       return next;
     });
     setSaveState("idle");
@@ -917,6 +973,17 @@ export function AdminGridApp({
             </div>
 
             <div className="admin-sidebar__panels min-h-0 flex-1 overflow-hidden">
+              {sidebarTab === "nav" ? (
+                <div
+                  id="admin-panel-nav"
+                  role="tabpanel"
+                  aria-labelledby="admin-tab-nav"
+                  className="h-full min-h-0 overflow-y-auto p-4"
+                >
+                  <NavTab site={site} onChange={patchSite} />
+                </div>
+              ) : null}
+
               {sidebarTab === "hero" ? (
                 <div
                   id="admin-panel-hero"
@@ -1042,25 +1109,6 @@ export function AdminGridApp({
                 </div>
               ) : null}
 
-              {sidebarTab === "content" ? (
-                <div
-                  id="admin-panel-content"
-                  role="tabpanel"
-                  aria-labelledby="admin-tab-content"
-                  className="h-full min-h-0 overflow-y-auto p-4"
-                >
-                  {selected ? (
-                    <ContentTab
-                      item={selected}
-                      onOpenEdit={() => setContentOpen(true)}
-                    />
-                  ) : (
-                    <p className="text-sm text-ink/50">
-                      Select a block to view content summary.
-                    </p>
-                  )}
-                </div>
-              ) : null}
             </div>
           </aside>
 
@@ -1220,7 +1268,12 @@ export function AdminGridApp({
               >
                 <div className="admin-hero-preview mb-4 overflow-hidden border border-ink/15">
                   <div className="admin-preview-nav">
-                    <HazyNav brand={siteTitle} items={siteNav} />
+                    <HazyNav
+                      brand={site.siteTitle}
+                      items={site.nav}
+                      textColor={site.navTextColor}
+                      textSize={site.navTextSize}
+                    />
                   </div>
                   <IntroMask
                     key={`hero-${previewKey}-${enOf(hero.titleText)}-${hero.videoUrl}-${hero.imageUrl ?? ""}-${hero.watchUrl ?? ""}`}
@@ -1824,46 +1877,134 @@ function PlacementTab({
   );
 }
 
-function ContentTab({
-  item,
-  onOpenEdit,
+function NavTab({
+  site,
+  onChange,
 }: {
-  item: GridItem;
-  onOpenEdit: () => void;
+  site: SiteSettings;
+  onChange: (patch: Partial<SiteSettings>) => void;
 }) {
+  const [locale, setLocale] = useState<LocaleCode>(DEFAULT_LOCALE);
+
+  function patchNavItem(index: number, patch: Partial<NavItem>) {
+    const nav = site.nav.map((item, i) =>
+      i === index ? { ...item, ...patch } : item,
+    );
+    onChange({ nav });
+  }
+
+  function addNavItem() {
+    onChange({
+      nav: [...site.nav, { label: { [locale]: "New link" }, href: "/#" }],
+    });
+  }
+
+  function removeNavItem(index: number) {
+    onChange({ nav: site.nav.filter((_, i) => i !== index) });
+  }
+
   return (
-    <div className="space-y-3">
-      <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
-        Content · {item.kind}
-      </p>
-      <p className="text-sm text-ink">{itemContentPreview(item)}</p>
-      {"href" in item && item.href ? (
-        <p className="break-all font-mono text-[0.6rem] tracking-[0.08em] text-ink/50">
-          Link · {item.href}
+    <div className="space-y-4">
+      <div>
+        <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
+          Navbar
         </p>
-      ) : item.kind !== "blankCell" && item.kind !== "titleRow" ? (
-        <p className="text-xs text-ink/40">No link URL yet</p>
-      ) : null}
-      {item.kind === "blankCell" ? (
-        <p className="text-xs text-ink/45">
-          Empty spacer — drop/resize target inside the section band. Compact to
-          trim unused rows.
+        <p className="mt-1 text-xs text-ink/50">
+          Edits stay local until Save publishes to Sanity{" "}
+          <code className="font-mono">siteSettings</code>. Locale fields use the
+          language switcher below.
         </p>
-      ) : (
-        <>
-          <p className="text-xs text-ink/45">
-            Use <span className="font-mono uppercase">Edit</span> in the preview
-            bar (or below) to change inner content.
-          </p>
-          <button
-            type="button"
-            onClick={onOpenEdit}
-            className="bg-rust px-3 py-2 font-mono text-[0.65rem] tracking-[0.14em] text-paper uppercase"
+      </div>
+
+      <AdminLocaleSelect value={locale} onChange={setLocale} />
+
+      <label className="block space-y-1">
+        <span className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/55 uppercase">
+          Brand
+        </span>
+        <input
+          type="text"
+          value={readLocaleField(site.siteTitle, locale)}
+          onChange={(e) =>
+            onChange({
+              siteTitle: writeLocaleField(site.siteTitle, locale, e.target.value),
+            })
+          }
+          className="w-full border border-ink/20 bg-paper px-2 py-2 text-sm text-ink"
+          placeholder="Amanda Smith"
+        />
+      </label>
+
+      <div className="space-y-3">
+        <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/50 uppercase">
+          Nav items
+        </p>
+        {site.nav.map((item, index) => (
+          <div
+            key={`${item.href}-${index}`}
+            className="space-y-2 border border-ink/12 p-3"
           >
-            Edit content
-          </button>
-        </>
-      )}
+            <label className="block space-y-1">
+              <span className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/55 uppercase">
+                Label
+              </span>
+              <input
+                type="text"
+                value={readLocaleField(item.label, locale)}
+                onChange={(e) =>
+                  patchNavItem(index, {
+                    label: writeLocaleField(item.label, locale, e.target.value),
+                  })
+                }
+                className="w-full border border-ink/20 bg-paper px-2 py-1.5 text-sm text-ink"
+              />
+            </label>
+            <label className="block space-y-1">
+              <span className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/55 uppercase">
+                Href
+              </span>
+              <input
+                type="text"
+                value={item.href}
+                onChange={(e) => patchNavItem(index, { href: e.target.value })}
+                className="w-full border border-ink/20 bg-paper px-2 py-1.5 font-mono text-xs text-ink"
+                placeholder="/#grid · /cv · mailto:…"
+              />
+            </label>
+            <button
+              type="button"
+              onClick={() => removeNavItem(index)}
+              className="border border-ink/20 px-2 py-1 font-mono text-[0.55rem] tracking-[0.1em] uppercase"
+            >
+              Remove
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={addNavItem}
+          className="w-full border border-ink/20 px-3 py-1.5 font-mono text-[0.65rem] tracking-[0.14em] uppercase"
+        >
+          Add link
+        </button>
+      </div>
+
+      <TextStyleFields
+        color={site.navTextColor ?? ""}
+        size={site.navTextSize ?? "md"}
+        onColorChange={(navTextColor) =>
+          onChange({ navTextColor: navTextColor || undefined })
+        }
+        onSizeChange={(navTextSize) =>
+          onChange({
+            navTextSize: navTextSize === "md" ? undefined : navTextSize,
+          })
+        }
+      />
+      <p className="-mt-1 text-xs text-ink/45">
+        Applies to brand + nav links on the public site and admin preview. Empty
+        color = ink (current look).
+      </p>
     </div>
   );
 }
@@ -1946,15 +2087,19 @@ function ContentEditModal({
       else onClose();
       return;
     }
-    if (draft.kind === "titleRow") {
-      onApply({ label: draft.label });
-      return;
-    }
     const textStylePatch = {
       textColor: draft.textColor?.trim() || null,
       textSize:
         draft.textSize && draft.textSize !== "md" ? draft.textSize : null,
     };
+
+    if (draft.kind === "titleRow") {
+      onApply({
+        label: draft.label,
+        ...textStylePatch,
+      } as Partial<GridItem>);
+      return;
+    }
 
     if (draft.kind === "colorCell") {
       const hasProse =
@@ -2095,11 +2240,27 @@ function ContentEditModal({
           ) : null}
 
           {draft.kind === "titleRow" ? (
-            <TextField
-              label="Content section"
-              value={readLocaleField(draft.label, locale)}
-              onChange={(label) => setLoc("label", draft.label, label)}
-            />
+            <>
+              <TextField
+                label="Content section"
+                value={readLocaleField(draft.label, locale)}
+                onChange={(label) => setLoc("label", draft.label, label)}
+              />
+              <TextStyleFields
+                color={draft.textColor ?? ""}
+                size={draft.textSize ?? "md"}
+                onColorChange={(textColor) =>
+                  patchDraft({
+                    textColor: textColor || undefined,
+                  } as Partial<GridItem>)
+                }
+                onSizeChange={(textSize) =>
+                  patchDraft({
+                    textSize: textSize === "md" ? undefined : textSize,
+                  } as Partial<GridItem>)
+                }
+              />
+            </>
           ) : null}
 
           {draft.kind === "colorCell" ? (

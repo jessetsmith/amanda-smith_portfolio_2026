@@ -7,6 +7,7 @@ import {
 } from "@/lib/grid-sync";
 import { defaultHero } from "@/lib/hero";
 import { loadHero } from "@/lib/hero-sync";
+import { normalizeSiteSettings } from "@/lib/site-sync";
 import {
   applyCvOverlays,
   applyGridOverlays,
@@ -169,30 +170,37 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     contactEmail?: string;
     contactNote?: string;
   };
-  const fixtureSettings: SiteSettings = {
-    source: "fixture",
-    siteTitle: loc(fixture.siteTitle),
-    nav: localizeNav(fixture.nav),
-    contactEmail: fixture.contactEmail,
-    contactNote: locOpt(fixture.contactNote),
-  };
+  const fixtureSettings = applySiteOverlays(
+    normalizeSiteSettings(
+      {
+        siteTitle: fixture.siteTitle,
+        nav: localizeNav(fixture.nav),
+        contactEmail: fixture.contactEmail,
+        contactNote: fixture.contactNote,
+      },
+      "fixture",
+    ),
+  );
 
   if (!isSanityConfigured() || !client) {
-    return applySiteOverlays(fixtureSettings);
+    return fixtureSettings;
   }
   try {
     const data = await client.fetch(siteSettingsQuery);
-    if (!data) return applySiteOverlays(fixtureSettings);
-    const nav = localizeNav(data.nav);
-    return {
-      source: "sanity",
-      siteTitle: loc(data.siteTitle, fixture.siteTitle),
-      nav: nav.length ? nav : fixtureSettings.nav,
-      contactEmail: data.contactEmail || fixture.contactEmail,
-      contactNote: locOpt(data.contactNote) || fixtureSettings.contactNote,
-    };
+    if (!data) return fixtureSettings;
+    return normalizeSiteSettings(
+      {
+        siteTitle: data.siteTitle,
+        nav: data.nav,
+        navTextColor: data.navTextColor,
+        navTextSize: data.navTextSize,
+        contactEmail: data.contactEmail,
+        contactNote: data.contactNote,
+      },
+      "sanity",
+    );
   } catch {
-    return applySiteOverlays(fixtureSettings);
+    return fixtureSettings;
   }
 }
 

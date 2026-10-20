@@ -357,6 +357,13 @@ a.grid-cell-link:focus-visible .card-open {
   grid-column: 1 / -1 !important;
   grid-row: auto !important;
   background: color-mix(in srgb, var(--color-paper) 70%, var(--color-tan));
+  color: var(--cell-text-color);
+}
+
+.grid-cell.title-row .title-row__label {
+  margin: 0;
+  color: var(--cell-text-color);
+  font-size: calc(0.7rem * var(--cell-text-scale));
 }
 
 /* Readable type — never squeeze into letter-columns */
@@ -1444,9 +1451,23 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 
 /* —— Hazy nav (New Materialism cue) —— */
 .hazy-nav {
+  --nav-text-color: var(--color-ink);
+  --nav-text-scale: 1;
   position: sticky;
   top: 0;
   z-index: 40;
+}
+
+.hazy-nav[data-text-size="sm"] {
+  --nav-text-scale: 0.88;
+}
+
+.hazy-nav[data-text-size="lg"] {
+  --nav-text-scale: 1.14;
+}
+
+.hazy-nav[data-text-size="xl"] {
+  --nav-text-scale: 1.3;
 }
 
 .hazy-nav__bar {
@@ -1476,10 +1497,10 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 
 .hazy-nav__brand {
   font-family: var(--font-display);
-  font-size: 1.05rem;
+  font-size: calc(1.05rem * var(--nav-text-scale));
   font-weight: var(--weight-title);
   letter-spacing: -0.02em;
-  color: var(--color-ink);
+  color: var(--nav-text-color);
   text-decoration: none;
   min-height: 2.75rem;
   display: inline-flex;
@@ -1516,10 +1537,10 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 .hazy-nav__link {
   font-family: var(--font-meta);
   font-weight: var(--weight-meta-strong);
-  font-size: 0.68rem;
+  font-size: calc(0.68rem * var(--nav-text-scale));
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--color-ink);
+  color: var(--nav-text-color);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
@@ -1546,7 +1567,7 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   .hazy-nav__brand {
     flex: 1 1 auto;
     min-width: 0;
-    font-size: 1rem;
+    font-size: calc(1rem * var(--nav-text-scale));
     min-height: 2.5rem;
   }
 
@@ -1566,7 +1587,7 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 
   .hazy-nav__link {
     min-height: 2.5rem;
-    font-size: 0.64rem;
+    font-size: calc(0.64rem * var(--nav-text-scale));
   }
 }
 
@@ -1988,7 +2009,7 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   .hazy-nav__brand {
     flex: 1 1 auto;
     min-width: 0;
-    font-size: 1rem;
+    font-size: calc(1rem * var(--nav-text-scale));
     min-height: 2.5rem;
   }
 
@@ -2008,7 +2029,7 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 
   .hazy-nav__link {
     min-height: 2.5rem;
-    font-size: 0.64rem;
+    font-size: calc(0.64rem * var(--nav-text-scale));
   }
 }
 

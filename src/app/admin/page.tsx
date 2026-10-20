@@ -20,8 +20,7 @@ export default async function AdminPage() {
       initialSource={source}
       initialHero={heroResult.hero}
       initialHeroSource={heroResult.source}
-      siteTitle={site.siteTitle}
-      siteNav={site.nav}
+      initialSite={site}
     />
   );
 }

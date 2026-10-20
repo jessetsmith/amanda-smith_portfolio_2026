@@ -70,6 +70,8 @@ export const homepageQuery = `*[_type == "homepage" && _id == "homepage"][0]{
 export const siteSettingsQuery = `*[_type == "siteSettings" && _id == "siteSettings"][0]{
   siteTitle,
   nav[]{ label, href },
+  navTextColor,
+  navTextSize,
   contactEmail,
   contactNote
 }`;
