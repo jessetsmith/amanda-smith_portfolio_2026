@@ -461,10 +461,11 @@ a.grid-cell-link:focus-visible .card-open {
   font-size: calc(0.6rem * var(--cell-text-scale));
 }
 
+/* Highlight badge — always rust; never inherit --cell-text-color */
 .card-featured-mark {
   font-weight: 500;
   letter-spacing: 0.14em;
-  color: var(--cell-text-color);
+  color: color-mix(in srgb, var(--color-rust) 85%, var(--color-ink));
 }
 
 /* Section lead — half width (span 2); slightly larger than standard */
