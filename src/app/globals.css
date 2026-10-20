@@ -1183,7 +1183,7 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 }
 
 /*
-  Glyph hard-line open over the first half of the pin (matches reveal=progress*2),
+  Glyph hard-line opens across most of the pin (matches reveal≈progress*1.18),
   then clip-path: none so ink/stroke outside the em-box can never stay shaved.
 */
 @keyframes intro-glyph-reveal {
