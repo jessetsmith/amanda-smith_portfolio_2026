@@ -1128,47 +1128,87 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 }
 
 /*
-  Twin name stack — solid punch + outline share --intro-title-bottom so they
-  stay overlapped/staggered (outline nudged down-right). Support anchors just
-  under that shared bottom. High enough to clear the fold; Sound/Watch stay put.
+  Twin name stack — solid punch + outline share a clip window at
+  --intro-title-bottom (staggered overlap on the inner layers). Support/quote
+  anchors just above that clip. Name rises through an invisible hard clip
+  line as --intro-progress goes 0 → 1.
 */
 .intro-mask {
   --intro-title-bottom: 36%;
+  --intro-title-size: clamp(2.75rem, 12vw, 9rem);
+  /* ~1 line of display type (+ a little) — clip box + quote clearance */
+  --intro-title-clip-height: calc(var(--intro-title-size) * 0.9 * 1.2);
   /* rem — shared by title-region transform + support anchor (not em of body) */
   --intro-title-stagger-x: 0.28rem;
   /* Slight down-right offset; keep most of the outline under the solid fill */
   --intro-title-stagger-y: 0.38rem;
-  --intro-support-gap: 0.55rem;
+  --intro-support-gap: 0.65rem;
+}
+
+/* Shared clip window — hard invisible line; letters rise into view on scroll */
+.intro-mask__title-clip {
+  position: absolute;
+  left: max(1.25rem, env(safe-area-inset-left));
+  right: max(1.25rem, env(safe-area-inset-right));
+  bottom: var(--intro-title-bottom);
+  max-width: 14ch;
+  height: var(--intro-title-clip-height);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.intro-mask__title-clip--punch {
+  z-index: 2;
+}
+
+.intro-mask__title-clip--outline {
+  z-index: 3;
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-mask {
+    --intro-progress: 1;
+  }
+
+  .intro-mask__title,
+  .intro-mask__title-region {
+    will-change: auto;
+  }
 }
 
 /* Solid type punches through video (+ haze) into the under-layer — the one solid name */
 .intro-mask__title {
-  position: absolute;
+  position: relative;
   z-index: 2;
-  left: max(1.25rem, env(safe-area-inset-left));
-  right: max(1.25rem, env(safe-area-inset-right));
-  bottom: var(--intro-title-bottom);
   margin: 0;
   max-width: 14ch;
   font-family: var(--font-display);
-  font-size: clamp(2.75rem, 12vw, 9rem);
+  font-size: var(--intro-title-size);
   font-weight: var(--weight-display);
   line-height: 0.9;
   letter-spacing: var(--tracking-display);
   color: #000;
   mix-blend-mode: destination-out;
-  transform: translateY(calc(var(--intro-progress) * -18vh));
+  /*
+    progress 0 → mostly below the clip line (hard cut through glyphs)
+    progress 1 → fully revealed + light upward drift
+  */
+  transform: translateY(
+    calc((1 - var(--intro-progress)) * 72% + var(--intro-progress) * -4vh)
+  );
+  will-change: transform;
 }
 
 @media (min-width: 768px) {
   .intro-mask {
     --intro-title-bottom: 34%;
+    --intro-title-size: clamp(3.75rem, 13vw, 9rem);
   }
 
-  .intro-mask__title {
+  .intro-mask__title-clip {
     left: 2.5rem;
     right: 2.5rem;
-    font-size: clamp(3.75rem, 13vw, 9rem);
   }
 }
 
@@ -1210,42 +1250,28 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 @media (max-height: 700px) and (orientation: landscape) {
   .intro-mask {
     --intro-title-bottom: 30%;
-  }
-
-  .intro-mask__title {
-    font-size: clamp(2.25rem, 8vw, 4.5rem);
-  }
-
-  .intro-mask__title-region {
-    font-size: clamp(2.25rem, 8vw, 4.5rem);
+    --intro-title-size: clamp(2.25rem, 8vw, 4.5rem);
   }
 }
 
-/* Hit + outline region — locked to punch title bottom, staggered slightly */
+/* Hit + outline region — inside shared clip; staggered slightly vs punch */
 .intro-mask__title-region {
-  position: absolute;
+  position: relative;
   z-index: 3;
-  left: max(1.25rem, env(safe-area-inset-left));
-  right: max(1.25rem, env(safe-area-inset-right));
-  bottom: var(--intro-title-bottom);
   display: block;
   max-width: 14ch;
-  font-size: clamp(2.75rem, 12vw, 9rem);
+  font-size: var(--intro-title-size);
   line-height: 0.9;
   pointer-events: auto;
   outline: none;
   transform: translate(
     var(--intro-title-stagger-x),
-    calc(var(--intro-progress) * -18vh + var(--intro-title-stagger-y))
+    calc(
+      (1 - var(--intro-progress)) * 72% + var(--intro-progress) * -4vh +
+        var(--intro-title-stagger-y)
+    )
   );
-}
-
-@media (min-width: 768px) {
-  .intro-mask__title-region {
-    left: 2.5rem;
-    right: 2.5rem;
-    font-size: clamp(3.75rem, 13vw, 9rem);
-  }
+  will-change: transform;
 }
 
 /* Cloud haze fills the intro/title sticky section (+ slight overflow) */
@@ -1420,27 +1446,27 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   -webkit-text-stroke: 1px color-mix(in srgb, var(--color-paper) 70%, transparent);
 }
 
-/* Quote sits just under the overlapped twin titles (top edge at title bottom − gap) */
+/* Quote sits just above the overlapped twin titles */
 .intro-mask__support {
   position: absolute;
   z-index: 3;
   left: max(1.25rem, env(safe-area-inset-left));
   bottom: calc(
-    var(--intro-title-bottom) - var(--intro-title-stagger-y) -
+    var(--intro-title-bottom) + var(--intro-title-clip-height) +
       var(--intro-support-gap)
   );
   margin: 0;
   max-width: 28rem;
   font-family: var(--font-body);
-  font-weight: var(--weight-body);
+  font-weight: var(--weight-title);
   font-size: 1.05rem;
   line-height: 1.5;
   color: var(--color-ink);
   /* Soft paper halo so black stays readable on darker video frames */
   text-shadow: 0 1px 10px color-mix(in srgb, var(--color-paper) 75%, transparent);
-  opacity: calc(0.95 - var(--intro-progress) * 0.25);
-  /* +100% drops the block so its top meets the bottom anchor above */
-  transform: translateY(calc(var(--intro-progress) * -18vh + 100%));
+  opacity: calc(0.95 - var(--intro-progress) * 0.2);
+  transform: translateY(calc(var(--intro-progress) * -3vh));
+  pointer-events: none;
 }
 
 @media (min-width: 768px) {
@@ -1976,19 +2002,14 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
     --intro-title-stagger-y: 0.28rem !important;
   }
 
-  .intro-mask__title {
-    left: max(1.25rem, env(safe-area-inset-left)) !important;
-    right: max(1.25rem, env(safe-area-inset-right)) !important;
-    bottom: var(--intro-title-bottom) !important;
-    /* cqw = frame width; public uses 12vw at a real phone viewport */
-    font-size: clamp(2.75rem, 12cqw, 9rem) !important;
+  .intro-mask {
+    --intro-title-size: clamp(2.75rem, 12cqw, 9rem) !important;
   }
 
-  .intro-mask__title-region {
+  .intro-mask__title-clip {
     left: max(1.25rem, env(safe-area-inset-left)) !important;
     right: max(1.25rem, env(safe-area-inset-right)) !important;
     bottom: var(--intro-title-bottom) !important;
-    font-size: clamp(2.75rem, 12cqw, 9rem) !important;
   }
 
   .intro-mask__support {
@@ -2052,18 +2073,14 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
     --intro-title-bottom: 34% !important;
   }
 
-  .intro-mask__title {
-    left: 2.5rem !important;
-    right: 2.5rem !important;
-    bottom: var(--intro-title-bottom) !important;
-    font-size: clamp(3.75rem, 13cqw, 9rem) !important;
+  .intro-mask {
+    --intro-title-size: clamp(3.75rem, 13cqw, 9rem) !important;
   }
 
-  .intro-mask__title-region {
+  .intro-mask__title-clip {
     left: 2.5rem !important;
     right: 2.5rem !important;
     bottom: var(--intro-title-bottom) !important;
-    font-size: clamp(3.75rem, 13cqw, 9rem) !important;
   }
 
   .intro-mask__support {
@@ -2148,6 +2165,11 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   background: var(--color-ink);
   position: relative;
   overflow: hidden;
+}
+
+/* Admin: title fully revealed (no scroll-scrubbed clip) while editing */
+.admin-hero-preview .intro-mask {
+  --intro-progress: 1;
 }
 
 /* Compact blurb under hero so the preview frame stays usable */

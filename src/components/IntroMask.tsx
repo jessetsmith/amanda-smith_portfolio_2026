@@ -376,8 +376,10 @@ export function IntroMask({
     const section = sectionRef.current;
     if (!section) return;
 
+    // Admin preview: keep title fully revealed so editing isn’t masked.
+    // Reduced motion: same — no scroll-scrubbed clip reveal.
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) {
+    if (!enableHandCursor || reduce) {
       section.style.setProperty("--intro-progress", "1");
       return;
     }
@@ -392,7 +394,7 @@ export function IntroMask({
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [enableHandCursor]);
 
   // Reset sound when media source changes (always start muted for autoplay)
   useEffect(() => {
@@ -676,28 +678,34 @@ export function IntroMask({
             <span className="intro-mask__haze-cloud intro-mask__haze-cloud--d" />
             <span className="intro-mask__haze-cloud intro-mask__haze-cloud--e" />
           </span>
-          <h1 className="intro-mask__title" aria-hidden>
-            {title}
-          </h1>
+          {/* Punch title — clipped so it rises through an invisible line on scroll */}
+          <div className="intro-mask__title-clip intro-mask__title-clip--punch" aria-hidden>
+            <h1 className="intro-mask__title">{title}</h1>
+          </div>
         </div>
 
         <div className="intro-mask__content">
+          {/* Quote sits above the twin name titles */}
+          {supportLine ? (
+            <p className="intro-mask__support">{supportLine}</p>
+          ) : null}
           {/* Outline-only twin (transparent fill + white stroke), stacked/offset */}
-          <div
-            ref={titleRegionRef}
-            className="intro-mask__title-region"
-            tabIndex={0}
-            aria-label={title}
-            onPointerMove={onPointerMove}
-            onPointerLeave={clearSpotlight}
-            onBlur={clearSpotlight}
-            onFocus={onFocus}
-          >
-            <p className="intro-mask__title-readable" aria-hidden>
-              {title}
-            </p>
+          <div className="intro-mask__title-clip intro-mask__title-clip--outline">
+            <div
+              ref={titleRegionRef}
+              className="intro-mask__title-region"
+              tabIndex={0}
+              aria-label={title}
+              onPointerMove={onPointerMove}
+              onPointerLeave={clearSpotlight}
+              onBlur={clearSpotlight}
+              onFocus={onFocus}
+            >
+              <p className="intro-mask__title-readable" aria-hidden>
+                {title}
+              </p>
+            </div>
           </div>
-          <p className="intro-mask__support">{supportLine}</p>
         </div>
 
         {hasPlayable || watchHref ? (
