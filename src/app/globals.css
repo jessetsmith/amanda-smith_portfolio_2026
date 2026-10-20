@@ -703,19 +703,19 @@ a.grid-cell-link:focus-visible .card-open {
 .intro-mask {
   --intro-progress: 0;
   position: relative;
-  height: 220vh;
+  /* Longer runway so title scrub feels gradual, not snappy */
+  height: 320vh;
 }
 
 @media (max-width: 767px) {
   .intro-mask {
-    /* Shorter scroll runway on phones — still enough for punch scrub */
-    height: 165vh;
+    height: 240vh;
   }
 }
 
 @media (max-height: 700px) and (orientation: landscape) {
   .intro-mask {
-    height: 140vh;
+    height: 190vh;
   }
 }
 
@@ -964,8 +964,9 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   transition: none;
 }
 
+/* Never fade the veil off — opacity fades flash YouTube/native pause chrome */
 .intro-mask__youtube-veil.intro-mask__media-poster[data-on="0"][data-soft="1"] {
-  transition: opacity 0.45s ease !important;
+  transition: none !important;
 }
 
 .intro-mask__video {
@@ -982,6 +983,7 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 
 .intro-mask__video::-webkit-media-controls,
 .intro-mask__video::-webkit-media-controls-enclosure,
+.intro-mask__video::-webkit-media-controls-overlay-enclosure,
 .intro-mask__video::-webkit-media-controls-panel,
 .intro-mask__video::-webkit-media-controls-start-playback-button,
 .intro-mask__video::-webkit-media-controls-play-button,
@@ -1004,11 +1006,11 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   max-height: 0 !important;
 }
 
-/* Blocks residual YouTube/native chrome hits; Sound + Watch sit above */
+/* Blocks residual YouTube/native chrome hits; Sound + Watch sit above (z below controls) */
 .intro-mask__video-shield {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: 4 !important;
   pointer-events: auto;
   background: transparent;
 }
@@ -1162,10 +1164,9 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   --intro-title-stagger-y: 0.38rem;
   --intro-support-gap: 0.65rem;
   /*
-    Reveal completes ~halfway through the intro runway, then holds at 1 so
-    the full name is never left mid-clip at rest.
+    Reveal completes ~85% through the longer runway (gradual rise), then holds.
   */
-  --intro-reveal: clamp(0, calc(var(--intro-progress) * 2), 1);
+  --intro-reveal: clamp(0, calc(var(--intro-progress) * 1.18), 1);
 }
 
 /*
@@ -1202,17 +1203,19 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
     view-timeline-name: --intro-view;
     view-timeline-axis: block;
     timeline-scope: --intro-view;
-    animation: intro-progress-scrub linear both;
+    animation: intro-progress-scrub both;
+    animation-timing-function: cubic-bezier(0.22, 0.05, 0.2, 1);
     animation-timeline: --intro-view;
     animation-range: contain 0% contain 100%;
   }
 
   .intro-mask__title,
   .intro-mask__title-region {
-    animation: intro-glyph-reveal linear both;
+    animation: intro-glyph-reveal both;
+    animation-timing-function: cubic-bezier(0.22, 0.05, 0.2, 1);
     animation-timeline: --intro-view;
-    /* Complete (→ none) by mid sticky scrub = reveal 1 */
-    animation-range: contain 0% contain 50%;
+    /* Complete (→ none) late in the pin — matches ~progress*1.18 → 1 */
+    animation-range: contain 0% contain 85%;
   }
 }
 
@@ -1576,8 +1579,10 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   font-size: 1.05rem;
   line-height: 1.5;
   color: var(--color-ink);
-  /* Soft paper halo so black stays readable on darker video frames */
-  text-shadow: 0 1px 10px color-mix(in srgb, var(--color-paper) 75%, transparent);
+  /* Solid bold only — no glow / halo / stroke */
+  text-shadow: none;
+  -webkit-text-stroke: 0;
+  filter: none;
   opacity: calc(0.95 - var(--intro-progress) * 0.2);
   transform: translateY(calc(var(--intro-progress) * -3vh));
   pointer-events: none;

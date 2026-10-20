@@ -409,14 +409,18 @@ export function IntroMask({
         const total = Math.max(rect.height - window.innerHeight, 1);
         const raw = Math.min(1, Math.max(0, -rect.top / total));
         section.style.setProperty("--intro-progress", String(raw));
-        section.style.setProperty("--intro-reveal", String(Math.min(1, raw * 2)));
+        // Match CSS: reveal completes ~85% through the runway
+        section.style.setProperty(
+          "--intro-reveal",
+          String(Math.min(1, raw * 1.18)),
+        );
       }
       const cs = getComputedStyle(section);
       const progress = parseFloat(cs.getPropertyValue("--intro-progress"));
       const reveal = parseFloat(cs.getPropertyValue("--intro-reveal"));
       const open =
         (Number.isFinite(reveal) && reveal >= 0.999) ||
-        (Number.isFinite(progress) && progress >= 0.5);
+        (Number.isFinite(progress) && progress >= 0.85);
       setRevealed(open);
     };
 
@@ -844,14 +848,30 @@ function NativeHeroVideo({
     const stripChrome = () => {
       el.controls = false;
       el.removeAttribute("controls");
+      el.disablePictureInPicture = true;
     };
     stripChrome();
 
     let restarting = false;
+    let unveilTimer: number | null = null;
+    const coverChrome = () => {
+      if (poster) setShowPoster(true);
+    };
+    const uncoverAfterPlay = () => {
+      if (unveilTimer != null) window.clearTimeout(unveilTimer);
+      // Brief hold so Safari’s center pause glyph never peeks through
+      unveilTimer = window.setTimeout(() => {
+        if (failedRef.current || el.paused) return;
+        setShowPoster(false);
+        unveilTimer = null;
+      }, 280);
+    };
+
     const restartSeamless = () => {
       if (restarting || failedRef.current) return;
       restarting = true;
       stripChrome();
+      coverChrome();
       try {
         el.currentTime = 0.001;
       } catch {
@@ -866,7 +886,7 @@ function NativeHeroVideo({
     const markPlaying = () => {
       if (failedRef.current) return;
       stripChrome();
-      setShowPoster(false);
+      uncoverAfterPlay();
     };
     const markFailed = () => {
       failedRef.current = true;
@@ -877,7 +897,7 @@ function NativeHeroVideo({
     const onTimeUpdate = () => {
       const duration = el.duration;
       if (!Number.isFinite(duration) || duration <= 0.5) return;
-      if (duration - el.currentTime <= 0.12) {
+      if (duration - el.currentTime <= 0.18) {
         restartSeamless();
       }
     };
@@ -885,15 +905,19 @@ function NativeHeroVideo({
     const onPause = () => {
       stripChrome();
       if (failedRef.current) return;
-      // Cover should always be playing; resume unless the tab is hidden
+      // Mask native pause chrome, then resume (unless tab is hidden)
+      coverChrome();
       if (document.visibilityState === "hidden") return;
       void el.play().catch(() => undefined);
     };
     const onWaiting = () => {
-      // Brief buffers: keep video if we already revealed; show poster only pre-first-play
       if (failedRef.current) return;
     };
     const onError = () => markFailed();
+    const blockChromeGesture = (event: Event) => {
+      event.preventDefault();
+      stripChrome();
+    };
 
     el.addEventListener("timeupdate", onTimeUpdate);
     el.addEventListener("ended", onEnded);
@@ -903,6 +927,8 @@ function NativeHeroVideo({
     el.addEventListener("loadeddata", stripChrome);
     el.addEventListener("waiting", onWaiting);
     el.addEventListener("error", onError);
+    el.addEventListener("contextmenu", blockChromeGesture);
+    el.addEventListener("webkitbeginfullscreen", blockChromeGesture);
 
     registerApi({
       setMuted: (muted) => {
@@ -925,6 +951,7 @@ function NativeHeroVideo({
 
     return () => {
       window.clearTimeout(failTimer);
+      if (unveilTimer != null) window.clearTimeout(unveilTimer);
       el.removeEventListener("timeupdate", onTimeUpdate);
       el.removeEventListener("ended", onEnded);
       el.removeEventListener("pause", onPause);
@@ -933,6 +960,8 @@ function NativeHeroVideo({
       el.removeEventListener("loadeddata", stripChrome);
       el.removeEventListener("waiting", onWaiting);
       el.removeEventListener("error", onError);
+      el.removeEventListener("contextmenu", blockChromeGesture);
+      el.removeEventListener("webkitbeginfullscreen", blockChromeGesture);
       registerApi({ setMuted: () => undefined });
     };
   }, [poster, registerApi, src]);
@@ -972,6 +1001,7 @@ function NativeHeroVideo({
         tabIndex={-1}
         poster={poster}
         src={src}
+        onContextMenu={(event) => event.preventDefault()}
       />
     </div>
   );
@@ -1022,16 +1052,18 @@ function YouTubeHeroVideo({
       if (root) root.dataset.veiled = "1";
       return;
     }
-    // Unveil: show iframe UNDER the poster, then drop the poster
+    // Unveil only after chrome window: show iframe under poster, then
+    // drop poster instantly (never fade — fades flash the pause glyph).
     if (root) root.dataset.veiled = "0";
-    if (veil) veil.dataset.soft = softReveal ? "1" : "0";
+    if (veil) veil.dataset.soft = "0";
     unveilPaintTimerRef.current = window.setTimeout(
       () => {
         if (failedRef.current) return;
         if (veilRef.current) veilRef.current.dataset.on = "0";
         unveilPaintTimerRef.current = null;
       },
-      softReveal ? 80 : 1100,
+      // Hold cover long enough that YT center pause never peeks through
+      softReveal ? 1400 : 1600,
     );
   }, []);
 
@@ -1203,8 +1235,8 @@ function YouTubeHeroVideo({
                       player.getPlayerState() ===
                         window.YT?.PlayerState?.PLAYING;
                     const t = player?.getCurrentTime() ?? 0;
-                    // YouTube keeps a center pause glyph for multiple seconds after seek+play
-                    if (!stillPlaying || t < 3.4) {
+                    // YouTube keeps a center pause glyph for several seconds after seek+play
+                    if (!stillPlaying || t < 4.2) {
                       setVeil(true);
                       unveilTimer = window.setTimeout(() => {
                         if (cancelled || failedRef.current) return;
@@ -1212,7 +1244,7 @@ function YouTubeHeroVideo({
                         firstPlayDoneRef.current = true;
                         setVeil(false, soft);
                         restartingRef.current = false;
-                      }, 900);
+                      }, 1400);
                       return;
                     }
                   } catch {
@@ -1222,7 +1254,7 @@ function YouTubeHeroVideo({
                   firstPlayDoneRef.current = true;
                   setVeil(false, soft);
                   restartingRef.current = false;
-                }, 900);
+                }, 1200);
                 return;
               }
 
@@ -1230,6 +1262,7 @@ function YouTubeHeroVideo({
                 state === paused &&
                 document.visibilityState !== "hidden"
               ) {
+                // Cover BEFORE resume so the center pause circle never paints
                 setVeil(true);
                 try {
                   event.target.playVideo();
