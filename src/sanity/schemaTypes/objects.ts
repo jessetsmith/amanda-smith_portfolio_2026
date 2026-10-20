@@ -132,10 +132,31 @@ export const gridItem = defineType({
     defineField({
       name: "featured",
       type: "boolean",
-      title: "Featured lead",
+      title: "Featured highlight",
       description:
-        "Highlight as the section lead (larger type/image). One per section, right after the title row.",
+        "Mark as the section highlight (larger type/image). One per section, right after the title row.",
       initialValue: false,
+    }),
+    defineField({
+      name: "textColor",
+      type: "string",
+      title: "Text color",
+      description:
+        "Optional CSS color for block text (e.g. #1a1a1a). Empty = black/ink default.",
+    }),
+    defineField({
+      name: "textSize",
+      type: "string",
+      title: "Text size",
+      description: "Optional size for block text. Empty = default (md).",
+      options: {
+        list: [
+          { title: "Small", value: "sm" },
+          { title: "Medium (default)", value: "md" },
+          { title: "Large", value: "lg" },
+          { title: "Extra large", value: "xl" },
+        ],
+      },
     }),
     defineField({
       name: "layouts",
@@ -181,6 +202,14 @@ export const gridItem = defineType({
       name: "label",
       type: "localeString",
       title: "Label",
+    }),
+    defineField({
+      name: "subcategory",
+      type: "localeString",
+      title: "Subcategory",
+      description:
+        "Color cells only — optional segment(s) after the label, shown with a middle-dot (e.g. Workshop, or Workshop · Series). Leave empty to omit.",
+      hidden: ({ parent }) => parent?.kind !== "colorCell",
     }),
     defineField({
       name: "prose",
@@ -248,7 +277,7 @@ export const gridItem = defineType({
     },
     prepare({ kind, title, headline, label, featured, hidden }) {
       const flags = [
-        featured ? "featured lead" : null,
+        featured ? "featured highlight" : null,
         hidden ? "hidden" : null,
       ]
         .filter(Boolean)

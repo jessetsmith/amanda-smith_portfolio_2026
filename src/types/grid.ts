@@ -4,6 +4,11 @@ export type CellFill = "rust" | "ochre" | "sage" | "tan" | "paper" | "ink";
 
 export type PlaceholderTone = "warm" | "cool" | "ink";
 
+/** Optional per-cell text size override (public defaults to md). */
+export type CellTextSize = "sm" | "md" | "lg" | "xl";
+
+export const CELL_TEXT_SIZES: CellTextSize[] = ["sm", "md", "lg", "xl"];
+
 export type GridItemKind =
   | "titleRow"
   | "colorCell"
@@ -65,10 +70,14 @@ export interface GridItemBase {
   rowSpan?: number;
   fill?: CellFill;
   /**
-   * Section lead / highlighted card. Prefer one featured content cell
+   * Section highlight card. Prefer one featured content cell
    * immediately after each titleRow at colSpan 2 (50% width); standards use 1.
    */
   featured?: boolean;
+  /** Optional text color override (CSS color). Default: ink / black. */
+  textColor?: string;
+  /** Optional text size token. Default: md (current sizes). */
+  textSize?: CellTextSize;
   /** Independent tablet/mobile placement — omitted until customized. */
   layouts?: ItemLayouts;
 }
@@ -96,6 +105,11 @@ export interface ColorCellItem extends GridItemBase {
   fill: CellFill;
   href?: string;
   label?: LocaleString;
+  /**
+   * Optional subcategory (or ·-separated chain). Shown after the label with
+   * a middle-dot, e.g. PHOTOVOICE · WORKSHOP. Omitted when empty.
+   */
+  subcategory?: LocaleString;
   /**
    * Optional long text (poetry / prose). Omitted by default — only present
    * when an editor adds it; clear in admin to remove from the public cell.

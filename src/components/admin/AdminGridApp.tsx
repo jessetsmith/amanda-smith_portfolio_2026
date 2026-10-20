@@ -32,11 +32,13 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import type {
   CellFill,
+  CellTextSize,
   GridItem,
   GridItemKind,
   LayoutBreakpoint,
   TitleRowItem,
 } from "@/types/grid";
+import { CELL_TEXT_SIZES } from "@/types/grid";
 import { AdminLocaleSelect, readLocaleField, writeLocaleField } from "@/components/admin/AdminLocaleSelect";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { enOf } from "@/lib/i18n/display";
@@ -745,7 +747,7 @@ export function AdminGridApp({
           updateItems((prev) => {
             const current = prev.find((row) => row.id === selected.id);
             if (!current) return prev;
-            // Featured flag is shared content; desktop also widens the lead cell.
+            // Featured flag is shared content; desktop also widens the highlight cell.
             // Tablet/mobile must not rewrite desktop colSpan — only flip featured.
             if (editBreakpoint !== "desktop") {
               return prev.map((row) =>
@@ -1362,7 +1364,7 @@ function SortableRow({
       >
         <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/45 uppercase">
           {item.kind}
-          {item.featured ? " · lead" : ""} · c{item.colStart}/{item.colSpan} · r
+          {item.featured ? " · highlight" : ""} · c{item.colStart}/{item.colSpan} · r
           {item.rowSpan ?? 1}
         </p>
         <p className="truncate text-sm text-ink">{label}</p>
@@ -1375,9 +1377,11 @@ function itemContentPreview(item: GridItem): string {
   if (item.kind === "titleRow") return enOf(item.label);
   if (item.kind === "colorCell") {
     const label = enOf(item.label) || item.fill;
+    const sub = enOf(item.subcategory);
+    const base = sub ? `${label} · ${sub}` : label;
     return Object.keys(toLocaleMap(item.prose)).length
-      ? `${label} · prose`
-      : label;
+      ? `${base} · prose`
+      : base;
   }
   if (item.kind === "textCell") return enOf(item.headline);
   if (item.kind === "projectCell") return enOf(item.title);
@@ -1753,7 +1757,7 @@ function PlacementTab({
             onChange={(e) => onFeaturedChange(e.target.checked)}
             className="accent-rust"
           />
-          Featured lead · span 2
+          Featured highlight · span 2
         </label>
       ) : null}
 
@@ -1903,15 +1907,25 @@ function ContentEditModal({
       onApply({ label: draft.label });
       return;
     }
+    const textStylePatch = {
+      textColor: draft.textColor?.trim() || null,
+      textSize:
+        draft.textSize && draft.textSize !== "md" ? draft.textSize : null,
+    };
+
     if (draft.kind === "colorCell") {
       const hasProse =
         proseEnabled && Object.keys(toLocaleMap(draft.prose)).length > 0;
+      const hasSub =
+        Object.keys(toLocaleMap(draft.subcategory)).length > 0;
       onApply(
         {
           fill: draft.fill,
           label: draft.label,
           href: draft.href?.trim() || undefined,
+          subcategory: hasSub ? draft.subcategory : null,
           prose: hasProse ? draft.prose : null,
+          ...textStylePatch,
         } as Partial<GridItem>,
         sectionTarget,
       );
@@ -1927,7 +1941,8 @@ function ContentEditModal({
           imageAlt: draft.imageAlt,
           placeholderTone: draft.placeholderTone,
           description: draft.description,
-        },
+          ...textStylePatch,
+        } as Partial<GridItem>,
         sectionTarget,
       );
       return;
@@ -1942,7 +1957,8 @@ function ContentEditModal({
           imageAlt: draft.imageAlt,
           placeholderTone: draft.placeholderTone,
           excerpt: draft.excerpt,
-        },
+          ...textStylePatch,
+        } as Partial<GridItem>,
         sectionTarget,
       );
       return;
@@ -1957,7 +1973,8 @@ function ContentEditModal({
         imageAlt: draft.imageAlt,
         placeholderTone: draft.placeholderTone,
         summary: draft.summary,
-      },
+        ...textStylePatch,
+      } as Partial<GridItem>,
       sectionTarget,
     );
   }
@@ -2057,6 +2074,17 @@ function ContentEditModal({
                 value={readLocaleField(draft.label, locale)}
                 onChange={(label) => setLoc("label", draft.label, label)}
               />
+              <TextField
+                label="Subcategory"
+                value={readLocaleField(draft.subcategory, locale)}
+                onChange={(subcategory) =>
+                  setLoc("subcategory", draft.subcategory, subcategory)
+                }
+              />
+              <p className="-mt-1 text-xs text-ink/45">
+                Optional. Shown after the label with a middle-dot (e.g. Workshop).
+                Chain segments with · if needed.
+              </p>
               <TextField
                 label="Link URL"
                 value={draft.href ?? ""}
@@ -2238,6 +2266,24 @@ function ContentEditModal({
               />
             </>
           ) : null}
+
+          {draft.kind === "colorCell" ||
+          draft.kind === "mediaCell" ||
+          draft.kind === "textCell" ||
+          draft.kind === "projectCell" ? (
+            <TextStyleFields
+              color={draft.textColor ?? ""}
+              size={draft.textSize ?? "md"}
+              onColorChange={(textColor) =>
+                patchDraft({ textColor: textColor || undefined } as Partial<GridItem>)
+              }
+              onSizeChange={(textSize) =>
+                patchDraft({
+                  textSize: textSize === "md" ? undefined : textSize,
+                } as Partial<GridItem>)
+              }
+            />
+          ) : null}
         </div>
 
         <div className="flex flex-wrap justify-end gap-2 border-t border-ink/12 pt-3">
@@ -2257,6 +2303,81 @@ function ContentEditModal({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function TextStyleFields({
+  color,
+  size,
+  onColorChange,
+  onSizeChange,
+}: {
+  color: string;
+  size: CellTextSize;
+  onColorChange: (color: string) => void;
+  onSizeChange: (size: CellTextSize) => void;
+}) {
+  const pickerValue = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(color)
+    ? color
+    : "#1a1a1a";
+  return (
+    <div className="space-y-3 border-t border-ink/10 pt-3">
+      <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/50 uppercase">
+        Text style
+      </p>
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="block space-y-1">
+          <span className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/55 uppercase">
+            Text color
+          </span>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={pickerValue}
+              onChange={(e) => onColorChange(e.target.value)}
+              className="h-9 w-12 cursor-pointer border border-ink/20 bg-paper p-0.5"
+              title="Pick text color"
+            />
+            <input
+              type="text"
+              value={color}
+              onChange={(e) => onColorChange(e.target.value)}
+              placeholder="#1a1a1a (default)"
+              className="w-36 border border-ink/20 bg-paper px-2 py-1.5 font-mono text-xs text-ink"
+            />
+            {color ? (
+              <button
+                type="button"
+                onClick={() => onColorChange("")}
+                className="border border-ink/20 px-2 py-1.5 font-mono text-[0.55rem] tracking-[0.1em] uppercase"
+              >
+                Reset
+              </button>
+            ) : null}
+          </div>
+        </label>
+        <SelectField
+          label="Text size"
+          value={size}
+          options={CELL_TEXT_SIZES.map((value) => ({
+            value,
+            label:
+              value === "sm"
+                ? "Small"
+                : value === "md"
+                  ? "Medium (default)"
+                  : value === "lg"
+                    ? "Large"
+                    : "Extra large",
+          }))}
+          onChange={(next) => onSizeChange(next as CellTextSize)}
+        />
+      </div>
+      <p className="text-xs text-ink/45">
+        Applies to meta, titles, subtitles, prose, and body text on this block.
+        Empty color = black.
+      </p>
     </div>
   );
 }

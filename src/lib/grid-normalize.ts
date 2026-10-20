@@ -3,11 +3,12 @@ import { finalizeGridLayout } from "@/lib/grid-layout";
 import { toLocaleMap, type LocaleString } from "@/lib/i18n/resolve";
 import type {
   CellFill,
+  CellTextSize,
   GridItem,
   GridItemKind,
   PlaceholderTone,
 } from "@/types/grid";
-import { GRID_COLUMNS } from "@/types/grid";
+import { CELL_TEXT_SIZES, GRID_COLUMNS } from "@/types/grid";
 
 const FILLS: CellFill[] = ["rust", "ochre", "sage", "tan", "paper", "ink"];
 const KINDS: GridItemKind[] = [
@@ -57,6 +58,11 @@ export function normalizeGridItem(item: GridItem, order: number): GridItem {
       : `${kind}-${order}`;
 
   const featured = Boolean((item as { featured?: boolean }).featured);
+  const textColor = str((item as { textColor?: unknown }).textColor);
+  const textSizeRaw = (item as { textSize?: unknown }).textSize;
+  const textSize = CELL_TEXT_SIZES.includes(textSizeRaw as CellTextSize)
+    ? (textSizeRaw as CellTextSize)
+    : undefined;
   const rowStartRaw = (item as { rowStart?: number }).rowStart;
   const rowStart =
     typeof rowStartRaw === "number" && rowStartRaw >= 1
@@ -73,6 +79,8 @@ export function normalizeGridItem(item: GridItem, order: number): GridItem {
     rowSpan,
     ...(rowStart ? { rowStart } : {}),
     ...(featured ? { featured: true as const } : {}),
+    ...(textColor ? { textColor } : {}),
+    ...(textSize && textSize !== "md" ? { textSize } : {}),
     ...(layouts ? { layouts } : {}),
   };
 
@@ -98,12 +106,16 @@ export function normalizeGridItem(item: GridItem, order: number): GridItem {
           ? (item.fill as CellFill)
           : "rust";
       const prose = locOpt((item as { prose?: unknown }).prose);
+      const subcategory = locOpt(
+        (item as { subcategory?: unknown }).subcategory,
+      );
       return {
         ...base,
         kind: "colorCell",
         fill,
         label: locOpt((item as { label?: unknown }).label),
         href: str((item as { href?: string }).href),
+        ...(subcategory ? { subcategory } : {}),
         ...(prose ? { prose } : {}),
       };
     }

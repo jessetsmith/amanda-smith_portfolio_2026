@@ -45,6 +45,17 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
       | undefined;
     const kind = String(row.kind || "textCell");
     const featured = Boolean(row.featured);
+    const textColor =
+      typeof row.textColor === "string" && row.textColor.trim()
+        ? row.textColor.trim()
+        : undefined;
+    const textSize =
+      row.textSize === "sm" ||
+      row.textSize === "md" ||
+      row.textSize === "lg" ||
+      row.textSize === "xl"
+        ? row.textSize
+        : undefined;
     const rowStartNum = Number(row.rowStart);
     const layouts = normalizeItemLayouts(row.layouts);
     const base = {
@@ -58,6 +69,8 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
         ? { rowStart: Math.floor(rowStartNum) }
         : {}),
       ...(featured ? { featured: true as const } : {}),
+      ...(textColor ? { textColor } : {}),
+      ...(textSize && textSize !== "md" ? { textSize } : {}),
       ...(layouts ? { layouts } : {}),
     };
 
@@ -99,12 +112,14 @@ export function mapSanityGridItems(raw: unknown): GridItem[] | null {
     }
     if (kind === "colorCell") {
       const prose = locOpt(row.prose);
+      const subcategory = locOpt(row.subcategory);
       return {
         ...base,
         kind: "colorCell" as const,
         fill: (row.fill as GridItem["fill"]) || "rust",
         label: locOpt(row.label),
         href,
+        ...(subcategory ? { subcategory } : {}),
         ...(prose ? { prose } : {}),
       };
     }
@@ -155,9 +170,11 @@ export function localizeFixtureGridItems(items: GridItem[]): GridItem[] {
       }
       if (item.kind === "colorCell") {
         const prose = locOpt(item.prose);
+        const subcategory = locOpt(item.subcategory);
         return {
           ...item,
           label: locOpt(item.label),
+          ...(subcategory ? { subcategory } : {}),
           ...(prose ? { prose } : {}),
         };
       }

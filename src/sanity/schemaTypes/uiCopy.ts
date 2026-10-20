@@ -2,7 +2,7 @@ import { defineField, defineType } from "sanity";
 
 const STRING_FIELDS = [
   { name: "open", title: "Grid “Open” cue" },
-  { name: "lead", title: "Featured “Lead” mark" },
+  { name: "lead", title: "Featured “Highlight” mark" },
   { name: "watchFullVideo", title: "Watch full video" },
   { name: "soundOn", title: "Sound on" },
   { name: "soundOff", title: "Sound off" },

@@ -83,12 +83,12 @@ const UI_COPY = {
     de: "Öffnen",
   },
   lead: {
-    en: "Lead",
+    en: "Highlight",
     es: "Destacado",
     it: "In evidenza",
     pt: "Destaque",
-    fr: "À la une",
-    de: "Lead",
+    fr: "Mise en avant",
+    de: "Highlight",
   },
   watchFullVideo: {
     en: "Watch full video",

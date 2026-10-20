@@ -6,6 +6,7 @@ import type { HomepageHero } from "@/types/hero";
 
 const TEXT_FIELDS = [
   "label",
+  "subcategory",
   "prose",
   "meta",
   "headline",

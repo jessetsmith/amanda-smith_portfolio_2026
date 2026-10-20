@@ -524,7 +524,7 @@ export function AdminDragOverlayCard({ item }: { item: GridItem }) {
     <div className="admin-drag-overlay">
       <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/50 uppercase">
         {item.kind}
-        {item.featured ? " · lead" : ""}
+        {item.featured ? " · highlight" : ""}
       </p>
       <p className="font-display text-lg leading-tight text-ink">{label}</p>
     </div>

@@ -1,7 +1,36 @@
 import type { CSSProperties, ElementType, ReactNode } from "react";
-import type { GridItem, PlaceholderTone } from "@/types/grid";
+import type { CellTextSize, GridItem, PlaceholderTone } from "@/types/grid";
 import { useLocaleOptional } from "@/components/i18n/LocaleProvider";
 import { fillClass, gridPlacementStyle } from "@/lib/grid";
+
+function cellTextStyle(item: GridItem): CSSProperties {
+  const color =
+    "textColor" in item && typeof item.textColor === "string" && item.textColor
+      ? item.textColor
+      : undefined;
+  return color
+    ? ({ ["--cell-text-color" as string]: color } as CSSProperties)
+    : {};
+}
+
+function cellTextSizeAttr(item: GridItem): CellTextSize | undefined {
+  if (!("textSize" in item) || !item.textSize || item.textSize === "md") {
+    return undefined;
+  }
+  return item.textSize;
+}
+
+/** Join label + optional subcategory segments with middle-dot separators. */
+function metaParts(...parts: Array<string | undefined>): string {
+  return parts
+    .flatMap((part) =>
+      (part || "")
+        .split(/\s*·\s*/)
+        .map((s) => s.trim())
+        .filter(Boolean),
+    )
+    .join(" · ");
+}
 
 interface GridCellProps {
   item: GridItem;
@@ -112,6 +141,7 @@ function CellShell({
       }
     : {};
 
+  const textSize = cellTextSizeAttr(item);
   return (
     <Comp
       className={`${kindClass}${linked ? " grid-cell-link" : ""} ${className}`.trim()}
@@ -120,6 +150,7 @@ function CellShell({
       data-featured={
         "featured" in item && item.featured ? "true" : undefined
       }
+      data-text-size={textSize}
       data-linked={linked ? "true" : undefined}
       {...linkProps}
     >
@@ -139,10 +170,12 @@ export function GridCell({
   const { t, ui } = useLocaleOptional();
   const style = {
     ...(omitPlacement ? {} : gridPlacementStyle(item)),
+    ...cellTextStyle(item),
     ...styleOverride,
   };
+  const textSize = cellTextSizeAttr(item);
   const base = `grid-cell relative ${className}`.trim();
-  const leadMark = (
+  const highlightMark = (
     <span className="card-featured-mark"> · {ui("lead")}</span>
   );
 
@@ -153,8 +186,9 @@ export function GridCell({
           className={`${base} title-row flex items-center px-6 py-4 sm:px-8`}
           style={style}
           data-kind={item.kind}
+          data-text-size={textSize}
         >
-          <p className="font-mono text-[0.7rem] tracking-[0.22em] text-ink uppercase">
+          <p className="font-mono text-[0.7rem] tracking-[0.22em] uppercase">
             <MetaDot />
             {t(item.label)}
           </p>
@@ -173,6 +207,8 @@ export function GridCell({
           }
         : {};
       const label = t(item.label);
+      const subcategory = t(item.subcategory);
+      const metaLine = metaParts(label, subcategory);
       const prose = t(item.prose);
       return (
         <Comp
@@ -181,13 +217,14 @@ export function GridCell({
           }${prose ? " color-cell--prose" : ""}`}
           style={style}
           data-kind={item.kind}
+          data-text-size={textSize}
           data-linked={linked ? "true" : undefined}
           {...linkProps}
         >
-          {label ? (
-            <span className="font-mono text-[0.65rem] tracking-[0.18em] uppercase opacity-80">
+          {metaLine ? (
+            <span className="color-cell__meta font-mono text-[0.65rem] tracking-[0.18em] uppercase">
               <MetaDot />
-              {label}
+              {metaLine}
             </span>
           ) : prose ? null : (
             <span className="sr-only">{ui("colorCell")}</span>
@@ -224,13 +261,13 @@ export function GridCell({
           style={style}
           kindClass={contentCardClass(item, "media-cell")}
         >
-          <p className="card-meta font-mono tracking-[0.18em] text-ink uppercase">
+          <p className="card-meta font-mono tracking-[0.18em] uppercase">
             <MetaDot />
             {meta}
-            {item.featured ? leadMark : null}
+            {item.featured ? highlightMark : null}
           </p>
           {title ? (
-            <h2 className="card-title font-display text-ink">{title}</h2>
+            <h2 className="card-title font-display">{title}</h2>
           ) : null}
           <CardImage
             src={item.imageSrc}
@@ -239,9 +276,7 @@ export function GridCell({
             label={caption || ui("image")}
           />
           {description ? (
-            <p className="card-desc leading-relaxed text-ink/70">
-              {description}
-            </p>
+            <p className="card-desc leading-relaxed">{description}</p>
           ) : null}
         </CellShell>
       );
@@ -262,17 +297,15 @@ export function GridCell({
           kindClass={contentCardClass(item, "text-cell")}
         >
           {meta ? (
-            <p className="card-meta font-mono tracking-[0.18em] text-ink uppercase">
+            <p className="card-meta font-mono tracking-[0.18em] uppercase">
               <MetaDot />
               {meta}
-              {item.featured ? leadMark : null}
+              {item.featured ? highlightMark : null}
             </p>
           ) : null}
-          <h2 className="card-title font-display text-ink">{headline}</h2>
+          <h2 className="card-title font-display">{headline}</h2>
           {subtitle ? (
-            <p className="card-subtitle leading-snug text-ink/55">
-              {subtitle}
-            </p>
+            <p className="card-subtitle leading-snug">{subtitle}</p>
           ) : null}
           <CardImage
             src={item.imageSrc}
@@ -281,7 +314,7 @@ export function GridCell({
             label={ui("image")}
           />
           {excerpt ? (
-            <p className="card-desc leading-relaxed text-ink/70">{excerpt}</p>
+            <p className="card-desc leading-relaxed">{excerpt}</p>
           ) : null}
         </CellShell>
       );
@@ -302,22 +335,20 @@ export function GridCell({
           kindClass={contentCardClass(item, "project-cell")}
         >
           <div className="card-meta flex items-baseline justify-between gap-3">
-            <p className="font-mono tracking-[0.18em] text-ink uppercase">
+            <p className="font-mono tracking-[0.18em] uppercase">
               <MetaDot />
               {meta}
-              {item.featured ? leadMark : null}
+              {item.featured ? highlightMark : null}
             </p>
             {item.year ? (
-              <p className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/45">
+              <p className="card-year font-mono text-[0.6rem] tracking-[0.12em]">
                 {item.year}
               </p>
             ) : null}
           </div>
-          <h2 className="card-title font-display text-ink">{title}</h2>
+          <h2 className="card-title font-display">{title}</h2>
           {subtitle ? (
-            <p className="card-subtitle leading-snug text-ink/55">
-              {subtitle}
-            </p>
+            <p className="card-subtitle leading-snug">{subtitle}</p>
           ) : null}
           <CardImage
             src={item.imageSrc}
@@ -326,7 +357,7 @@ export function GridCell({
             label={ui("image")}
           />
           {summary ? (
-            <p className="card-desc leading-relaxed text-ink/65">{summary}</p>
+            <p className="card-desc leading-relaxed">{summary}</p>
           ) : null}
         </CellShell>
       );
