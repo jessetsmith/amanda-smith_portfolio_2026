@@ -7,11 +7,16 @@ import {
   normalizeHero,
 } from "@/lib/hero";
 import { resolveLocale, toLocaleMap } from "@/lib/i18n/resolve";
+import { UI_COPY } from "@/lib/i18n/ui-copy";
 import { sanityFetchOptions } from "@/lib/sanity-fetch";
 import { client } from "@/sanity/lib/client";
 import { getWriteClient } from "@/sanity/lib/write-client";
 import { isSanityConfigured } from "@/sanity/env";
-import { homepageHeroQuery, homepageQuery } from "@/sanity/lib/queries";
+import {
+  homepageHeroQuery,
+  homepageQuery,
+  uiCopyQuery,
+} from "@/sanity/lib/queries";
 import type { HomepageHero, HomepageHeroResult } from "@/types/hero";
 
 const DATA_DIR = path.join(process.cwd(), ".data");
@@ -37,6 +42,7 @@ function publicMediaUrl(url: string | undefined): string | undefined {
 }
 
 function seedHero(): HomepageHero {
+  const seedSubtext = (seed as { subtext?: unknown }).subtext;
   return normalizeHero({
     titleText: toLocaleMap(seed.titleText, resolveLocale(defaultHero().titleText)),
     supportText: toLocaleMap(
@@ -48,6 +54,12 @@ function seedHero(): HomepageHero {
     imageUrl: str(seed.imageUrl) || undefined,
     watchUrl: str(seed.watchUrl) || undefined,
     stampHint: toLocaleMap((seed as { stampHint?: string }).stampHint) || undefined,
+    subtext: seedSubtext != null ? seedSubtext : { ...UI_COPY.gridIntro },
+    subtextTextColor:
+      str((seed as { subtextTextColor?: string }).subtextTextColor) || undefined,
+    subtextTextSize:
+      (seed as { subtextTextSize?: HomepageHero["subtextTextSize"] })
+        .subtextTextSize || undefined,
   });
 }
 
@@ -116,12 +128,34 @@ function heroDocumentFields(hero: HomepageHero) {
     videoUrl: hero.videoUrl || undefined,
     watchUrl: hero.watchUrl || undefined,
     stampHint: hero.stampHint || undefined,
+    subtext: hero.subtext ?? undefined,
+    subtextTextColor: hero.subtextTextColor || undefined,
+    subtextTextSize:
+      hero.subtextTextSize && hero.subtextTextSize !== "md"
+        ? hero.subtextTextSize
+        : undefined,
     // Absolute URLs only in string overrides — local upload paths stay off Sanity.
     posterUrl: isAbsoluteHttpUrl(hero.posterUrl) ? hero.posterUrl : undefined,
     imageUrl: isAbsoluteHttpUrl(hero.imageUrl) ? hero.imageUrl : undefined,
     ...(poster ? { poster } : {}),
     ...(backgroundImage ? { backgroundImage } : {}),
   };
+}
+
+/** Prefer authored uiCopy.gridIntro when hero.subtext was never saved. */
+async function subtextFromUiCopy(): Promise<HomepageHero["subtext"] | undefined> {
+  if (!client) return undefined;
+  try {
+    const data = await client.fetch<{ gridIntro?: unknown } | null>(
+      uiCopyQuery,
+      {},
+      HERO_FETCH,
+    );
+    if (data?.gridIntro == null) return undefined;
+    return toLocaleMap(data.gridIntro);
+  } catch {
+    return undefined;
+  }
 }
 
 /** Ensure singleton exists in Sanity (seed from legacy homepage fields or defaults). */
@@ -164,8 +198,17 @@ export async function loadHero(): Promise<HomepageHeroResult> {
   if (isSanityConfigured() && client) {
     try {
       const data = await client.fetch(homepageHeroQuery, {}, HERO_FETCH);
-      const fromDoc = fromSanityDoc(data);
-      if (fromDoc) return { hero: fromDoc, source: "sanity" };
+      let fromDoc = fromSanityDoc(data);
+      if (fromDoc) {
+        // Migrate: consolidate historical uiCopy.gridIntro into hero.subtext once.
+        if (data?.subtext == null) {
+          const fromUi = await subtextFromUiCopy();
+          if (fromUi && Object.keys(fromUi).length) {
+            fromDoc = normalizeHero({ ...fromDoc, subtext: fromUi });
+          }
+        }
+        return { hero: fromDoc, source: "sanity" };
+      }
 
       const ensured = await ensureHeroDocument();
       if (ensured) return ensured;

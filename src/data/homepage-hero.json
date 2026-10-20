@@ -5,5 +5,13 @@
   "posterUrl": "",
   "imageUrl": "",
   "watchUrl": "",
-  "stampHint": "click to leave your mark"
+  "stampHint": "click to leave your mark",
+  "subtext": {
+    "en": "An archival modernism practice shaped by relational space and trauma-informed research across exhibitions and writing.",
+    "es": "Una práctica de modernismo de archivo marcada por el espacio relacional y la investigación sensible al trauma, a través de exposiciones y escritura.",
+    "it": "Una pratica di modernismo d’archivio plasmata dallo spazio relazionale e dalla ricerca trauma-informed tra mostre e scrittura.",
+    "pt": "Uma prática de modernismo de arquivo moldada pelo espaço relacional e pela pesquisa sensível ao trauma, entre exposições e escrita.",
+    "fr": "Une pratique de modernisme d’archives façonnée par l’espace relationnel et une recherche attentive au trauma, entre expositions et écriture.",
+    "de": "Eine archivalisch-modernistische Praxis, geprägt von relationalem Raum und traumainformierter Forschung in Ausstellungen und Schreiben."
+  }
 }

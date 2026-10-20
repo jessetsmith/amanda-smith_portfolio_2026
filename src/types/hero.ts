@@ -1,4 +1,5 @@
 import type { LocaleString } from "@/lib/i18n/resolve";
+import type { CellTextSize } from "@/types/grid";
 
 export interface HomepageHero {
   titleText: LocaleString;
@@ -19,6 +20,15 @@ export interface HomepageHero {
    * Empty → client uses the default copy.
    */
   stampHint?: LocaleString;
+  /**
+   * Tagline under the nav / above the grid (definition hotspots match phrases).
+   * Blank allowed per locale. Unset → seeded from historical uiCopy.gridIntro.
+   */
+  subtext?: LocaleString;
+  /** Optional CSS color for the grid intro subtext. Empty → ink/70 default. */
+  subtextTextColor?: string;
+  /** Optional size for the grid intro subtext. Empty/md → current default. */
+  subtextTextSize?: CellTextSize;
 }
 
 export type HeroDataSource = "sanity" | "fixture";

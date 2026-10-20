@@ -1539,6 +1539,48 @@ function HeroTab({
           uploads for production.
         </p>
       </div>
+
+      <div className="space-y-3 border-t border-ink/10 pt-4">
+        <label className="block space-y-1">
+          <span className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/55 uppercase">
+            Subtext
+          </span>
+          <textarea
+            value={readLocaleField(hero.subtext, locale)}
+            onChange={(e) =>
+              onChange({
+                subtext: writeLocaleField(hero.subtext, locale, e.target.value),
+              })
+            }
+            rows={4}
+            className="w-full border border-ink/20 bg-paper px-2 py-2 text-sm text-ink"
+            placeholder="An archival modernism practice…"
+          />
+          <span className="block text-xs text-ink/45">
+            Tagline under the nav / above the grid. Matching English phrases
+            keep definition underlines. Blank allowed. Spaces type normally.
+          </span>
+        </label>
+        <TextStyleFields
+          color={hero.subtextTextColor ?? ""}
+          size={hero.subtextTextSize ?? "md"}
+          onColorChange={(subtextTextColor) =>
+            onChange({
+              subtextTextColor: subtextTextColor || undefined,
+            })
+          }
+          onSizeChange={(subtextTextSize) =>
+            onChange({
+              subtextTextSize:
+                subtextTextSize === "md" ? undefined : subtextTextSize,
+            })
+          }
+        />
+        <p className="-mt-1 text-xs text-ink/45">
+          Subtext only — size and color do not affect cover title or support
+          line. Empty color = soft ink (current look).
+        </p>
+      </div>
     </div>
   );
 }

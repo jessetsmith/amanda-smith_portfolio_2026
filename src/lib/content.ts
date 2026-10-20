@@ -95,6 +95,9 @@ export async function getHomepageContent(): Promise<HomepageContent> {
     imageSrc: hero.imageUrl || undefined,
     watchUrl: hero.watchUrl || undefined,
     stampHint: locOpt(hero.stampHint),
+    subtext: loc(hero.subtext),
+    subtextTextColor: hero.subtextTextColor,
+    subtextTextSize: hero.subtextTextSize,
     gridItems: filterPublicGridItems(gridItemsBase),
     uiCopy,
   };
@@ -148,6 +151,9 @@ export async function getHomepageContent(): Promise<HomepageContent> {
       imageSrc: hero.imageUrl || undefined,
       watchUrl: hero.watchUrl || undefined,
       stampHint: locOpt(hero.stampHint),
+      subtext: loc(hero.subtext),
+      subtextTextColor: hero.subtextTextColor,
+      subtextTextSize: hero.subtextTextSize,
       gridItems: filterPublicGridItems(sanityGrid ?? grid.items),
       uiCopy,
     };

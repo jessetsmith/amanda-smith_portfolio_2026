@@ -1,6 +1,6 @@
 import type { LocaleString } from "@/lib/i18n/resolve";
 import type { UiCopyDoc } from "@/lib/i18n/ui-copy";
-import type { GridItem } from "@/types/grid";
+import type { CellTextSize, GridItem } from "@/types/grid";
 
 export interface NavItem {
   label: LocaleString;
@@ -27,6 +27,10 @@ export interface HomepageContent {
   watchUrl?: string;
   /** Hero stamp hover tip (empty → IntroMask default). */
   stampHint?: LocaleString;
+  /** Tagline under nav / above grid (from homepageHero.subtext). */
+  subtext?: LocaleString;
+  subtextTextColor?: string;
+  subtextTextSize?: CellTextSize;
   gridItems: GridItem[];
   /** Optional Sanity-overridden chrome strings. */
   uiCopy?: UiCopyDoc;

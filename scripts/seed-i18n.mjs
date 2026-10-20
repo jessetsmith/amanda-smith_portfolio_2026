@@ -325,6 +325,12 @@ async function main() {
       heroBase.stampHint || heroSeed.stampHint,
       translations.hero.stampHint,
     ),
+    subtext: mergeLocale(
+      heroBase.subtext || heroSeed.subtext || UI_COPY.gridIntro,
+      translations.hero.subtext || UI_COPY.gridIntro,
+    ),
+    subtextTextColor: heroBase.subtextTextColor || undefined,
+    subtextTextSize: heroBase.subtextTextSize || undefined,
   });
   console.log("homepageHero ✓");
 

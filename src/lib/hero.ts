@@ -4,6 +4,8 @@ import {
   toLocaleMap,
   type LocaleString,
 } from "@/lib/i18n/resolve";
+import { UI_COPY } from "@/lib/i18n/ui-copy";
+import { CELL_TEXT_SIZES, type CellTextSize } from "@/types/grid";
 import type { HomepageHero } from "@/types/hero";
 
 export const DEFAULT_STAMP_HINT = "click to leave your mark";
@@ -15,10 +17,26 @@ const DEFAULT_HERO: HomepageHero = {
   },
   videoUrl: "/media/intro.mp4",
   stampHint: { en: DEFAULT_STAMP_HINT },
+  subtext: { ...UI_COPY.gridIntro },
 };
 
 function str(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function parseTextSize(value: unknown): CellTextSize | undefined {
+  if (
+    value === "sm" ||
+    value === "md" ||
+    value === "lg" ||
+    value === "xl"
+  ) {
+    return value;
+  }
+  if (typeof value === "string" && CELL_TEXT_SIZES.includes(value as CellTextSize)) {
+    return value as CellTextSize;
+  }
+  return undefined;
 }
 
 /** Prefer absolute http(s) URLs for production (Pages cannot serve /media/uploads). */
@@ -39,6 +57,7 @@ export function defaultHero(): HomepageHero {
     titleText: toLocaleMap(DEFAULT_HERO.titleText),
     supportText: toLocaleMap(DEFAULT_HERO.supportText),
     stampHint: toLocaleMap(DEFAULT_HERO.stampHint),
+    subtext: toLocaleMap(DEFAULT_HERO.subtext ?? UI_COPY.gridIntro),
   };
 }
 
@@ -58,6 +77,19 @@ export function normalizeHero(
   const stampHint = toLocaleMap(raw?.stampHint);
   const posterAssetId = str(raw?.posterAssetId);
   const imageAssetId = str(raw?.imageAssetId);
+
+  // Unset subtext → historical gridIntro defaults. Explicit map (incl. blanks) kept.
+  const hasSubtext =
+    raw != null &&
+    Object.prototype.hasOwnProperty.call(raw, "subtext") &&
+    raw.subtext != null;
+  const subtext = hasSubtext
+    ? toLocaleMap(raw.subtext)
+    : toLocaleMap(fallback.subtext);
+
+  const subtextTextColor = str(raw?.subtextTextColor);
+  const subtextTextSize = parseTextSize(raw?.subtextTextSize);
+
   return {
     titleText,
     supportText,
@@ -68,6 +100,11 @@ export function normalizeHero(
     ...(imageAssetId ? { imageAssetId } : {}),
     ...(watchUrl ? { watchUrl } : {}),
     ...(Object.keys(stampHint).length ? { stampHint } : {}),
+    subtext,
+    ...(subtextTextColor ? { subtextTextColor } : {}),
+    ...(subtextTextSize && subtextTextSize !== "md"
+      ? { subtextTextSize }
+      : {}),
   };
 }
 

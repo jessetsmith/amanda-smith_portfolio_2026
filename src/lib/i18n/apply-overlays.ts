@@ -23,12 +23,18 @@ type OverlayMap = Record<string, Partial<Record<(typeof TEXT_FIELDS)[number], Lo
 
 /** Merge authored locale overlays onto hero (fixture / pre-seed path). */
 export function applyHeroOverlays(hero: HomepageHero): HomepageHero {
-  const overlay = translations.hero;
+  const overlay = translations.hero as {
+    titleText?: unknown;
+    supportText?: unknown;
+    stampHint?: unknown;
+    subtext?: unknown;
+  };
   return {
     ...hero,
     titleText: mergeLocaleMaps(hero.titleText, overlay.titleText),
     supportText: mergeLocaleMaps(hero.supportText, overlay.supportText),
     stampHint: mergeLocaleMaps(hero.stampHint, overlay.stampHint),
+    subtext: mergeLocaleMaps(hero.subtext, overlay.subtext),
   };
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, type CSSProperties } from "react";
 import definitions from "@/data/definitions.json";
 
 interface DefinitionEntry {
@@ -11,14 +11,21 @@ interface DefinitionEntry {
 interface DefinitionTextProps {
   text: string;
   className?: string;
+  style?: CSSProperties;
+  "data-text-size"?: string;
 }
 
-export function DefinitionText({ text, className }: DefinitionTextProps) {
+export function DefinitionText({
+  text,
+  className,
+  style,
+  "data-text-size": dataTextSize,
+}: DefinitionTextProps) {
   const entries = definitions as DefinitionEntry[];
   const parts = useMemo(() => annotateText(text, entries), [text, entries]);
 
   return (
-    <p className={className}>
+    <p className={className} style={style} data-text-size={dataTextSize}>
       {parts.map((part, index) =>
         part.definition ? (
           <DefinitionPhrase

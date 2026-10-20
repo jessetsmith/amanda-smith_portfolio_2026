@@ -37,8 +37,10 @@ export const uiCopy = defineType({
   fields: [
     defineField({
       name: "gridIntro",
-      title: "Homepage grid intro blurb",
+      title: "Homepage grid intro blurb (legacy)",
       type: "localeText",
+      description:
+        "Prefer editing Subtext on Homepage hero / admin Hero tab. Kept as fallback until hero.subtext is saved.",
     }),
     ...STRING_FIELDS.map((field) =>
       defineField({

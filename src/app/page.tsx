@@ -34,7 +34,12 @@ export default async function Home() {
         />
         <div id="grid" className="relative z-10 overflow-x-clip bg-paper">
           <div className="mx-auto max-w-[90rem] px-4 pt-10 pb-2 sm:px-6 md:px-8">
-            <GridIntroBlurb className="max-w-2xl text-base leading-relaxed text-ink/70 sm:text-lg" />
+            <GridIntroBlurb
+              className="max-w-2xl"
+              text={home.subtext}
+              textColor={home.subtextTextColor}
+              textSize={home.subtextTextSize}
+            />
           </div>
           <HomepageGrid items={home.gridItems} />
         </div>

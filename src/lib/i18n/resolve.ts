@@ -45,8 +45,9 @@ export function toLocaleMap(
       if (!Object.prototype.hasOwnProperty.call(record, code)) continue;
       const raw = record[code];
       if (typeof raw !== "string") continue;
-      // Preserve intentional empties (`""`); trim non-empty values.
-      out[code] = raw.trim();
+      // Preserve intentional empties (`""`); keep mid-typing spaces
+      // (trim only all-whitespace → blank). Trailing Space must survive edits.
+      out[code] = raw.trim() === "" ? "" : raw;
     }
     if (!hasLocaleKey(out, DEFAULT_LOCALE) && fallbackEn) {
       out.en = fallbackEn;

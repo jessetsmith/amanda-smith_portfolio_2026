@@ -83,6 +83,34 @@ export const homepageHero = defineType({
       description:
         "Shown on first hover over the public cover (“click to leave your mark”). Clears after the first stamp. Leave empty to use the default copy.",
     }),
+    defineField({
+      name: "subtext",
+      type: "localeText",
+      title: "Grid intro subtext",
+      description:
+        "Tagline under the nav / above the homepage grid. Phrases that match site definitions keep hover underlines. Blank allowed.",
+    }),
+    defineField({
+      name: "subtextTextColor",
+      type: "string",
+      title: "Subtext text color",
+      description:
+        "Optional CSS color for the grid intro subtext (e.g. #1a1a1a). Empty = soft ink (current look).",
+    }),
+    defineField({
+      name: "subtextTextSize",
+      type: "string",
+      title: "Subtext text size",
+      description: "Optional size for the grid intro subtext. Empty = medium (current look).",
+      options: {
+        list: [
+          { title: "Small", value: "sm" },
+          { title: "Medium (default)", value: "md" },
+          { title: "Large", value: "lg" },
+          { title: "Extra large", value: "xl" },
+        ],
+      },
+    }),
   ],
   preview: {
     select: {
