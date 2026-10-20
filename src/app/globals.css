@@ -1095,7 +1095,7 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   left: max(1.25rem, env(safe-area-inset-left));
   right: max(1.25rem, env(safe-area-inset-right));
   /* Lifted so outline twin + support stay fully in the first viewport */
-  bottom: 34%;
+  bottom: 38%;
   margin: 0;
   max-width: 14ch;
   font-family: var(--font-display);
@@ -1112,7 +1112,7 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   .intro-mask__title {
     left: 2.5rem;
     right: 2.5rem;
-    bottom: 36%;
+    bottom: 40%;
     font-size: clamp(3.75rem, 13vw, 9rem);
   }
 }
@@ -1126,7 +1126,7 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   justify-content: flex-end;
   /* Extra bottom pad keeps support readable above the fold (Sound/Watch stay absolute) */
   padding: 5.5rem max(1.25rem, env(safe-area-inset-right))
-    max(7rem, calc(env(safe-area-inset-bottom) + 5.75rem))
+    max(8.75rem, calc(env(safe-area-inset-bottom) + 7.25rem))
     max(1.25rem, env(safe-area-inset-left));
   pointer-events: none;
   box-sizing: border-box;
@@ -1134,13 +1134,13 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 
 @media (min-width: 768px) {
   .intro-mask__content {
-    padding: 6rem 2.5rem 6rem;
+    padding: 6rem 2.5rem 7.25rem;
   }
 }
 
 @media (max-width: 767px) {
   .intro-mask__title {
-    bottom: 40%;
+    bottom: 46%;
   }
 
   .intro-mask__support {
@@ -1842,7 +1842,7 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   .intro-mask__title {
     left: max(1.25rem, env(safe-area-inset-left)) !important;
     right: max(1.25rem, env(safe-area-inset-right)) !important;
-    bottom: 40% !important;
+    bottom: 46% !important;
     /* cqw = frame width; public uses 12vw at a real phone viewport */
     font-size: clamp(2.75rem, 12cqw, 9rem) !important;
   }
@@ -1860,7 +1860,7 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 
   .intro-mask__content {
     padding: 5.5rem max(1.25rem, env(safe-area-inset-right))
-      max(7rem, calc(env(safe-area-inset-bottom) + 5.75rem))
+      max(8.75rem, calc(env(safe-area-inset-bottom) + 7.25rem))
       max(1.25rem, env(safe-area-inset-left)) !important;
   }
 
@@ -1911,7 +1911,7 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   .intro-mask__title {
     left: 2.5rem !important;
     right: 2.5rem !important;
-    bottom: 36% !important;
+    bottom: 40% !important;
     font-size: clamp(3.75rem, 13cqw, 9rem) !important;
   }
 
@@ -1920,7 +1920,7 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   }
 
   .intro-mask__content {
-    padding: 6rem 2.5rem 6rem !important;
+    padding: 6rem 2.5rem 7.25rem !important;
   }
 
   .intro-mask__media-controls {
