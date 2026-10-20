@@ -377,39 +377,61 @@ export function IntroMask({
     const section = sectionRef.current;
     if (!section) return;
 
+    const setRevealed = (open: boolean) => {
+      section.classList.toggle("is-title-revealed", open);
+    };
+
     // Admin preview: keep title fully revealed so editing isn’t masked.
     // Reduced motion: same — no scroll-scrubbed clip reveal.
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!enableHandCursor || reduce) {
       section.style.setProperty("--intro-progress", "1");
       section.style.setProperty("--intro-reveal", "1");
-      return;
+      setRevealed(true);
+      return () => setRevealed(false);
     }
 
     /*
-      Prefer CSS scroll-driven animation (globals.css) — it does not depend on
-      client hydration. JS remains the fallback for browsers without view().
+      Prefer CSS scroll-driven animation (globals.css) for --intro-progress.
+      Always sync is-title-revealed so at reveal 1 we drop clip-path entirely
+      (inset(0) still shaves ink/stroke that paints outside the em-box).
     */
     const supportsViewTimeline =
       typeof CSS !== "undefined" &&
       typeof CSS.supports === "function" &&
       CSS.supports("animation-timeline: view()");
-    if (supportsViewTimeline) return;
 
-    const update = () => {
-      const rect = section.getBoundingClientRect();
-      const total = Math.max(rect.height - window.innerHeight, 1);
-      const raw = Math.min(1, Math.max(0, -rect.top / total));
-      section.style.setProperty("--intro-progress", String(raw));
-      section.style.setProperty("--intro-reveal", String(Math.min(1, raw * 2)));
+    let raf = 0;
+    const sync = () => {
+      raf = 0;
+      if (!supportsViewTimeline) {
+        const rect = section.getBoundingClientRect();
+        const total = Math.max(rect.height - window.innerHeight, 1);
+        const raw = Math.min(1, Math.max(0, -rect.top / total));
+        section.style.setProperty("--intro-progress", String(raw));
+        section.style.setProperty("--intro-reveal", String(Math.min(1, raw * 2)));
+      }
+      const cs = getComputedStyle(section);
+      const progress = parseFloat(cs.getPropertyValue("--intro-progress"));
+      const reveal = parseFloat(cs.getPropertyValue("--intro-reveal"));
+      const open =
+        (Number.isFinite(reveal) && reveal >= 0.999) ||
+        (Number.isFinite(progress) && progress >= 0.5);
+      setRevealed(open);
     };
 
-    update();
-    window.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update, { passive: true });
+    const onScroll = () => {
+      if (!raf) raf = window.requestAnimationFrame(sync);
+    };
+
+    sync();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
     return () => {
-      window.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) window.cancelAnimationFrame(raf);
+      setRevealed(false);
     };
   }, [enableHandCursor]);
 

@@ -1181,11 +1181,38 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   }
 }
 
+/*
+  Glyph hard-line open over the first half of the pin (matches reveal=progress*2),
+  then clip-path: none so ink/stroke outside the em-box can never stay shaved.
+*/
+@keyframes intro-glyph-reveal {
+  0% {
+    clip-path: inset(0.14em 0.12em 100% 0.06em);
+  }
+  99% {
+    clip-path: inset(-0.16em -0.16em -0.32em -0.12em);
+  }
+  100% {
+    clip-path: none;
+  }
+}
+
 @supports (animation-timeline: view()) {
   .intro-mask {
+    view-timeline-name: --intro-view;
+    view-timeline-axis: block;
+    timeline-scope: --intro-view;
     animation: intro-progress-scrub linear both;
-    animation-timeline: view();
+    animation-timeline: --intro-view;
     animation-range: contain 0% contain 100%;
+  }
+
+  .intro-mask__title,
+  .intro-mask__title-region {
+    animation: intro-glyph-reveal linear both;
+    animation-timeline: --intro-view;
+    /* Complete (→ none) by mid sticky scrub = reveal 1 */
+    animation-range: contain 0% contain 50%;
   }
 }
 
@@ -1229,6 +1256,8 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 
   .intro-mask__title,
   .intro-mask__title-region {
+    animation: none;
+    clip-path: none;
     will-change: auto;
   }
 }
@@ -1238,7 +1267,12 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   position: relative;
   z-index: 2;
   display: block;
-  margin: 0;
+  /*
+    Border box must contain ink + stroke. clip-path: inset(0) still clips
+    painting that overflows the em-box (~0.1em above/below on this face).
+  */
+  padding: 0.14em 0.12em 0.2em 0.06em;
+  margin: -0.14em -0.12em -0.2em -0.06em;
   max-width: none;
   white-space: nowrap;
   font-family: var(--font-display);
@@ -1249,11 +1283,24 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   color: #000;
   mix-blend-mode: destination-out;
   /*
-    Hard invisible line rises through the glyphs (bottom inset opens).
-    reveal 1 → inset 0 — full ink visible, no residual overflow clip.
+    Fallback when scroll-driven animations aren’t available: hard line via
+    --intro-reveal. Prefer @keyframes intro-glyph-reveal (ends at none).
   */
-  clip-path: inset(0 0 calc((1 - var(--intro-reveal)) * 100%) 0);
+  clip-path: inset(
+    calc(var(--intro-reveal) * -0.16em)
+    calc(var(--intro-reveal) * -0.16em)
+    calc((1 - var(--intro-reveal)) * 100% - var(--intro-reveal) * 0.32em)
+    calc(var(--intro-reveal) * -0.12em)
+  );
   will-change: clip-path;
+}
+
+/* Once scrub has fully opened the name, never clip ink/stroke again */
+.intro-mask.is-title-revealed .intro-mask__title,
+.intro-mask.is-title-revealed .intro-mask__title-region {
+  animation: none;
+  clip-path: none;
+  will-change: auto;
 }
 
 @media (min-width: 768px) {
@@ -1315,6 +1362,9 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   position: relative;
   z-index: 3;
   display: block;
+  /* Same ink/stroke pad as punch so outline bottoms aren’t clipped at reveal 1 */
+  padding: 0.14em 0.12em 0.2em 0.06em;
+  margin: -0.14em -0.12em -0.2em -0.06em;
   max-width: none;
   white-space: nowrap;
   font-size: 1em;
@@ -1325,7 +1375,12 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
     var(--intro-title-stagger-x),
     var(--intro-title-stagger-y)
   );
-  clip-path: inset(0 0 calc((1 - var(--intro-reveal)) * 100%) 0);
+  clip-path: inset(
+    calc(var(--intro-reveal) * -0.16em)
+    calc(var(--intro-reveal) * -0.16em)
+    calc((1 - var(--intro-reveal)) * 100% - var(--intro-reveal) * 0.32em)
+    calc(var(--intro-reveal) * -0.12em)
+  );
   will-change: clip-path;
 }
 
@@ -1501,6 +1556,8 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   letter-spacing: var(--tracking-display);
   color: transparent;
   -webkit-text-stroke: 1px color-mix(in srgb, var(--color-paper) 70%, transparent);
+  /* Stroke outside the fill so baselines aren’t covered then clipped */
+  paint-order: stroke fill;
 }
 
 /* Quote sits just above the overlapped twin titles */
@@ -2231,6 +2288,12 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   --intro-progress: 1;
   --intro-reveal: 1;
   animation: none;
+}
+
+.admin-hero-preview .intro-mask__title,
+.admin-hero-preview .intro-mask__title-region {
+  animation: none;
+  clip-path: none;
 }
 
 /* Compact blurb under hero so the preview frame stays usable */
