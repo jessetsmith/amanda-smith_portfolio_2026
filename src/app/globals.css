@@ -1095,9 +1095,10 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 */
 .intro-mask {
   --intro-title-bottom: 36%;
-  --intro-title-stagger-x: 0.05em;
-  --intro-title-stagger-y: 0.2em;
-  --intro-support-gap: 0.7rem;
+  /* rem — shared by title-region transform + support anchor (not em of body) */
+  --intro-title-stagger-x: 0.2rem;
+  --intro-title-stagger-y: 0.65rem;
+  --intro-support-gap: 0.85rem;
 }
 
 /* Solid type punches through video (+ haze) into the under-layer — the one solid name */
@@ -1152,7 +1153,7 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 @media (max-width: 767px) {
   .intro-mask {
     --intro-title-bottom: 40%;
-    --intro-title-stagger-y: 0.18em;
+    --intro-title-stagger-y: 0.45rem;
   }
 
   .intro-mask__support {
@@ -1877,7 +1878,7 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   .intro-mask {
     height: 100% !important;
     --intro-title-bottom: 40% !important;
-    --intro-title-stagger-y: 0.18em !important;
+    --intro-title-stagger-y: 0.45rem !important;
   }
 
   .intro-mask__title {
