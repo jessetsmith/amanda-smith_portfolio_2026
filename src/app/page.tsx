@@ -38,7 +38,7 @@ export default async function Home() {
           stampHint={home.stampHint}
         />
         <div id="grid" className="relative z-10 overflow-x-clip bg-paper">
-          <div className="mx-auto max-w-[90rem] px-4 pt-10 pb-2 sm:px-6 md:px-8">
+          <div className="grid-intro-wrap mx-auto max-w-[90rem] px-4 sm:px-6 md:px-8">
             <GridIntroBlurb
               className="max-w-2xl"
               text={home.subtext}

@@ -1599,7 +1599,20 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   }
 }
 
-/* —— Grid intro subtext (under nav / above grid) —— */
+/* —— Grid intro subtext (under hero / above first titleRow) —— */
+.grid-intro-wrap {
+  /* Was pt-10 / pb-2 — a bit more air above and below the blurb */
+  padding-top: 3rem;
+  padding-bottom: 2rem;
+}
+
+@media (min-width: 640px) {
+  .grid-intro-wrap {
+    padding-top: 3.5rem;
+    padding-bottom: 2.5rem;
+  }
+}
+
 .grid-intro-blurb {
   --intro-subtext-color: color-mix(in srgb, var(--color-ink) 70%, transparent);
   --intro-subtext-scale: 1;
