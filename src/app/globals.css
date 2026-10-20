@@ -1088,14 +1088,25 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   }
 }
 
+/*
+  Twin name stack — solid punch + outline share --intro-title-bottom so they
+  stay overlapped/staggered (outline nudged down-right). Support anchors just
+  under that shared bottom. High enough to clear the fold; Sound/Watch stay put.
+*/
+.intro-mask {
+  --intro-title-bottom: 36%;
+  --intro-title-stagger-x: 0.05em;
+  --intro-title-stagger-y: 0.2em;
+  --intro-support-gap: 0.7rem;
+}
+
 /* Solid type punches through video (+ haze) into the under-layer — the one solid name */
 .intro-mask__title {
   position: absolute;
   z-index: 2;
   left: max(1.25rem, env(safe-area-inset-left));
   right: max(1.25rem, env(safe-area-inset-right));
-  /* Lifted so outline twin + support stay fully in the first viewport */
-  bottom: 38%;
+  bottom: var(--intro-title-bottom);
   margin: 0;
   max-width: 14ch;
   font-family: var(--font-display);
@@ -1109,10 +1120,13 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 }
 
 @media (min-width: 768px) {
+  .intro-mask {
+    --intro-title-bottom: 34%;
+  }
+
   .intro-mask__title {
     left: 2.5rem;
     right: 2.5rem;
-    bottom: 40%;
     font-size: clamp(3.75rem, 13vw, 9rem);
   }
 }
@@ -1120,13 +1134,10 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 .intro-mask__content {
   position: relative;
   z-index: 2;
-  display: flex;
+  display: block;
   height: 100%;
-  flex-direction: column;
-  justify-content: flex-end;
-  /* Extra bottom pad keeps support readable above the fold (Sound/Watch stay absolute) */
   padding: 5.5rem max(1.25rem, env(safe-area-inset-right))
-    max(8.75rem, calc(env(safe-area-inset-bottom) + 7.25rem))
+    max(1.25rem, env(safe-area-inset-bottom))
     max(1.25rem, env(safe-area-inset-left));
   pointer-events: none;
   box-sizing: border-box;
@@ -1134,17 +1145,17 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 
 @media (min-width: 768px) {
   .intro-mask__content {
-    padding: 6rem 2.5rem 7.25rem;
+    padding: 6rem 2.5rem 1.5rem;
   }
 }
 
 @media (max-width: 767px) {
-  .intro-mask__title {
-    bottom: 46%;
+  .intro-mask {
+    --intro-title-bottom: 40%;
+    --intro-title-stagger-y: 0.18em;
   }
 
   .intro-mask__support {
-    margin-bottom: 0.5rem;
     max-width: min(16rem, calc(100vw - 7.5rem));
     font-size: 0.95rem;
     line-height: 1.35;
@@ -1156,30 +1167,42 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 }
 
 @media (max-height: 700px) and (orientation: landscape) {
+  .intro-mask {
+    --intro-title-bottom: 30%;
+  }
+
   .intro-mask__title {
-    bottom: 32%;
     font-size: clamp(2.25rem, 8vw, 4.5rem);
   }
 
-  .intro-mask__content {
-    padding-bottom: max(5.5rem, calc(env(safe-area-inset-bottom) + 4.25rem));
+  .intro-mask__title-region {
+    font-size: clamp(2.25rem, 8vw, 4.5rem);
   }
 }
 
-/* Hit + outline region (outline-only twin of the punch title) */
+/* Hit + outline region — locked to punch title bottom, staggered slightly */
 .intro-mask__title-region {
-  position: relative;
+  position: absolute;
+  z-index: 3;
+  left: max(1.25rem, env(safe-area-inset-left));
+  right: max(1.25rem, env(safe-area-inset-right));
+  bottom: var(--intro-title-bottom);
   display: block;
   max-width: 14ch;
   font-size: clamp(2.75rem, 12vw, 9rem);
   line-height: 0.9;
   pointer-events: auto;
   outline: none;
-  transform: translateY(calc(var(--intro-progress) * -18vh));
+  transform: translate(
+    var(--intro-title-stagger-x),
+    calc(var(--intro-progress) * -18vh + var(--intro-title-stagger-y))
+  );
 }
 
 @media (min-width: 768px) {
   .intro-mask__title-region {
+    left: 2.5rem;
+    right: 2.5rem;
     font-size: clamp(3.75rem, 13vw, 9rem);
   }
 }
@@ -1356,8 +1379,16 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   -webkit-text-stroke: 1px color-mix(in srgb, var(--color-paper) 70%, transparent);
 }
 
+/* Quote sits just under the overlapped twin titles (top edge at title bottom − gap) */
 .intro-mask__support {
-  margin-top: 1.25rem;
+  position: absolute;
+  z-index: 3;
+  left: max(1.25rem, env(safe-area-inset-left));
+  bottom: calc(
+    var(--intro-title-bottom) - var(--intro-title-stagger-y) -
+      var(--intro-support-gap)
+  );
+  margin: 0;
   max-width: 28rem;
   font-family: var(--font-body);
   font-weight: var(--weight-body);
@@ -1366,6 +1397,14 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   color: var(--color-paper);
   text-shadow: 0 1px 10px color-mix(in srgb, var(--color-ink) 40%, transparent);
   opacity: calc(0.95 - var(--intro-progress) * 0.25);
+  /* +100% drops the block so its top meets the bottom anchor above */
+  transform: translateY(calc(var(--intro-progress) * -18vh + 100%));
+}
+
+@media (min-width: 768px) {
+  .intro-mask__support {
+    left: 2.5rem;
+  }
 }
 
 /* —— Hazy nav (New Materialism cue) —— */
@@ -1837,22 +1876,27 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 @container admin-preview (max-width: 767px) {
   .intro-mask {
     height: 100% !important;
+    --intro-title-bottom: 40% !important;
+    --intro-title-stagger-y: 0.18em !important;
   }
 
   .intro-mask__title {
     left: max(1.25rem, env(safe-area-inset-left)) !important;
     right: max(1.25rem, env(safe-area-inset-right)) !important;
-    bottom: 46% !important;
+    bottom: var(--intro-title-bottom) !important;
     /* cqw = frame width; public uses 12vw at a real phone viewport */
     font-size: clamp(2.75rem, 12cqw, 9rem) !important;
   }
 
   .intro-mask__title-region {
+    left: max(1.25rem, env(safe-area-inset-left)) !important;
+    right: max(1.25rem, env(safe-area-inset-right)) !important;
+    bottom: var(--intro-title-bottom) !important;
     font-size: clamp(2.75rem, 12cqw, 9rem) !important;
   }
 
   .intro-mask__support {
-    margin-bottom: 0.5rem;
+    left: max(1.25rem, env(safe-area-inset-left)) !important;
     max-width: min(16rem, calc(100cqw - 7.5rem)) !important;
     font-size: 0.95rem;
     line-height: 1.35;
@@ -1860,7 +1904,7 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 
   .intro-mask__content {
     padding: 5.5rem max(1.25rem, env(safe-area-inset-right))
-      max(8.75rem, calc(env(safe-area-inset-bottom) + 7.25rem))
+      max(1.25rem, env(safe-area-inset-bottom))
       max(1.25rem, env(safe-area-inset-left)) !important;
   }
 
@@ -1908,19 +1952,30 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 
 /* Tablet frame (~768): match public @media (min-width: 768px) but with cqw */
 @container admin-preview (min-width: 768px) and (max-width: 1023px) {
+  .intro-mask {
+    --intro-title-bottom: 34% !important;
+  }
+
   .intro-mask__title {
     left: 2.5rem !important;
     right: 2.5rem !important;
-    bottom: 40% !important;
+    bottom: var(--intro-title-bottom) !important;
     font-size: clamp(3.75rem, 13cqw, 9rem) !important;
   }
 
   .intro-mask__title-region {
+    left: 2.5rem !important;
+    right: 2.5rem !important;
+    bottom: var(--intro-title-bottom) !important;
     font-size: clamp(3.75rem, 13cqw, 9rem) !important;
   }
 
+  .intro-mask__support {
+    left: 2.5rem !important;
+  }
+
   .intro-mask__content {
-    padding: 6rem 2.5rem 7.25rem !important;
+    padding: 6rem 2.5rem 1.5rem !important;
   }
 
   .intro-mask__media-controls {
