@@ -78,6 +78,7 @@ import {
   moveItemToContentSection,
   type SectionTarget,
 } from "@/lib/grid-section";
+import { GridIntroBlurb } from "@/components/GridIntroBlurb";
 import { HazyNav } from "@/components/HazyNav";
 import { IntroMask } from "@/components/IntroMask";
 import { defaultHero, heroSignature, normalizeHero } from "@/lib/hero";
@@ -1272,25 +1273,37 @@ export function AdminGridApp({
                   if (event.target === event.currentTarget) setSelectedId(null);
                 }}
               >
-                <div className="admin-hero-preview mb-4 overflow-hidden border border-ink/15">
-                  <div className="admin-preview-nav">
-                    <HazyNav
-                      brand={site.siteTitle}
-                      items={site.nav}
-                      textColor={site.navTextColor}
-                      textSize={site.navTextSize}
+                <div className="admin-hero-stack mb-4">
+                  <div className="admin-hero-preview overflow-hidden border border-ink/15">
+                    <div className="admin-preview-nav">
+                      <HazyNav
+                        brand={site.siteTitle}
+                        items={site.nav}
+                        textColor={site.navTextColor}
+                        textSize={site.navTextSize}
+                      />
+                    </div>
+                    <IntroMask
+                      key={`hero-${previewKey}-${enOf(hero.titleText)}-${hero.videoUrl}-${hero.imageUrl ?? ""}-${hero.watchUrl ?? ""}`}
+                      maskText={hero.titleText}
+                      support={hero.supportText}
+                      videoSrc={hero.videoUrl}
+                      posterSrc={hero.posterUrl}
+                      imageSrc={hero.imageUrl}
+                      watchUrl={hero.watchUrl}
+                      enableHandCursor={false}
                     />
                   </div>
-                  <IntroMask
-                    key={`hero-${previewKey}-${enOf(hero.titleText)}-${hero.videoUrl}-${hero.imageUrl ?? ""}-${hero.watchUrl ?? ""}`}
-                    maskText={hero.titleText}
-                    support={hero.supportText}
-                    videoSrc={hero.videoUrl}
-                    posterSrc={hero.posterUrl}
-                    imageSrc={hero.imageUrl}
-                    watchUrl={hero.watchUrl}
-                    enableHandCursor={false}
-                  />
+                  <div className="admin-subtext-preview border border-t-0 border-ink/15 bg-paper">
+                    <div className="grid-intro-wrap px-4 sm:px-6">
+                      <GridIntroBlurb
+                        className="max-w-2xl"
+                        text={hero.subtext}
+                        textColor={hero.subtextTextColor}
+                        textSize={hero.subtextTextSize}
+                      />
+                    </div>
+                  </div>
                 </div>
                 <SortableContext
                   items={gridSortableIds}

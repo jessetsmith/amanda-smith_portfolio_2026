@@ -2136,12 +2136,36 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
     inset 0 -1.5px 0 var(--color-rust);
 }
 
+/* Hero + subtext stack in admin (mirrors live: cover then grid intro) */
+.admin-hero-stack {
+  display: flex;
+  flex-direction: column;
+}
+
 /* Live hero cover in admin — clip tall IntroMask scroll runway */
 .admin-hero-preview {
   max-height: min(52vh, 28rem);
   background: var(--color-ink);
   position: relative;
   overflow: hidden;
+}
+
+/* Compact blurb under hero so the preview frame stays usable */
+.admin-subtext-preview .grid-intro-wrap {
+  padding-top: 1.25rem;
+  padding-bottom: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .admin-subtext-preview .grid-intro-wrap {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+  }
+}
+
+.admin-subtext-preview .grid-intro-blurb {
+  /* Slightly smaller in admin so lengthier copy doesn’t dominate */
+  font-size: calc(0.95rem * var(--intro-subtext-scale));
 }
 
 .admin-hero-preview .intro-mask {
