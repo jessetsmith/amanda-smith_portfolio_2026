@@ -186,7 +186,11 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     return fixtureSettings;
   }
   try {
-    const data = await client.fetch(siteSettingsQuery);
+    const data = await client.fetch(
+      siteSettingsQuery,
+      {},
+      sanityFetchOptions,
+    );
     if (!data) return fixtureSettings;
     return normalizeSiteSettings(
       {

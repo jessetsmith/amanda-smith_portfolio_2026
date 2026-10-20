@@ -94,12 +94,11 @@ export async function saveSiteSettings(
         _type: "siteSettings",
         ...documentFields(normalized),
       });
-      await writeLocalSite({ ...normalized, source: "sanity" }).catch(
-        () => undefined,
-      );
-      const refreshed = await loadSiteSettings();
-      if (refreshed.source === "sanity") return refreshed;
-      return { ...normalized, source: "sanity" };
+      // Return what we wrote — do not refetch (Next fetch cache can drop
+      // newly written fields like navTextSize and reset admin dropdowns).
+      const saved = { ...normalized, source: "sanity" as const };
+      await writeLocalSite(saved).catch(() => undefined);
+      return saved;
     } catch (err) {
       console.error("Sanity site settings save failed, falling back to .data", err);
     }

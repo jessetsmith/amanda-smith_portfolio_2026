@@ -394,8 +394,12 @@ export function AdminGridApp({
               setSource((data as { source: DataSource }).source);
             }
           } else if (kind === "hero") {
+            // Prefer the client snapshot we just saved so text-size fields
+            // cannot be wiped by an incomplete API body.
             const publishedHero = normalizeHero(
-              (data as { hero?: HomepageHero }).hero ?? nextHero,
+              (data as { hero?: HomepageHero }).hero
+                ? { ...nextHero, ...(data as { hero: HomepageHero }).hero }
+                : nextHero,
             );
             savedHeroRef.current = publishedHero;
             setHero(publishedHero);
@@ -405,7 +409,12 @@ export function AdminGridApp({
             }
           } else {
             const publishedSite = normalizeSiteSettings(
-              (data as { site?: SiteSettings }).site ?? nextSite,
+              (data as { site?: SiteSettings }).site
+                ? {
+                    ...nextSite,
+                    ...(data as { site: SiteSettings }).site,
+                  }
+                : nextSite,
               ((data as { source?: DataSource }).source as SiteSettings["source"]) ||
                 nextSite.source,
             );

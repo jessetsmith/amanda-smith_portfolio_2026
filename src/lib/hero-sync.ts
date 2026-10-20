@@ -252,9 +252,9 @@ export async function saveHero(hero: HomepageHero): Promise<HomepageHeroResult> 
         .commit()
         .catch(() => undefined);
 
+      // Return what we wrote — refetch can serve a stale payload missing
+      // newly set fields (e.g. subtextTextSize) and reset admin selects.
       await writeLocalHero(normalized).catch(() => undefined);
-      const refreshed = await loadHero();
-      if (refreshed.source === "sanity") return refreshed;
       return { hero: normalized, source: "sanity" };
     } catch (err) {
       console.error("Sanity hero save failed, falling back to .data", err);
