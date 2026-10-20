@@ -1396,8 +1396,9 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   font-weight: var(--weight-body);
   font-size: 1.05rem;
   line-height: 1.5;
-  color: var(--color-paper);
-  text-shadow: 0 1px 10px color-mix(in srgb, var(--color-ink) 40%, transparent);
+  color: var(--color-ink);
+  /* Soft paper halo so black stays readable on darker video frames */
+  text-shadow: 0 1px 10px color-mix(in srgb, var(--color-paper) 75%, transparent);
   opacity: calc(0.95 - var(--intro-progress) * 0.25);
   /* +100% drops the block so its top meets the bottom anchor above */
   transform: translateY(calc(var(--intro-progress) * -18vh + 100%));
