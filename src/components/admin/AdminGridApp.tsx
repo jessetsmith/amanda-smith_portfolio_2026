@@ -39,6 +39,7 @@ import type {
   TitleRowItem,
 } from "@/types/grid";
 import { CELL_TEXT_SIZES } from "@/types/grid";
+import { HERO_TEXT_SIZES, type HeroTextSize } from "@/types/hero";
 import { AdminLocaleSelect, readLocaleField, writeLocaleField } from "@/components/admin/AdminLocaleSelect";
 import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 import { enOf } from "@/lib/i18n/display";
@@ -1284,13 +1285,17 @@ export function AdminGridApp({
                       />
                     </div>
                     <IntroMask
-                      key={`hero-${previewKey}-${enOf(hero.titleText)}-${hero.videoUrl}-${hero.imageUrl ?? ""}-${hero.watchUrl ?? ""}`}
+                      key={`hero-${previewKey}-${enOf(hero.titleText)}-${hero.videoUrl}-${hero.imageUrl ?? ""}-${hero.watchUrl ?? ""}-${hero.titleTextSize ?? ""}-${hero.supportTextSize ?? ""}-${hero.titleTextColor ?? ""}-${hero.supportTextColor ?? ""}`}
                       maskText={hero.titleText}
                       support={hero.supportText}
                       videoSrc={hero.videoUrl}
                       posterSrc={hero.posterUrl}
                       imageSrc={hero.imageUrl}
                       watchUrl={hero.watchUrl}
+                      titleTextColor={hero.titleTextColor}
+                      titleTextSize={hero.titleTextSize}
+                      supportTextColor={hero.supportTextColor}
+                      supportTextSize={hero.supportTextSize}
                       enableHandCursor={false}
                     />
                   </div>
@@ -1485,43 +1490,75 @@ function HeroTab({
 
       <AdminLocaleSelect value={locale} onChange={setLocale} />
 
-      <label className="block space-y-1">
-        <span className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/55 uppercase">
-          Hero title
-        </span>
-        <input
-          type="text"
-          value={readLocaleField(hero.titleText, locale)}
-          onChange={(e) =>
-            onChange({
-              titleText: writeLocaleField(hero.titleText, locale, e.target.value),
-            })
+      <div className="space-y-3">
+        <label className="block space-y-1">
+          <span className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/55 uppercase">
+            Hero title
+          </span>
+          <input
+            type="text"
+            value={readLocaleField(hero.titleText, locale)}
+            onChange={(e) =>
+              onChange({
+                titleText: writeLocaleField(
+                  hero.titleText,
+                  locale,
+                  e.target.value,
+                ),
+              })
+            }
+            className="w-full border border-ink/20 bg-paper px-2 py-2 text-sm text-ink"
+            placeholder="Amanda Smith"
+          />
+        </label>
+        <HeroTextStyleFields
+          label="Title style"
+          hint="Cover name size + outline color (solid punch stays black for the video cut-through). Empty size = responsive clamp."
+          color={hero.titleTextColor ?? ""}
+          size={hero.titleTextSize}
+          onColorChange={(titleTextColor) =>
+            onChange({ titleTextColor: titleTextColor || undefined })
           }
-          className="w-full border border-ink/20 bg-paper px-2 py-2 text-sm text-ink"
-          placeholder="Amanda Smith"
+          onSizeChange={(titleTextSize) => onChange({ titleTextSize })}
         />
-      </label>
+      </div>
 
-      <label className="block space-y-1">
-        <span className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/55 uppercase">
-          Support line
-        </span>
-        <textarea
-          value={readLocaleField(hero.supportText, locale)}
-          onChange={(e) =>
-            onChange({
-              supportText: writeLocaleField(
-                hero.supportText,
-                locale,
-                e.target.value,
-              ),
-            })
+      <div className="space-y-3">
+        <label className="block space-y-1">
+          <span className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/55 uppercase">
+            Quote
+          </span>
+          <textarea
+            value={readLocaleField(hero.supportText, locale)}
+            onChange={(e) =>
+              onChange({
+                supportText: writeLocaleField(
+                  hero.supportText,
+                  locale,
+                  e.target.value,
+                ),
+              })
+            }
+            rows={3}
+            className="w-full border border-ink/20 bg-paper px-2 py-2 text-sm text-ink"
+            placeholder="“It is the visual effect…”"
+          />
+          <span className="block text-xs text-ink/45">
+            Quote above the cover name (locale copy). Style controls below are
+            separate from the title.
+          </span>
+        </label>
+        <HeroTextStyleFields
+          label="Quote style"
+          hint="Quote only — does not change the cover name. Empty size ≈ 16–17px; empty color = ink."
+          color={hero.supportTextColor ?? ""}
+          size={hero.supportTextSize}
+          onColorChange={(supportTextColor) =>
+            onChange({ supportTextColor: supportTextColor || undefined })
           }
-          rows={3}
-          className="w-full border border-ink/20 bg-paper px-2 py-2 text-sm text-ink"
-          placeholder="Exhibitions, research, and writing…"
+          onSizeChange={(supportTextSize) => onChange({ supportTextSize })}
         />
-      </label>
+      </div>
 
       <label className="block space-y-1">
         <span className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/55 uppercase">
@@ -2527,6 +2564,87 @@ function ContentEditModal({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function parseHeroSizeOption(value: string): HeroTextSize | undefined {
+  if (!value) return undefined;
+  const n = Number(value);
+  return (HERO_TEXT_SIZES as readonly number[]).includes(n)
+    ? (n as HeroTextSize)
+    : undefined;
+}
+
+function HeroTextStyleFields({
+  label,
+  hint,
+  color,
+  size,
+  onColorChange,
+  onSizeChange,
+}: {
+  label: string;
+  hint: string;
+  color: string;
+  size?: HeroTextSize;
+  onColorChange: (color: string) => void;
+  onSizeChange: (size: HeroTextSize | undefined) => void;
+}) {
+  const pickerValue = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(color)
+    ? color
+    : "#1a1a1a";
+  const sizeValue = size != null ? String(size) : "";
+  return (
+    <div className="space-y-3 border border-ink/10 bg-paper/40 px-3 py-3">
+      <p className="font-mono text-[0.6rem] tracking-[0.14em] text-ink/50 uppercase">
+        {label}
+      </p>
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="block space-y-1">
+          <span className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/55 uppercase">
+            Text color
+          </span>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={pickerValue}
+              onChange={(e) => onColorChange(e.target.value)}
+              className="h-9 w-12 cursor-pointer border border-ink/20 bg-paper p-0.5"
+              title="Pick text color"
+            />
+            <input
+              type="text"
+              value={color}
+              onChange={(e) => onColorChange(e.target.value)}
+              placeholder="#1a1a1a"
+              className="w-36 border border-ink/20 bg-paper px-2 py-1.5 font-mono text-xs text-ink"
+            />
+            {color ? (
+              <button
+                type="button"
+                onClick={() => onColorChange("")}
+                className="border border-ink/20 px-2 py-1.5 font-mono text-[0.55rem] tracking-[0.1em] uppercase"
+              >
+                Reset
+              </button>
+            ) : null}
+          </div>
+        </label>
+        <SelectField
+          label="Text size (px)"
+          value={sizeValue}
+          options={[
+            { value: "", label: "Default" },
+            ...HERO_TEXT_SIZES.map((n) => ({
+              value: String(n),
+              label: `${n}px`,
+            })),
+          ]}
+          onChange={(next) => onSizeChange(parseHeroSizeOption(next))}
+        />
+      </div>
+      <p className="text-xs text-ink/45">{hint}</p>
     </div>
   );
 }

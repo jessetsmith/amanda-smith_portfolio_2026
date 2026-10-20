@@ -7,6 +7,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type CSSProperties,
   type PointerEvent,
 } from "react";
 import { createPortal } from "react-dom";
@@ -29,6 +30,14 @@ interface IntroMaskProps {
    * Only shown when enableHandCursor is on (public).
    */
   stampHint?: LocaleString;
+  /** Cover name outline/stroke color. Empty → paper stroke default. */
+  titleTextColor?: string;
+  /** Cover name size in px. Empty → responsive clamp. */
+  titleTextSize?: number;
+  /** Quote (support) color. Empty → ink. */
+  supportTextColor?: string;
+  /** Quote size in px. Empty → ~1.05rem. */
+  supportTextSize?: number;
   /**
    * Handprint overlay + `cursor: none` on the cover.
    * Public homepage only — leave off in admin live preview.
@@ -166,6 +175,10 @@ export function IntroMask({
   imageSrc,
   watchUrl,
   stampHint,
+  titleTextColor,
+  titleTextSize,
+  supportTextColor,
+  supportTextSize,
   enableHandCursor = true,
 }: IntroMaskProps) {
   const { t, ui, locale } = useLocaleOptional();
@@ -184,6 +197,20 @@ export function IntroMask({
   const watchHref = watchUrl?.trim() || "";
   const title = t(maskText);
   const supportLine = t(support);
+  const coverStyle = {
+    ...(titleTextColor?.trim()
+      ? { ["--intro-title-stroke" as string]: titleTextColor.trim() }
+      : {}),
+    ...(titleTextSize && titleTextSize > 0
+      ? { ["--intro-title-size" as string]: `${titleTextSize}px` }
+      : {}),
+    ...(supportTextColor?.trim()
+      ? { ["--intro-support-color" as string]: supportTextColor.trim() }
+      : {}),
+    ...(supportTextSize && supportTextSize > 0
+      ? { ["--intro-support-size" as string]: `${supportTextSize}px` }
+      : {}),
+  } as CSSProperties;
   const stampHintText =
     resolveStampHint({ stampHint }, locale) || DEFAULT_STAMP_HINT;
   const [soundOn, setSoundOn] = useState(false);
@@ -623,7 +650,12 @@ export function IntroMask({
   );
 
   return (
-    <section ref={sectionRef} className="intro-mask" aria-label="Introduction">
+    <section
+      ref={sectionRef}
+      className="intro-mask"
+      aria-label="Introduction"
+      style={coverStyle}
+    >
       {enableHandCursor && handCursorMounted
         ? createPortal(
             <div

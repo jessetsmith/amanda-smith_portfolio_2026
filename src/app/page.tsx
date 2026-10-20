@@ -36,6 +36,10 @@ export default async function Home() {
           imageSrc={home.imageSrc}
           watchUrl={home.watchUrl}
           stampHint={home.stampHint}
+          titleTextColor={home.titleTextColor}
+          titleTextSize={home.titleTextSize}
+          supportTextColor={home.supportTextColor}
+          supportTextSize={home.supportTextSize}
         />
         <div id="grid" className="relative z-10 overflow-x-clip bg-paper">
           <div className="grid-intro-wrap mx-auto max-w-[90rem] px-4 sm:px-6 md:px-8">

@@ -20,8 +20,47 @@ export const homepageHero = defineType({
     defineField({
       name: "supportText",
       type: "localeText",
-      title: "Support line",
-      description: "Short line under the title on the cover",
+      title: "Support line / quote",
+      description: "Quote above the cover name",
+    }),
+    defineField({
+      name: "titleTextColor",
+      type: "string",
+      title: "Title text color",
+      description:
+        "Outline/stroke color for the cover name. Empty = soft paper stroke (current look).",
+    }),
+    defineField({
+      name: "titleTextSize",
+      type: "number",
+      title: "Title text size (px)",
+      description:
+        "Cover name size in pixels (12–144 ladder). Empty = responsive clamp.",
+      options: {
+        list: [
+          12, 14, 16, 18, 20, 24, 28, 32, 40, 48, 56, 64, 72, 80, 96, 112, 128,
+          144,
+        ].map((n) => ({ title: `${n}px`, value: n })),
+      },
+    }),
+    defineField({
+      name: "supportTextColor",
+      type: "string",
+      title: "Quote text color",
+      description: "Color for the quote above the name. Empty = ink.",
+    }),
+    defineField({
+      name: "supportTextSize",
+      type: "number",
+      title: "Quote text size (px)",
+      description:
+        "Quote size in pixels (12–144 ladder). Empty ≈ 16–17px default.",
+      options: {
+        list: [
+          12, 14, 16, 18, 20, 24, 28, 32, 40, 48, 56, 64, 72, 80, 96, 112, 128,
+          144,
+        ].map((n) => ({ title: `${n}px`, value: n })),
+      },
     }),
     defineField({
       name: "videoUrl",

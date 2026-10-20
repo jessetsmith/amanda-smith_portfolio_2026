@@ -31,6 +31,14 @@ export interface HomepageContent {
   watchUrl?: string;
   /** Hero stamp hover tip (empty → IntroMask default). */
   stampHint?: LocaleString;
+  /** Cover name outline color (homepageHero.titleTextColor). */
+  titleTextColor?: string;
+  /** Cover name size in px (homepageHero.titleTextSize). */
+  titleTextSize?: number;
+  /** Quote above name color (homepageHero.supportTextColor). */
+  supportTextColor?: string;
+  /** Quote size in px (homepageHero.supportTextSize). */
+  supportTextSize?: number;
   /** Tagline under nav / above grid (from homepageHero.subtext). */
   subtext?: LocaleString;
   subtextTextColor?: string;

@@ -5,6 +5,10 @@
 export const homepageHeroQuery = `*[_type == "homepageHero" && _id == "homepageHero"][0]{
   titleText,
   supportText,
+  titleTextColor,
+  titleTextSize,
+  supportTextColor,
+  supportTextSize,
   videoUrl,
   watchUrl,
   stampHint,

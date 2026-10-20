@@ -134,6 +134,10 @@ function heroDocumentFields(hero: HomepageHero) {
       hero.subtextTextSize && hero.subtextTextSize !== "md"
         ? hero.subtextTextSize
         : undefined,
+    titleTextColor: hero.titleTextColor || undefined,
+    titleTextSize: hero.titleTextSize || undefined,
+    supportTextColor: hero.supportTextColor || undefined,
+    supportTextSize: hero.supportTextSize || undefined,
     // Absolute URLs only in string overrides — local upload paths stay off Sanity.
     posterUrl: isAbsoluteHttpUrl(hero.posterUrl) ? hero.posterUrl : undefined,
     imageUrl: isAbsoluteHttpUrl(hero.imageUrl) ? hero.imageUrl : undefined,

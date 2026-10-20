@@ -6,7 +6,11 @@ import {
 } from "@/lib/i18n/resolve";
 import { UI_COPY } from "@/lib/i18n/ui-copy";
 import { CELL_TEXT_SIZES, type CellTextSize } from "@/types/grid";
-import type { HomepageHero } from "@/types/hero";
+import {
+  HERO_TEXT_SIZES,
+  type HeroTextSize,
+  type HomepageHero,
+} from "@/types/hero";
 
 export const DEFAULT_STAMP_HINT = "click to leave your mark";
 
@@ -37,6 +41,20 @@ function parseTextSize(value: unknown): CellTextSize | undefined {
     return value as CellTextSize;
   }
   return undefined;
+}
+
+function parseHeroTextSize(value: unknown): HeroTextSize | undefined {
+  const n =
+    typeof value === "number"
+      ? value
+      : typeof value === "string" && value.trim()
+        ? Number(value.trim())
+        : NaN;
+  if (!Number.isFinite(n)) return undefined;
+  const px = Math.round(n) as HeroTextSize;
+  return (HERO_TEXT_SIZES as readonly number[]).includes(px)
+    ? px
+    : undefined;
 }
 
 /** Prefer absolute http(s) URLs for production (Pages cannot serve /media/uploads). */
@@ -89,6 +107,10 @@ export function normalizeHero(
 
   const subtextTextColor = str(raw?.subtextTextColor);
   const subtextTextSize = parseTextSize(raw?.subtextTextSize);
+  const titleTextColor = str(raw?.titleTextColor);
+  const titleTextSize = parseHeroTextSize(raw?.titleTextSize);
+  const supportTextColor = str(raw?.supportTextColor);
+  const supportTextSize = parseHeroTextSize(raw?.supportTextSize);
 
   return {
     titleText,
@@ -100,6 +122,10 @@ export function normalizeHero(
     ...(imageAssetId ? { imageAssetId } : {}),
     ...(watchUrl ? { watchUrl } : {}),
     ...(Object.keys(stampHint).length ? { stampHint } : {}),
+    ...(titleTextColor ? { titleTextColor } : {}),
+    ...(titleTextSize ? { titleTextSize } : {}),
+    ...(supportTextColor ? { supportTextColor } : {}),
+    ...(supportTextSize ? { supportTextSize } : {}),
     subtext,
     ...(subtextTextColor ? { subtextTextColor } : {}),
     ...(subtextTextSize && subtextTextSize !== "md"

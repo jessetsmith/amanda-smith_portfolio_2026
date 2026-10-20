@@ -1344,7 +1344,7 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 
   .intro-mask__support {
     max-width: min(16rem, calc(100vw - 7.5rem));
-    font-size: 0.95rem;
+    font-size: var(--intro-support-size, 0.95rem);
     line-height: 1.35;
   }
 
@@ -1558,7 +1558,11 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   line-height: inherit;
   letter-spacing: var(--tracking-display);
   color: transparent;
-  -webkit-text-stroke: 1px color-mix(in srgb, var(--color-paper) 70%, transparent);
+  -webkit-text-stroke: 1px
+    var(
+      --intro-title-stroke,
+      color-mix(in srgb, var(--color-paper) 70%, transparent)
+    );
   /* Stroke outside the fill so baselines aren’t covered then clipped */
   paint-order: stroke fill;
 }
@@ -1576,9 +1580,9 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   max-width: 28rem;
   font-family: var(--font-body);
   font-weight: var(--weight-title);
-  font-size: 1.05rem;
+  font-size: var(--intro-support-size, 1.05rem);
   line-height: 1.5;
-  color: var(--color-ink);
+  color: var(--intro-support-color, var(--color-ink));
   /* Solid bold only — no glow / halo / stroke */
   text-shadow: none;
   -webkit-text-stroke: 0;
@@ -2135,7 +2139,7 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   .intro-mask__support {
     left: max(1.25rem, env(safe-area-inset-left)) !important;
     max-width: min(16rem, calc(100cqw - 7.5rem)) !important;
-    font-size: 0.95rem;
+    font-size: var(--intro-support-size, 0.95rem);
     line-height: 1.35;
   }
 
