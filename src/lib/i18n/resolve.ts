@@ -6,11 +6,19 @@ import {
 
 /**
  * Plain string (legacy / EN-only) or per-locale map from Sanity.
- * Missing locales fall back to English, then any available value.
+ * Missing locale keys fall back to English, then any non-empty value.
+ * Explicit empty strings (`""`) mean intentional blank — no cross-locale refill.
  */
 export type LocaleString = string | Partial<Record<LocaleCode, string>>;
 
 export type LocaleText = LocaleString;
+
+function hasLocaleKey(
+  value: Partial<Record<LocaleCode, string>>,
+  locale: LocaleCode,
+): boolean {
+  return Object.prototype.hasOwnProperty.call(value, locale);
+}
 
 export function isLocaleMap(
   value: unknown,
@@ -34,52 +42,73 @@ export function toLocaleMap(
     const record = value as Record<string, unknown>;
     const out: Partial<Record<LocaleCode, string>> = {};
     for (const code of LOCALES) {
+      if (!Object.prototype.hasOwnProperty.call(record, code)) continue;
       const raw = record[code];
-      if (typeof raw === "string" && raw.trim()) out[code] = raw.trim();
+      if (typeof raw !== "string") continue;
+      // Preserve intentional empties (`""`); trim non-empty values.
+      out[code] = raw.trim();
     }
-    if (!out.en && fallbackEn) out.en = fallbackEn;
+    if (!hasLocaleKey(out, DEFAULT_LOCALE) && fallbackEn) {
+      out.en = fallbackEn;
+    }
     return out;
   }
   return fallbackEn ? { en: fallbackEn } : {};
 }
 
-/** Pick copy for the active locale with English (then any) fallback. */
+/**
+ * Pick copy for the active locale.
+ * Explicit empty for a locale (or EN) stays blank — never refill from siblings.
+ */
 export function resolveLocale(
   value: LocaleString | null | undefined,
   locale: LocaleCode = DEFAULT_LOCALE,
 ): string {
   if (value == null) return "";
-  if (typeof value === "string") return value;
-  const preferred = value[locale]?.trim();
-  if (preferred) return preferred;
-  const en = value[DEFAULT_LOCALE]?.trim();
-  if (en) return en;
+  if (typeof value === "string") return value.trim();
+
+  if (hasLocaleKey(value, locale)) {
+    return (value[locale] ?? "").trim();
+  }
+  if (locale !== DEFAULT_LOCALE && hasLocaleKey(value, DEFAULT_LOCALE)) {
+    return (value[DEFAULT_LOCALE] ?? "").trim();
+  }
+
+  // Preferred + EN keys absent: legacy fallback to any non-empty locale.
   for (const code of LOCALES) {
-    const next = value[code]?.trim();
+    if (!hasLocaleKey(value, code)) continue;
+    const next = (value[code] ?? "").trim();
     if (next) return next;
   }
   return "";
 }
 
-/** Merge overlay locales onto a base map (overlay wins per key). */
+/**
+ * Merge overlay locales onto a base map.
+ * Base wins per key (including intentional empties); overlay only fills missing keys.
+ */
 export function mergeLocaleMaps(
   base: unknown,
   overlay: unknown,
 ): Partial<Record<LocaleCode, string>> {
   const a = toLocaleMap(base);
   const b = toLocaleMap(overlay);
-  return { ...a, ...b };
+  const out: Partial<Record<LocaleCode, string>> = { ...a };
+  for (const code of LOCALES) {
+    if (!hasLocaleKey(out, code) && hasLocaleKey(b, code) && b[code]) {
+      out[code] = b[code];
+    }
+  }
+  return out;
 }
 
-/** Set one locale on a value, preserving siblings. */
+/** Set one locale on a value, preserving siblings. Empty string = intentional blank. */
 export function setLocaleValue(
   current: LocaleString | null | undefined,
   locale: LocaleCode,
   next: string,
 ): Partial<Record<LocaleCode, string>> {
   const map = toLocaleMap(current);
-  const trimmed = next.trim();
-  if (trimmed) map[locale] = trimmed;
-  else delete map[locale];
+  map[locale] = next.trim();
   return map;
 }

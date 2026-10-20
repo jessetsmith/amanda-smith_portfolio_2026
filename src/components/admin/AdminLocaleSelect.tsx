@@ -6,7 +6,7 @@ import {
   LOCALE_SHORT,
   type LocaleCode,
 } from "@/lib/i18n/locales";
-import { localeOf, patchLocale } from "@/lib/i18n/display";
+import { patchLocale } from "@/lib/i18n/display";
 import type { LocaleString } from "@/lib/i18n/resolve";
 
 /** Compact language switcher for admin Hero / Content editors. */
@@ -34,19 +34,27 @@ export function AdminLocaleSelect({
         ))}
       </select>
       <span className="text-xs text-ink/45">
-        Other locales stay intact. Empty → English on the public site. Full
-        multi-locale editing also lives in{" "}
-        <code className="font-mono">/studio</code>.
+        Other locales stay intact. Clearing a language leaves that locale blank
+        (no autofill from another language). Full multi-locale editing also
+        lives in <code className="font-mono">/studio</code>.
       </span>
     </label>
   );
 }
 
+/** Admin input value for one locale — never falls back to siblings (avoids refill). */
 export function readLocaleField(
   value: LocaleString | null | undefined,
   locale: LocaleCode,
 ): string {
-  return localeOf(value, locale);
+  if (value == null) return "";
+  if (typeof value === "string") {
+    return locale === "en" ? value : "";
+  }
+  if (Object.prototype.hasOwnProperty.call(value, locale)) {
+    return (value[locale] ?? "").trim();
+  }
+  return "";
 }
 
 export function writeLocaleField(
