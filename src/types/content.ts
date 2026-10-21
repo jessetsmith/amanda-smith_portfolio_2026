@@ -123,11 +123,12 @@ export interface CvData {
   uiCopy?: UiCopyDoc;
 }
 
-/** Public /cv page — PDF viewer + hero video (no structured CV HTML). */
+/** Public /cv page — PDF viewer + intro.mp4 hero (no structured CV HTML). */
 export interface CvPageContent {
   source: "fixture" | "sanity";
   pdfUrl: string;
   pdfFilename: string;
+  /** Always `/media/intro.mp4` — not homepage hero. */
   videoSrc: string;
   posterSrc?: string;
   uiCopy?: UiCopyDoc;

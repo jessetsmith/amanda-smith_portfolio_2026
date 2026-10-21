@@ -4,10 +4,8 @@ import Link from "next/link";
 import { HazyNav } from "@/components/HazyNav";
 import { SiteShell } from "@/components/SiteShell";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import { resolveHeroMedia, resolveHeroPoster } from "@/lib/hero-media";
+import { CV_HERO_VIDEO } from "@/lib/cv";
 import type { CvPageContent, SiteSettings } from "@/types/content";
-
-const INTRO_MP4 = "/media/intro.mp4";
 
 export function CvPageClient({
   cv,
@@ -26,9 +24,8 @@ export function CvPageClient({
 function CvView({ cv, site }: { cv: CvPageContent; site: SiteSettings }) {
   const { ui } = useLocale();
   const eyebrow = ui("cvEyebrow") || "CV";
-  const media = resolveHeroMedia(cv.videoSrc || INTRO_MP4);
-  const poster =
-    resolveHeroPoster(cv.posterSrc, undefined, media.youtubeId) || cv.posterSrc;
+  // Always the local intro file — never homepage hero / YouTube.
+  const videoSrc = CV_HERO_VIDEO;
 
   return (
     <>
@@ -40,27 +37,15 @@ function CvView({ cv, site }: { cv: CvPageContent; site: SiteSettings }) {
       />
       <main className="cv-page">
         <section className="cv-hero" aria-label={eyebrow}>
-          {media.kind === "youtube" && media.youtubeId ? (
-            <iframe
-              className="cv-hero__media cv-hero__media--yt"
-              src={`https://www.youtube-nocookie.com/embed/${media.youtubeId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${media.youtubeId}&playsinline=1&rel=0&modestbranding=1`}
-              title=""
-              allow="autoplay; encrypted-media; picture-in-picture"
-              allowFullScreen={false}
-              tabIndex={-1}
-            />
-          ) : (
-            <video
-              className="cv-hero__media"
-              src={media.videoUrl || INTRO_MP4}
-              poster={poster}
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="metadata"
-            />
-          )}
+          <video
+            className="cv-hero__media"
+            src={videoSrc}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+          />
           <div className="cv-hero__veil" aria-hidden />
           <div className="cv-hero__copy">
             <p className="cv-hero__eyebrow">{eyebrow}</p>

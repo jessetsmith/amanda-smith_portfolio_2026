@@ -37,6 +37,7 @@ import {
 import cvFixture from "@/data/cv.json";
 import siteFixture from "@/data/site-settings.json";
 import {
+  CV_HERO_VIDEO,
   FALLBACK_CV_PDF,
   FALLBACK_CV_PDF_FILENAME,
 } from "@/lib/cv";
@@ -370,23 +371,15 @@ function pdfFromSanity(raw: unknown): {
   };
 }
 
-/** Public /cv — Sanity PDF + homepage hero video; no structured CV HTML. */
+/** Public /cv — Sanity PDF + fixed intro.mp4 hero (not homepage hero). */
 export async function getCvPageContent(): Promise<CvPageContent> {
-  const [heroResult, uiCopy] = await Promise.all([loadHero(), loadUiCopy()]);
-  const hero =
-    heroResult.source === "fixture"
-      ? applyHeroOverlays(heroResult.hero)
-      : heroResult.hero;
-  const heroFallback = defaultHero();
-  const videoSrc = hero.videoUrl || heroFallback.videoUrl;
-  const posterSrc = hero.posterUrl || hero.imageUrl || undefined;
+  const uiCopy = await loadUiCopy();
 
   const fixturePage: CvPageContent = {
     source: "fixture",
     pdfUrl: FALLBACK_CV_PDF,
     pdfFilename: FALLBACK_CV_PDF_FILENAME,
-    videoSrc,
-    posterSrc,
+    videoSrc: CV_HERO_VIDEO,
     uiCopy,
   };
 
@@ -395,16 +388,12 @@ export async function getCvPageContent(): Promise<CvPageContent> {
   try {
     const data = await client.fetch(cvPdfQuery, {}, sanityFetchOptions);
     const pdf = pdfFromSanity(data);
-    if (!pdf) {
-      // Document missing cvPdf — keep hero from Sanity, local PDF fallback.
-      return fixturePage;
-    }
+    if (!pdf) return fixturePage;
     return {
       source: "sanity",
       pdfUrl: pdf.pdfUrl,
       pdfFilename: pdf.pdfFilename,
-      videoSrc,
-      posterSrc,
+      videoSrc: CV_HERO_VIDEO,
       uiCopy,
     };
   } catch (err) {

@@ -18,7 +18,6 @@ export async function GET() {
     pdfUrl: page.pdfUrl,
     pdfFilename: page.pdfFilename,
     videoSrc: page.videoSrc,
-    posterSrc: page.posterSrc,
   });
 }
 
@@ -67,7 +66,6 @@ export async function POST(request: Request) {
       pdfUrl: page.pdfUrl,
       pdfFilename: page.pdfFilename,
       videoSrc: page.videoSrc,
-      posterSrc: page.posterSrc,
     });
   } catch (err) {
     console.error("CV PDF upload failed", err);
