@@ -8,6 +8,7 @@ import {
   type FormEvent,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
+import { createPortal } from "react-dom";
 import { FORMSPREE_ENDPOINT } from "@/lib/contact";
 
 type FormStatus = "idle" | "submitting" | "success" | "error";
@@ -30,8 +31,9 @@ export function ContactModal({
   const titleId = useId();
   const descId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -41,6 +43,10 @@ export function ContactModal({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (!open) return;
 
     previouslyFocused.current =
@@ -48,11 +54,15 @@ export function ContactModal({
         ? document.activeElement
         : null;
 
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtmlOverflow = html.style.overflow;
+    const prevBodyOverflow = body.style.overflow;
+    html.style.overflow = "hidden";
+    body.style.overflow = "hidden";
 
     const focusTimer = window.setTimeout(() => {
-      closeRef.current?.focus();
+      nameRef.current?.focus();
     }, 0);
 
     function onKeyDown(event: KeyboardEvent) {
@@ -66,7 +76,8 @@ export function ContactModal({
     return () => {
       window.clearTimeout(focusTimer);
       window.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = prevOverflow;
+      html.style.overflow = prevHtmlOverflow;
+      body.style.overflow = prevBodyOverflow;
       previouslyFocused.current?.focus();
     };
   }, [open, onClose]);
@@ -82,13 +93,13 @@ export function ContactModal({
     }
   }, [open]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
   function trapTab(event: ReactKeyboardEvent<HTMLDivElement>) {
     if (event.key !== "Tab" || !panelRef.current) return;
     const nodes = Array.from(
       panelRef.current.querySelectorAll<HTMLElement>(FOCUSABLE),
-    ).filter((el) => !el.hasAttribute("disabled") && el.offsetParent !== null);
+    ).filter((el) => !el.hasAttribute("disabled") && el.tabIndex !== -1);
     if (nodes.length === 0) return;
     const first = nodes[0];
     const last = nodes[nodes.length - 1];
@@ -157,7 +168,7 @@ export function ContactModal({
     }
   }
 
-  return (
+  const modal = (
     <div
       className="contact-modal"
       role="presentation"
@@ -173,9 +184,10 @@ export function ContactModal({
         aria-labelledby={titleId}
         aria-describedby={descId}
         onKeyDown={trapTab}
+        onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="contact-modal__header">
-          <div>
+          <div className="contact-modal__intro">
             <p className="contact-modal__eyebrow">Contact</p>
             <h2 id={titleId} className="contact-modal__title">
               Say hello
@@ -185,13 +197,12 @@ export function ContactModal({
             </p>
           </div>
           <button
-            ref={closeRef}
             type="button"
             className="contact-modal__close"
             onClick={onClose}
             aria-label="Close contact form"
           >
-            Close
+            <span aria-hidden="true">×</span>
           </button>
         </div>
 
@@ -212,8 +223,10 @@ export function ContactModal({
         ) : (
           <form className="contact-modal__form" onSubmit={onSubmit} noValidate>
             <label className="contact-modal__field">
-              <span>Name</span>
+              <span className="contact-modal__label">Name</span>
               <input
+                ref={nameRef}
+                className="contact-modal__input"
                 name="name"
                 type="text"
                 autoComplete="name"
@@ -224,8 +237,9 @@ export function ContactModal({
               />
             </label>
             <label className="contact-modal__field">
-              <span>Email</span>
+              <span className="contact-modal__label">Email</span>
               <input
+                className="contact-modal__input"
                 name="email"
                 type="email"
                 autoComplete="email"
@@ -236,10 +250,11 @@ export function ContactModal({
               />
             </label>
             <label className="contact-modal__field">
-              <span>
+              <span className="contact-modal__label">
                 Subject <em>(optional)</em>
               </span>
               <input
+                className="contact-modal__input"
                 name="subject"
                 type="text"
                 value={subject}
@@ -248,8 +263,9 @@ export function ContactModal({
               />
             </label>
             <label className="contact-modal__field">
-              <span>Message</span>
+              <span className="contact-modal__label">Message</span>
               <textarea
+                className="contact-modal__input contact-modal__textarea"
                 name="message"
                 rows={5}
                 value={message}
@@ -287,4 +303,6 @@ export function ContactModal({
       </div>
     </div>
   );
+
+  return createPortal(modal, document.body);
 }
