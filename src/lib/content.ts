@@ -28,6 +28,7 @@ import { sanityFetchOptions } from "@/lib/sanity-fetch";
 import { client } from "@/sanity/lib/client";
 import { isSanityConfigured } from "@/sanity/env";
 import {
+  cvPdfQuery,
   cvQuery,
   homepageQuery,
   siteSettingsQuery,
@@ -35,9 +36,14 @@ import {
 } from "@/sanity/lib/queries";
 import cvFixture from "@/data/cv.json";
 import siteFixture from "@/data/site-settings.json";
+import {
+  FALLBACK_CV_PDF,
+  FALLBACK_CV_PDF_FILENAME,
+} from "@/lib/cv";
 import type {
   CvData,
   CvHighlight,
+  CvPageContent,
   HomepageContent,
   NavItem,
   SiteSettings,
@@ -331,7 +337,7 @@ export async function getCvData(): Promise<CvData> {
     return { ...fixture, uiCopy };
   }
   try {
-    const data = await client.fetch(cvQuery);
+    const data = await client.fetch(cvQuery, {}, sanityFetchOptions);
     if (!data) return { ...fixture, uiCopy };
     return {
       ...localizeCv({ ...fixture, ...data } as Record<string, unknown>, "sanity"),
@@ -339,5 +345,70 @@ export async function getCvData(): Promise<CvData> {
     };
   } catch {
     return { ...fixture, uiCopy };
+  }
+}
+
+function pdfFromSanity(raw: unknown): {
+  pdfUrl: string;
+  pdfFilename: string;
+} | null {
+  const row = raw as {
+    cvPdf?: {
+      asset?: {
+        url?: string;
+        originalFilename?: string;
+      };
+    };
+  } | null;
+  const url = row?.cvPdf?.asset?.url;
+  if (typeof url !== "string" || !url) return null;
+  const name = row?.cvPdf?.asset?.originalFilename;
+  return {
+    pdfUrl: url,
+    pdfFilename:
+      typeof name === "string" && name ? name : FALLBACK_CV_PDF_FILENAME,
+  };
+}
+
+/** Public /cv — Sanity PDF + homepage hero video; no structured CV HTML. */
+export async function getCvPageContent(): Promise<CvPageContent> {
+  const [heroResult, uiCopy] = await Promise.all([loadHero(), loadUiCopy()]);
+  const hero =
+    heroResult.source === "fixture"
+      ? applyHeroOverlays(heroResult.hero)
+      : heroResult.hero;
+  const heroFallback = defaultHero();
+  const videoSrc = hero.videoUrl || heroFallback.videoUrl;
+  const posterSrc = hero.posterUrl || hero.imageUrl || undefined;
+
+  const fixturePage: CvPageContent = {
+    source: "fixture",
+    pdfUrl: FALLBACK_CV_PDF,
+    pdfFilename: FALLBACK_CV_PDF_FILENAME,
+    videoSrc,
+    posterSrc,
+    uiCopy,
+  };
+
+  if (!isSanityConfigured() || !client) return fixturePage;
+
+  try {
+    const data = await client.fetch(cvPdfQuery, {}, sanityFetchOptions);
+    const pdf = pdfFromSanity(data);
+    if (!pdf) {
+      // Document missing cvPdf — keep hero from Sanity, local PDF fallback.
+      return fixturePage;
+    }
+    return {
+      source: "sanity",
+      pdfUrl: pdf.pdfUrl,
+      pdfFilename: pdf.pdfFilename,
+      videoSrc,
+      posterSrc,
+      uiCopy,
+    };
+  } catch (err) {
+    console.error("getCvPageContent: cvPdf fetch failed", err);
+    return fixturePage;
   }
 }

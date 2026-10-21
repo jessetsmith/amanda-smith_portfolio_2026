@@ -1933,30 +1933,187 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
 }
 
 .cv-page {
-  padding-top: 1.5rem;
-  padding-bottom: max(6rem, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding-bottom: max(4rem, env(safe-area-inset-bottom));
   overflow-wrap: anywhere;
 }
 
-.cv-page__meta {
+.cv-hero {
+  position: relative;
+  isolation: isolate;
+  min-height: min(52vh, 28rem);
+  display: grid;
+  place-items: end start;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--color-ink) 18%, transparent),
+      color-mix(in srgb, var(--color-rust) 22%, transparent)
+    ),
+    var(--color-ink);
+}
+
+.cv-hero__media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 0;
+  pointer-events: none;
+}
+
+.cv-hero__media--yt {
+  /* Cover the hero plane (16:9 embed scaled up). */
+  width: 100%;
+  height: 100%;
+  transform: scale(1.35);
+  transform-origin: center center;
+}
+
+.cv-hero__veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(
+      to top,
+      color-mix(in srgb, var(--color-ink) 72%, transparent) 0%,
+      color-mix(in srgb, var(--color-ink) 28%, transparent) 55%,
+      transparent 100%
+    );
+  pointer-events: none;
+}
+
+.cv-hero__copy {
+  position: relative;
+  z-index: 2;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  color: var(--color-paper);
+}
+
+.cv-hero__eyebrow {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.cv-hero__title {
+  margin-top: 0.4rem;
+  font-family: var(--font-display), serif;
+  font-size: clamp(2.4rem, 7vw, 4.25rem);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+}
+
+.cv-pdf {
+  width: min(100%, 56rem);
+  margin: 0 auto;
+  padding: 1.25rem 1rem 0;
+}
+
+@media (min-width: 640px) {
+  .cv-pdf {
+    padding-inline: 1.5rem;
+  }
+}
+
+.cv-pdf__toolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem 0.75rem;
-  margin-top: 1rem;
-  font-size: 0.875rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.cv-pdf__filename {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  color: color-mix(in srgb, var(--color-ink) 55%, transparent);
+  overflow-wrap: anywhere;
+}
+
+.cv-pdf__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.cv-pdf__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--color-ink) 25%, transparent);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.cv-pdf__btn:hover {
+  border-color: color-mix(in srgb, var(--color-ink) 45%, transparent);
+}
+
+.cv-pdf__btn--primary {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-paper);
+}
+
+.cv-pdf__btn--primary:hover {
+  background: color-mix(in srgb, var(--color-ink) 88%, var(--color-paper));
+}
+
+.cv-pdf__frame-wrap {
+  position: relative;
+  width: 100%;
+  min-height: min(75vh, 52rem);
+  border: 1px solid color-mix(in srgb, var(--color-ink) 18%, transparent);
+  background: color-mix(in srgb, var(--color-ink) 4%, var(--color-paper));
+}
+
+.cv-pdf__frame {
+  display: block;
+  width: 100%;
+  height: min(75vh, 52rem);
+  border: 0;
+  background: var(--color-paper);
+}
+
+.cv-pdf__mobile-hint {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
   color: color-mix(in srgb, var(--color-ink) 60%, transparent);
 }
 
-.cv-page__meta-item {
-  overflow-wrap: anywhere;
-  word-break: break-word;
+.cv-pdf__mobile-hint a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
 }
 
-@media (max-width: 639px) {
-  .cv-page__meta {
-    flex-direction: column;
-    gap: 0.25rem;
-  }
+.cv-pdf__back {
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.cv-pdf__back a {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
 }
 
 /* Admin shell (viewport-locked) */

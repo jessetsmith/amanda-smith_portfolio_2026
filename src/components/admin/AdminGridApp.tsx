@@ -84,8 +84,12 @@ import { HazyNav } from "@/components/HazyNav";
 import { IntroMask } from "@/components/IntroMask";
 import { defaultHero, heroSignature, normalizeHero } from "@/lib/hero";
 import { normalizeSiteSettings, siteSignature } from "@/lib/site";
-import type { NavItem, SiteSettings } from "@/types/content";
+import type { CvPageContent, NavItem, SiteSettings } from "@/types/content";
 import type { HomepageHero } from "@/types/hero";
+import {
+  FALLBACK_CV_PDF,
+  FALLBACK_CV_PDF_FILENAME,
+} from "@/lib/cv";
 import {
   AdminDragOverlayCard,
   AdminGridCanvas,
@@ -156,11 +160,12 @@ const FILLS: CellFill[] = ["rust", "ochre", "sage", "tan", "paper", "ink"];
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 type DataSource = "sanity" | "fixture";
-type SidebarTab = "nav" | "hero" | "blocks" | "section";
+type SidebarTab = "nav" | "hero" | "cv" | "blocks" | "section";
 
 const SIDEBAR_TABS: { id: SidebarTab; label: string }[] = [
   { id: "nav", label: "Nav" },
   { id: "hero", label: "Hero" },
+  { id: "cv", label: "CV" },
   { id: "blocks", label: "Blocks" },
   { id: "section", label: "Section" },
 ];
@@ -171,6 +176,7 @@ interface AdminGridAppProps {
   initialHero?: HomepageHero;
   initialHeroSource?: DataSource;
   initialSite?: SiteSettings;
+  initialCv?: Pick<CvPageContent, "pdfUrl" | "pdfFilename" | "source">;
 }
 
 const HISTORY_CAP = 40;
@@ -205,6 +211,7 @@ export function AdminGridApp({
   initialHero,
   initialHeroSource = "fixture",
   initialSite,
+  initialCv,
 }: AdminGridAppProps) {
   const router = useRouter();
   const [items, setItems] = useState(() => normalizeGridItems(initialItems));
@@ -225,6 +232,11 @@ export function AdminGridApp({
   const [contentOpen, setContentOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>("nav");
+  const [cvPdf, setCvPdf] = useState({
+    pdfUrl: initialCv?.pdfUrl ?? FALLBACK_CV_PDF,
+    pdfFilename: initialCv?.pdfFilename ?? FALLBACK_CV_PDF_FILENAME,
+    source: (initialCv?.source ?? "fixture") as DataSource,
+  });
   const [editBreakpoint, setEditBreakpoint] =
     useState<LayoutBreakpoint>("desktop");
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
@@ -1000,6 +1012,22 @@ export function AdminGridApp({
                   className="h-full min-h-0 overflow-y-auto p-4"
                 >
                   <HeroTab hero={hero} onChange={patchHero} />
+                </div>
+              ) : null}
+
+              {sidebarTab === "cv" ? (
+                <div
+                  id="admin-panel-cv"
+                  role="tabpanel"
+                  aria-labelledby="admin-tab-cv"
+                  className="h-full min-h-0 overflow-y-auto p-4"
+                >
+                  <CvTab
+                    pdfUrl={cvPdf.pdfUrl}
+                    pdfFilename={cvPdf.pdfFilename}
+                    source={cvPdf.source}
+                    onUploaded={(next) => setCvPdf(next)}
+                  />
                 </div>
               ) : null}
 
@@ -2719,6 +2747,126 @@ function TextStyleFields({
       <p className="text-xs text-ink/45">
         Applies to meta, titles, subtitles, prose, and body text on this block.
         Empty color = black.
+      </p>
+    </div>
+  );
+}
+
+function CvTab({
+  pdfUrl,
+  pdfFilename,
+  source,
+  onUploaded,
+}: {
+  pdfUrl: string;
+  pdfFilename: string;
+  source: DataSource;
+  onUploaded: (next: {
+    pdfUrl: string;
+    pdfFilename: string;
+    source: DataSource;
+  }) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+
+  async function onFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setUploading(true);
+    setError(null);
+    setNote(null);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/cv", { method: "POST", body });
+      const data = (await res.json()) as {
+        pdfUrl?: string;
+        pdfFilename?: string;
+        source?: DataSource;
+        error?: string;
+      };
+      if (!res.ok || !data.pdfUrl) {
+        throw new Error(data.error || "Upload failed");
+      }
+      onUploaded({
+        pdfUrl: data.pdfUrl,
+        pdfFilename: data.pdfFilename || file.name,
+        source: data.source === "sanity" ? "sanity" : "fixture",
+      });
+      setNote(
+        data.source === "sanity"
+          ? "Saved to Sanity — live on /cv"
+          : "Saved locally (dev only until Sanity write token is set)",
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="space-y-1">
+        <p className="font-mono text-[0.6rem] tracking-[0.12em] text-ink/55 uppercase">
+          CV PDF
+        </p>
+        <p className="text-sm text-ink/70">
+          Public <span className="font-mono text-ink/90">/cv</span> embeds this
+          file under the hero video. Structured CV HTML is no longer used.
+        </p>
+      </div>
+
+      <div className="space-y-2 border border-ink/15 bg-paper px-3 py-3">
+        <p className="font-mono text-[0.55rem] tracking-[0.12em] text-ink/45 uppercase">
+          Current · {source}
+        </p>
+        <p className="break-all font-mono text-[0.75rem] text-ink">
+          {pdfFilename}
+        </p>
+        {pdfUrl ? (
+          <a
+            href={pdfUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block font-mono text-[0.65rem] tracking-[0.1em] text-ink/60 uppercase underline underline-offset-2"
+          >
+            Preview file
+          </a>
+        ) : null}
+      </div>
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="application/pdf,.pdf"
+        className="sr-only"
+        onChange={(event) => void onFileChange(event)}
+      />
+      <button
+        type="button"
+        disabled={uploading}
+        onClick={() => inputRef.current?.click()}
+        className="w-full bg-ink px-3 py-2.5 font-mono text-[0.65rem] tracking-[0.14em] text-paper uppercase disabled:opacity-50"
+      >
+        {uploading ? "Uploading…" : "Upload / replace PDF"}
+      </button>
+
+      {error ? (
+        <p className="text-sm text-rust" role="alert">
+          {error}
+        </p>
+      ) : null}
+      {note ? <p className="text-sm text-ink/60">{note}</p> : null}
+
+      <p className="text-xs text-ink/45">
+        Also editable in Sanity Studio → CV → CV PDF. Nav already links to{" "}
+        <span className="font-mono">/cv</span>.
       </p>
     </div>
   );

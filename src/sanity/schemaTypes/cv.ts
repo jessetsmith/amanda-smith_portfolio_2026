@@ -5,6 +5,14 @@ export const cv = defineType({
   title: "CV",
   type: "document",
   fields: [
+    defineField({
+      name: "cvPdf",
+      type: "file",
+      title: "CV PDF",
+      description:
+        "Public /cv page embeds this file (no structured HTML). Replace in Admin → CV or here.",
+      options: { accept: "application/pdf" },
+    }),
     defineField({ name: "name", type: "string", title: "Name" }),
     defineField({ name: "headline", type: "localeString" }),
     defineField({ name: "phone", type: "string" }),
@@ -16,9 +24,8 @@ export const cv = defineType({
       type: "localeText",
       title: "Summary",
       description:
-        "Public CV summary. (Portable Text body / PDF remain English-only for this pass.)",
+        "Legacy structured fields (not rendered on /cv). Prefer the CV PDF above.",
     }),
-    defineField({ name: "cvPdf", type: "file", title: "CV PDF" }),
     defineField({
       name: "expertiseTags",
       type: "array",

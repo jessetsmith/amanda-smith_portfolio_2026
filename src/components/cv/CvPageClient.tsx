@@ -1,17 +1,19 @@
 "use client";
 
-import type { ReactNode } from "react";
 import Link from "next/link";
 import { HazyNav } from "@/components/HazyNav";
 import { SiteShell } from "@/components/SiteShell";
 import { useLocale } from "@/components/i18n/LocaleProvider";
-import type { CvData, SiteSettings } from "@/types/content";
+import { resolveHeroMedia, resolveHeroPoster } from "@/lib/hero-media";
+import type { CvPageContent, SiteSettings } from "@/types/content";
+
+const INTRO_MP4 = "/media/intro.mp4";
 
 export function CvPageClient({
   cv,
   site,
 }: {
-  cv: CvData;
+  cv: CvPageContent;
   site: SiteSettings;
 }) {
   return (
@@ -21,8 +23,12 @@ export function CvPageClient({
   );
 }
 
-function CvView({ cv, site }: { cv: CvData; site: SiteSettings }) {
-  const { t, ui } = useLocale();
+function CvView({ cv, site }: { cv: CvPageContent; site: SiteSettings }) {
+  const { ui } = useLocale();
+  const eyebrow = ui("cvEyebrow") || "CV";
+  const media = resolveHeroMedia(cv.videoSrc || INTRO_MP4);
+  const poster =
+    resolveHeroPoster(cv.posterSrc, undefined, media.youtubeId) || cv.posterSrc;
 
   return (
     <>
@@ -32,185 +38,79 @@ function CvView({ cv, site }: { cv: CvData; site: SiteSettings }) {
         textColor={site.navTextColor}
         textSize={site.navTextSize}
       />
-      <main className="cv-page mx-auto w-full max-w-[52rem] px-4 pb-24 pt-10 sm:px-6 md:px-8">
-        <header className="border-b border-ink/20 pb-8">
-          <p className="font-mono text-[0.65rem] tracking-[0.22em] text-rust uppercase">
-            {ui("cvEyebrow")} · {cv.source}
-          </p>
-          <h1 className="mt-3 font-display text-4xl tracking-tight text-ink sm:text-5xl">
-            {cv.name}
-          </h1>
-          <p className="mt-2 text-lg text-ink/70">{t(cv.headline)}</p>
-          <div className="cv-page__meta">
-            {[t(cv.location), cv.email, cv.phone, t(cv.relocationNote)]
-              .filter(Boolean)
-              .map((part) => (
-                <span key={part} className="cv-page__meta-item">
-                  {part}
-                </span>
-              ))}
+      <main className="cv-page">
+        <section className="cv-hero" aria-label={eyebrow}>
+          {media.kind === "youtube" && media.youtubeId ? (
+            <iframe
+              className="cv-hero__media cv-hero__media--yt"
+              src={`https://www.youtube-nocookie.com/embed/${media.youtubeId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${media.youtubeId}&playsinline=1&rel=0&modestbranding=1`}
+              title=""
+              allow="autoplay; encrypted-media; picture-in-picture"
+              allowFullScreen={false}
+              tabIndex={-1}
+            />
+          ) : (
+            <video
+              className="cv-hero__media"
+              src={media.videoUrl || INTRO_MP4}
+              poster={poster}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+            />
+          )}
+          <div className="cv-hero__veil" aria-hidden />
+          <div className="cv-hero__copy">
+            <p className="cv-hero__eyebrow">{eyebrow}</p>
+            <h1 className="cv-hero__title">Amanda Smith</h1>
           </div>
-          {t(cv.summary) ? (
-            <p className="mt-5 max-w-2xl text-base leading-relaxed text-ink/75">
-              {t(cv.summary)}
-            </p>
-          ) : null}
-        </header>
+        </section>
 
-        <CvSection title={ui("cvExpertise")}>
-          <ul className="flex flex-wrap gap-x-3 gap-y-2">
-            {cv.expertiseTags.map((tag, i) => (
-              <li
-                key={`${t(tag)}-${i}`}
-                className="font-mono text-[0.7rem] tracking-[0.12em] text-ink/70 uppercase"
+        <section className="cv-pdf" aria-label="Curriculum vitae PDF">
+          <div className="cv-pdf__toolbar">
+            <p className="cv-pdf__filename">{cv.pdfFilename}</p>
+            <div className="cv-pdf__actions">
+              <a
+                className="cv-pdf__btn"
+                href={cv.pdfUrl}
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                {t(tag)}
-              </li>
-            ))}
-          </ul>
-          <ul className="mt-4 space-y-2 text-sm text-ink/75">
-            {cv.expertiseHighlights.map((item, i) => (
-              <li key={`${t(item.text)}-${i}`}>— {t(item.text)}</li>
-            ))}
-          </ul>
-        </CvSection>
+                Open
+              </a>
+              <a
+                className="cv-pdf__btn cv-pdf__btn--primary"
+                href={cv.pdfUrl}
+                download={cv.pdfFilename}
+              >
+                Download PDF
+              </a>
+            </div>
+          </div>
 
-        <CvSection title={ui("cvExperience")}>
-          <ul className="space-y-5">
-            {cv.experience.map((item, i) => (
-              <li key={`${t(item.title)}-${item.org}-${i}`}>
-                <p className="font-display text-lg text-ink">{t(item.title)}</p>
-                <p className="text-sm text-ink/65">
-                  {item.org}
-                  {t(item.location) ? ` · ${t(item.location)}` : ""}
-                </p>
-                <p className="font-mono text-[0.65rem] tracking-[0.1em] text-ink/45 uppercase">
-                  {formatRange(
-                    item.startDate,
-                    item.endDate,
-                    item.current,
-                    ui("present"),
-                  )}
-                </p>
-                {t(item.summary) ? (
-                  <p className="mt-1 text-sm text-ink/70">{t(item.summary)}</p>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        </CvSection>
+          <div className="cv-pdf__frame-wrap">
+            <iframe
+              className="cv-pdf__frame"
+              src={`${cv.pdfUrl}#view=FitH`}
+              title={`${cv.pdfFilename} viewer`}
+            />
+          </div>
 
-        <CvSection title={ui("cvAwards")}>
-          <ul className="space-y-3">
-            {cv.awards.map((item, i) => (
-              <li key={`${t(item.title)}-${i}`}>
-                <p className="text-ink">{t(item.title)}</p>
-                <p className="text-sm text-ink/60">
-                  {item.org}
-                  {item.date ? ` · ${item.date}` : ""}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </CvSection>
-
-        <CvSection title={ui("cvSpeaking")}>
-          <ul className="space-y-3">
-            {cv.speaking.map((item, i) => (
-              <li key={`${t(item.eventTitle)}-${i}`}>
-                <p className="text-ink">{t(item.eventTitle)}</p>
-                <p className="text-sm text-ink/60">
-                  {[item.role, item.org, item.date].filter(Boolean).join(" · ")}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </CvSection>
-
-        <CvSection title={ui("cvEducation")}>
-          <ul className="space-y-3">
-            {cv.education.map((item, i) => (
-              <li key={`${t(item.title)}-${item.institution}-${i}`}>
-                <p className="text-ink">{t(item.title)}</p>
-                <p className="text-sm text-ink/60">
-                  {item.institution}
-                  {item.startYear || item.endYear
-                    ? ` · ${[item.startYear, item.endYear].filter(Boolean).join("–")}`
-                    : ""}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </CvSection>
-
-        <CvSection title={ui("cvSkills")}>
-          <p className="text-sm leading-relaxed text-ink/75">
-            {cv.technicalSkills.map((s) => t(s)).filter(Boolean).join(" · ")}
+          <p className="cv-pdf__mobile-hint">
+            Prefer a native reader?{" "}
+            <a href={cv.pdfUrl} target="_blank" rel="noopener noreferrer">
+              Open the PDF
+            </a>{" "}
+            or download above.
           </p>
-          <ul className="mt-3 space-y-1 text-sm text-ink/70">
-            {cv.languages.map((item, i) => (
-              <li key={`${t(item.language)}-${i}`}>
-                {t(item.language)} — {t(item.level)}
-              </li>
-            ))}
-          </ul>
-        </CvSection>
 
-        <CvSection title={ui("cvPublications")}>
-          <ul className="space-y-2">
-            {cv.publications.map((item) => (
-              <li key={item.title} className="text-sm text-ink/80">
-                {item.url ? (
-                  <a href={item.url} className="underline decoration-ink/25">
-                    {item.title}
-                  </a>
-                ) : (
-                  item.title
-                )}
-                <span className="text-ink/50">
-                  {item.venue ? ` — ${item.venue}` : ""}
-                  {item.date ? ` (${item.date})` : ""}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </CvSection>
-
-        <p className="mt-12 text-sm text-ink/50">
-          <Link href="/" className="underline decoration-ink/25">
-            {ui("backToPortfolio")}
-          </Link>
-        </p>
+          <p className="cv-pdf__back">
+            <Link href="/">{ui("backToPortfolio") || "Back to portfolio"}</Link>
+          </p>
+        </section>
       </main>
     </>
   );
-}
-
-function CvSection({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="border-b border-ink/15 py-8">
-      <h2 className="font-mono text-[0.7rem] tracking-[0.2em] text-ink/50 uppercase">
-        {title}
-      </h2>
-      <div className="mt-4">{children}</div>
-    </section>
-  );
-}
-
-function formatRange(
-  start?: string,
-  end?: string,
-  current?: boolean,
-  presentLabel = "Present",
-): string {
-  if (!start && !end && !current) return "";
-  if (current) return `${start ?? ""}–${presentLabel}`.replace(/^–/, "");
-  if (start && end) return `${start}–${end}`;
-  return start || end || "";
 }

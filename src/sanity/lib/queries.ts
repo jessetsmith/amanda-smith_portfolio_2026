@@ -87,6 +87,20 @@ export const uiCopyQuery = `*[_type == "uiCopy" && _id == "uiCopy"][0]{
   language, primaryNav, image, media, project, colorCell
 }`;
 
+/** Public /cv page — PDF asset URL only. */
+export const cvPdfQuery = `*[_type == "cv" && _id == "cv"][0]{
+  cvPdf{
+    asset->{
+      _id,
+      url,
+      originalFilename,
+      size,
+      mimeType
+    }
+  }
+}`;
+
+/** Legacy structured CV (Studio / fixtures; not rendered on /cv). */
 export const cvQuery = `*[_type == "cv" && _id == "cv"][0]{
   name,
   headline,
@@ -95,6 +109,15 @@ export const cvQuery = `*[_type == "cv" && _id == "cv"][0]{
   location,
   relocationNote,
   summary,
+  cvPdf{
+    asset->{
+      _id,
+      url,
+      originalFilename,
+      size,
+      mimeType
+    }
+  },
   expertiseTags,
   expertiseHighlights[]{ text },
   experience[]{

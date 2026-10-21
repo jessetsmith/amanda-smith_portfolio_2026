@@ -1,6 +1,6 @@
 import { connection } from "next/server";
 import { AdminGridApp } from "@/components/admin/AdminGridApp";
-import { getSiteSettings } from "@/lib/content";
+import { getCvPageContent, getSiteSettings } from "@/lib/content";
 import { loadGridItems } from "@/lib/grid-sync";
 import { loadHero } from "@/lib/hero-sync";
 
@@ -9,10 +9,11 @@ export const instant = false;
 
 export default async function AdminPage() {
   await connection();
-  const [{ items, source }, heroResult, site] = await Promise.all([
+  const [{ items, source }, heroResult, site, cv] = await Promise.all([
     loadGridItems(),
     loadHero(),
     getSiteSettings(),
+    getCvPageContent(),
   ]);
   return (
     <AdminGridApp
@@ -21,6 +22,11 @@ export default async function AdminPage() {
       initialHero={heroResult.hero}
       initialHeroSource={heroResult.source}
       initialSite={site}
+      initialCv={{
+        pdfUrl: cv.pdfUrl,
+        pdfFilename: cv.pdfFilename,
+        source: cv.source,
+      }}
     />
   );
 }

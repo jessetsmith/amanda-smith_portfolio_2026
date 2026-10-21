@@ -122,3 +122,13 @@ export interface CvData {
   publications: CvPublication[];
   uiCopy?: UiCopyDoc;
 }
+
+/** Public /cv page — PDF viewer + hero video (no structured CV HTML). */
+export interface CvPageContent {
+  source: "fixture" | "sanity";
+  pdfUrl: string;
+  pdfFilename: string;
+  videoSrc: string;
+  posterSrc?: string;
+  uiCopy?: UiCopyDoc;
+}
