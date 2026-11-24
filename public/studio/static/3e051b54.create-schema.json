@@ -2,6 +2,86 @@
   {
     "fields": [
       {
+        "name": "en",
+        "type": "string",
+        "title": "English"
+      },
+      {
+        "name": "es",
+        "type": "string",
+        "title": "Español"
+      },
+      {
+        "name": "it",
+        "type": "string",
+        "title": "Italiano"
+      },
+      {
+        "name": "pt",
+        "type": "string",
+        "title": "Português"
+      },
+      {
+        "name": "fr",
+        "type": "string",
+        "title": "Français"
+      },
+      {
+        "name": "de",
+        "type": "string",
+        "title": "Deutsch"
+      }
+    ],
+    "name": "localeString",
+    "type": "object",
+    "title": "Localized string"
+  },
+  {
+    "fields": [
+      {
+        "rows": 4,
+        "name": "en",
+        "type": "text",
+        "title": "English"
+      },
+      {
+        "rows": 4,
+        "name": "es",
+        "type": "text",
+        "title": "Español"
+      },
+      {
+        "rows": 4,
+        "name": "it",
+        "type": "text",
+        "title": "Italiano"
+      },
+      {
+        "rows": 4,
+        "name": "pt",
+        "type": "text",
+        "title": "Português"
+      },
+      {
+        "rows": 4,
+        "name": "fr",
+        "type": "text",
+        "title": "Français"
+      },
+      {
+        "rows": 4,
+        "name": "de",
+        "type": "text",
+        "title": "Deutsch"
+      }
+    ],
+    "name": "localeText",
+    "type": "object",
+    "title": "Localized text"
+  },
+  {
+    "fields": [
+      {
         "rows": 3,
         "validation": [
           {
@@ -321,10 +401,120 @@
       },
       {
         "initialValue": false,
-        "description": "Highlight as the section lead (larger type/image). One per section, right after the title row.",
+        "description": "Mark as the section highlight (larger type/image). One per section, right after the title row.",
         "name": "featured",
         "type": "boolean",
-        "title": "Featured lead"
+        "title": "Featured highlight"
+      },
+      {
+        "description": "Optional CSS color for block text (e.g. #1a1a1a). Empty = black/ink default.",
+        "name": "textColor",
+        "type": "string",
+        "title": "Text color"
+      },
+      {
+        "options": {
+          "list": [
+            {
+              "title": "Small",
+              "value": "sm"
+            },
+            {
+              "title": "Medium (default)",
+              "value": "md"
+            },
+            {
+              "title": "Large",
+              "value": "lg"
+            },
+            {
+              "title": "Extra large",
+              "value": "xl"
+            }
+          ]
+        },
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "valid",
+                "constraint": [
+                  "sm",
+                  "md",
+                  "lg",
+                  "xl"
+                ]
+              }
+            ]
+          }
+        ],
+        "description": "Optional size for block text. Empty = default (md).",
+        "name": "textSize",
+        "type": "string",
+        "title": "Text size"
+      },
+      {
+        "description": "Independent tablet/mobile placement overrides. Desktop uses colStart/colSpan/row* above.",
+        "fields": [
+          {
+            "fields": [
+              {
+                "name": "colStart",
+                "type": "number"
+              },
+              {
+                "name": "colSpan",
+                "type": "number"
+              },
+              {
+                "name": "rowStart",
+                "type": "number"
+              },
+              {
+                "name": "rowSpan",
+                "type": "number"
+              },
+              {
+                "name": "order",
+                "type": "number"
+              }
+            ],
+            "name": "tablet",
+            "type": "object",
+            "title": "Tablet (~768)"
+          },
+          {
+            "fields": [
+              {
+                "name": "colStart",
+                "type": "number"
+              },
+              {
+                "name": "colSpan",
+                "type": "number"
+              },
+              {
+                "name": "rowStart",
+                "type": "number"
+              },
+              {
+                "name": "rowSpan",
+                "type": "number"
+              },
+              {
+                "name": "order",
+                "type": "number"
+              }
+            ],
+            "name": "mobile",
+            "type": "object",
+            "title": "Mobile (~390)"
+          }
+        ],
+        "name": "layouts",
+        "type": "object",
+        "title": "Breakpoint layouts"
       },
       {
         "options": {
@@ -360,26 +550,40 @@
       },
       {
         "name": "label",
-        "type": "string"
+        "type": "localeString"
+      },
+      {
+        "description": "Color cells only — optional segments after the label. Separate values with commas; commas become middle-dots (·) on the live site (e.g. Channel, Happenings → Channel · Happenings). Leave empty to omit.",
+        "hidden": "conditional",
+        "name": "subcategory",
+        "type": "localeString"
+      },
+      {
+        "description": "Color cells only — optional poetry or prose. Leave empty to omit from the public grid.",
+        "hidden": "conditional",
+        "name": "prose",
+        "type": "localeText",
+        "title": "Long text / prose"
       },
       {
         "description": "Top of card stack (meta → title → image → description)",
         "name": "meta",
-        "type": "string"
+        "type": "localeString"
       },
       {
         "name": "headline",
-        "type": "string"
+        "type": "localeString"
       },
       {
         "name": "title",
-        "type": "string"
+        "type": "localeString"
       },
       {
         "name": "subtitle",
-        "type": "string"
+        "type": "localeString"
       },
       {
+        "description": "Year / range (usually shared across locales)",
         "name": "year",
         "type": "string"
       },
@@ -390,7 +594,8 @@
       },
       {
         "name": "imageAlt",
-        "type": "string"
+        "type": "localeString",
+        "title": "Image alt"
       },
       {
         "options": {
@@ -421,19 +626,19 @@
       },
       {
         "name": "excerpt",
-        "type": "text"
+        "type": "localeText"
       },
       {
         "name": "summary",
-        "type": "text"
+        "type": "localeText"
       },
       {
         "name": "caption",
-        "type": "string"
+        "type": "localeString"
       },
       {
         "name": "description",
-        "type": "text"
+        "type": "localeText"
       },
       {
         "validation": [
@@ -472,6 +677,16 @@
         "type": "reference"
       }
     ],
+    "preview": {
+      "select": {
+        "kind": "kind",
+        "title": "title.en",
+        "headline": "headline.en",
+        "label": "label.en",
+        "featured": "featured",
+        "hidden": "hidden"
+      }
+    },
     "name": "gridItem",
     "type": "object",
     "title": "Grid item"
@@ -932,12 +1147,31 @@
   {
     "fields": [
       {
+        "options": {
+          "accept": "application/pdf"
+        },
+        "validation": [
+          {
+            "level": "warning",
+            "rules": [
+              {
+                "flag": "custom"
+              }
+            ]
+          }
+        ],
+        "description": "Public /cv page embeds this file (no structured HTML). Replace in Admin → CV or here.",
+        "name": "cvPdf",
+        "type": "file",
+        "title": "CV PDF"
+      },
+      {
         "name": "name",
         "type": "string"
       },
       {
         "name": "headline",
-        "type": "string"
+        "type": "localeString"
       },
       {
         "name": "phone",
@@ -949,25 +1183,22 @@
       },
       {
         "name": "location",
-        "type": "string"
+        "type": "localeString"
       },
       {
         "name": "relocationNote",
-        "type": "string"
+        "type": "localeString"
       },
       {
+        "description": "Legacy structured fields (not rendered on /cv). Prefer the CV PDF above.",
         "name": "summary",
-        "type": "portableBody"
-      },
-      {
-        "name": "cvPdf",
-        "type": "file",
-        "title": "CV PDF"
+        "type": "localeText"
       },
       {
         "of": [
           {
-            "type": "string"
+            "type": "localeString",
+            "title": "Localized string"
           }
         ],
         "name": "expertiseTags",
@@ -979,7 +1210,7 @@
             "fields": [
               {
                 "name": "text",
-                "type": "text"
+                "type": "localeText"
               }
             ],
             "type": "object"
@@ -994,7 +1225,7 @@
             "fields": [
               {
                 "name": "title",
-                "type": "string"
+                "type": "localeString"
               },
               {
                 "name": "org",
@@ -1002,7 +1233,7 @@
               },
               {
                 "name": "location",
-                "type": "string"
+                "type": "localeString"
               },
               {
                 "name": "startDate",
@@ -1018,12 +1249,13 @@
               },
               {
                 "name": "summary",
-                "type": "text"
+                "type": "localeText"
               },
               {
                 "of": [
                   {
-                    "type": "string"
+                    "type": "localeString",
+                    "title": "Localized string"
                   }
                 ],
                 "name": "bullets",
@@ -1039,6 +1271,12 @@
                 "type": "reference"
               }
             ],
+            "preview": {
+              "select": {
+                "title": "title.en",
+                "subtitle": "org"
+              }
+            },
             "type": "object"
           }
         ],
@@ -1051,7 +1289,7 @@
             "fields": [
               {
                 "name": "title",
-                "type": "string"
+                "type": "localeString"
               },
               {
                 "name": "org",
@@ -1059,7 +1297,7 @@
               },
               {
                 "name": "location",
-                "type": "string"
+                "type": "localeString"
               },
               {
                 "name": "date",
@@ -1067,9 +1305,15 @@
               },
               {
                 "name": "description",
-                "type": "text"
+                "type": "localeText"
               }
             ],
+            "preview": {
+              "select": {
+                "title": "title.en",
+                "subtitle": "org"
+              }
+            },
             "type": "object"
           }
         ],
@@ -1110,7 +1354,7 @@
               },
               {
                 "name": "eventTitle",
-                "type": "string"
+                "type": "localeString"
               },
               {
                 "name": "org",
@@ -1118,7 +1362,7 @@
               },
               {
                 "name": "location",
-                "type": "string"
+                "type": "localeString"
               },
               {
                 "name": "date",
@@ -1126,9 +1370,15 @@
               },
               {
                 "name": "description",
-                "type": "text"
+                "type": "localeText"
               }
             ],
+            "preview": {
+              "select": {
+                "title": "eventTitle.en",
+                "subtitle": "org"
+              }
+            },
             "type": "object"
           }
         ],
@@ -1165,7 +1415,7 @@
               },
               {
                 "name": "title",
-                "type": "string"
+                "type": "localeString"
               },
               {
                 "name": "institution",
@@ -1173,7 +1423,7 @@
               },
               {
                 "name": "location",
-                "type": "string"
+                "type": "localeString"
               },
               {
                 "name": "startYear",
@@ -1185,9 +1435,15 @@
               },
               {
                 "name": "notes",
-                "type": "text"
+                "type": "localeText"
               }
             ],
+            "preview": {
+              "select": {
+                "title": "title.en",
+                "subtitle": "institution"
+              }
+            },
             "type": "object"
           }
         ],
@@ -1197,7 +1453,8 @@
       {
         "of": [
           {
-            "type": "string"
+            "type": "localeString",
+            "title": "Localized string"
           }
         ],
         "name": "technicalSkills",
@@ -1209,13 +1466,19 @@
             "fields": [
               {
                 "name": "language",
-                "type": "string"
+                "type": "localeString"
               },
               {
                 "name": "level",
-                "type": "string"
+                "type": "localeString"
               }
             ],
+            "preview": {
+              "select": {
+                "title": "language.en",
+                "subtitle": "level.en"
+              }
+            },
             "type": "object"
           }
         ],
@@ -1358,6 +1621,16 @@
       {
         "of": [
           {
+            "preview": {
+              "select": {
+                "kind": "kind",
+                "title": "title.en",
+                "headline": "headline.en",
+                "label": "label.en",
+                "featured": "featured",
+                "hidden": "hidden"
+              }
+            },
             "type": "gridItem",
             "title": "Grid item"
           }
@@ -1385,15 +1658,250 @@
         ],
         "description": "Large cover name (e.g. Amanda Smith)",
         "name": "titleText",
-        "type": "string",
+        "type": "localeString",
         "title": "Hero title"
       },
       {
-        "rows": 3,
-        "description": "Short line under the title on the cover",
+        "description": "Quote above the cover name",
         "name": "supportText",
-        "type": "text",
-        "title": "Support line"
+        "type": "localeText",
+        "title": "Support line / quote"
+      },
+      {
+        "description": "Outline/stroke color for the cover name. Empty = soft paper stroke (current look).",
+        "name": "titleTextColor",
+        "type": "string",
+        "title": "Title text color"
+      },
+      {
+        "options": {
+          "list": [
+            {
+              "title": "12px",
+              "value": 12
+            },
+            {
+              "title": "14px",
+              "value": 14
+            },
+            {
+              "title": "16px",
+              "value": 16
+            },
+            {
+              "title": "18px",
+              "value": 18
+            },
+            {
+              "title": "20px",
+              "value": 20
+            },
+            {
+              "title": "24px",
+              "value": 24
+            },
+            {
+              "title": "28px",
+              "value": 28
+            },
+            {
+              "title": "32px",
+              "value": 32
+            },
+            {
+              "title": "40px",
+              "value": 40
+            },
+            {
+              "title": "48px",
+              "value": 48
+            },
+            {
+              "title": "56px",
+              "value": 56
+            },
+            {
+              "title": "64px",
+              "value": 64
+            },
+            {
+              "title": "72px",
+              "value": 72
+            },
+            {
+              "title": "80px",
+              "value": 80
+            },
+            {
+              "title": "96px",
+              "value": 96
+            },
+            {
+              "title": "112px",
+              "value": 112
+            },
+            {
+              "title": "128px",
+              "value": 128
+            },
+            {
+              "title": "144px",
+              "value": 144
+            }
+          ]
+        },
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "valid",
+                "constraint": [
+                  12,
+                  14,
+                  16,
+                  18,
+                  20,
+                  24,
+                  28,
+                  32,
+                  40,
+                  48,
+                  56,
+                  64,
+                  72,
+                  80,
+                  96,
+                  112,
+                  128,
+                  144
+                ]
+              }
+            ]
+          }
+        ],
+        "description": "Cover name size in pixels (12–144 ladder). Empty = responsive clamp.",
+        "name": "titleTextSize",
+        "type": "number",
+        "title": "Title text size (px)"
+      },
+      {
+        "description": "Color for the quote above the name. Empty = ink.",
+        "name": "supportTextColor",
+        "type": "string",
+        "title": "Quote text color"
+      },
+      {
+        "options": {
+          "list": [
+            {
+              "title": "12px",
+              "value": 12
+            },
+            {
+              "title": "14px",
+              "value": 14
+            },
+            {
+              "title": "16px",
+              "value": 16
+            },
+            {
+              "title": "18px",
+              "value": 18
+            },
+            {
+              "title": "20px",
+              "value": 20
+            },
+            {
+              "title": "24px",
+              "value": 24
+            },
+            {
+              "title": "28px",
+              "value": 28
+            },
+            {
+              "title": "32px",
+              "value": 32
+            },
+            {
+              "title": "40px",
+              "value": 40
+            },
+            {
+              "title": "48px",
+              "value": 48
+            },
+            {
+              "title": "56px",
+              "value": 56
+            },
+            {
+              "title": "64px",
+              "value": 64
+            },
+            {
+              "title": "72px",
+              "value": 72
+            },
+            {
+              "title": "80px",
+              "value": 80
+            },
+            {
+              "title": "96px",
+              "value": 96
+            },
+            {
+              "title": "112px",
+              "value": 112
+            },
+            {
+              "title": "128px",
+              "value": 128
+            },
+            {
+              "title": "144px",
+              "value": 144
+            }
+          ]
+        },
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "valid",
+                "constraint": [
+                  12,
+                  14,
+                  16,
+                  18,
+                  20,
+                  24,
+                  28,
+                  32,
+                  40,
+                  48,
+                  56,
+                  64,
+                  72,
+                  80,
+                  96,
+                  112,
+                  128,
+                  144
+                ]
+              }
+            ]
+          }
+        ],
+        "description": "Quote size in pixels (12–144 ladder). Empty ≈ 16–17px default.",
+        "name": "supportTextSize",
+        "type": "number",
+        "title": "Quote text size (px)"
       },
       {
         "description": "Absolute CDN URL, site path, or YouTube link. Prefer Mux/CDN for large files.",
@@ -1499,8 +2007,75 @@
         "name": "watchUrl",
         "type": "url",
         "title": "Watch full video URL"
+      },
+      {
+        "description": "Shown on first hover over the public cover (“click to leave your mark”). Clears after the first stamp. Leave empty to use the default copy.",
+        "name": "stampHint",
+        "type": "localeString",
+        "title": "Handprint stamp tip"
+      },
+      {
+        "description": "Tagline under the nav / above the homepage grid. Phrases that match site definitions keep hover underlines. Blank allowed.",
+        "name": "subtext",
+        "type": "localeText",
+        "title": "Grid intro subtext"
+      },
+      {
+        "description": "Optional CSS color for the grid intro subtext (e.g. #1a1a1a). Empty = soft ink (current look).",
+        "name": "subtextTextColor",
+        "type": "string",
+        "title": "Subtext text color"
+      },
+      {
+        "options": {
+          "list": [
+            {
+              "title": "Small",
+              "value": "sm"
+            },
+            {
+              "title": "Medium (default)",
+              "value": "md"
+            },
+            {
+              "title": "Large",
+              "value": "lg"
+            },
+            {
+              "title": "Extra large",
+              "value": "xl"
+            }
+          ]
+        },
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "valid",
+                "constraint": [
+                  "sm",
+                  "md",
+                  "lg",
+                  "xl"
+                ]
+              }
+            ]
+          }
+        ],
+        "description": "Optional size for the grid intro subtext. Empty = medium (current look).",
+        "name": "subtextTextSize",
+        "type": "string",
+        "title": "Subtext text size"
       }
     ],
+    "preview": {
+      "select": {
+        "title": "titleText.en",
+        "subtitle": "videoUrl",
+        "media": "poster"
+      }
+    },
     "name": "homepageHero",
     "type": "document",
     "title": "Homepage hero"
@@ -1509,7 +2084,8 @@
     "fields": [
       {
         "name": "siteTitle",
-        "type": "string"
+        "type": "localeString",
+        "title": "Site / brand title"
       },
       {
         "of": [
@@ -1517,13 +2093,19 @@
             "fields": [
               {
                 "name": "label",
-                "type": "string"
+                "type": "localeString"
               },
               {
                 "name": "href",
                 "type": "string"
               }
             ],
+            "preview": {
+              "select": {
+                "title": "label.en",
+                "subtitle": "href"
+              }
+            },
             "type": "object"
           }
         ],
@@ -1531,17 +2113,194 @@
         "type": "array"
       },
       {
+        "description": "Optional CSS color for brand + nav links (e.g. #1a1a1a). Empty = ink default.",
+        "name": "navTextColor",
+        "type": "string",
+        "title": "Nav text color"
+      },
+      {
+        "options": {
+          "list": [
+            {
+              "title": "Small",
+              "value": "sm"
+            },
+            {
+              "title": "Medium (default)",
+              "value": "md"
+            },
+            {
+              "title": "Large",
+              "value": "lg"
+            },
+            {
+              "title": "Extra large",
+              "value": "xl"
+            }
+          ]
+        },
+        "validation": [
+          {
+            "level": "error",
+            "rules": [
+              {
+                "flag": "valid",
+                "constraint": [
+                  "sm",
+                  "md",
+                  "lg",
+                  "xl"
+                ]
+              }
+            ]
+          }
+        ],
+        "description": "Optional size for brand + nav links. Empty = medium (current look).",
+        "name": "navTextSize",
+        "type": "string",
+        "title": "Nav text size"
+      },
+      {
         "name": "contactEmail",
         "type": "string"
       },
       {
         "name": "contactNote",
-        "type": "text"
+        "type": "localeText",
+        "title": "Contact note"
       }
     ],
     "name": "siteSettings",
     "type": "document",
     "title": "Site settings"
+  },
+  {
+    "fields": [
+      {
+        "description": "Prefer editing Subtext on Homepage hero / admin Hero tab. Kept as fallback until hero.subtext is saved.",
+        "name": "gridIntro",
+        "type": "localeText",
+        "title": "Homepage grid intro blurb (legacy)"
+      },
+      {
+        "name": "open",
+        "type": "localeString",
+        "title": "Grid “Open” cue"
+      },
+      {
+        "name": "lead",
+        "type": "localeString",
+        "title": "Featured “Highlight” mark"
+      },
+      {
+        "name": "watchFullVideo",
+        "type": "localeString",
+        "title": "Watch full video"
+      },
+      {
+        "name": "soundOn",
+        "type": "localeString",
+        "title": "Sound on"
+      },
+      {
+        "name": "soundOff",
+        "type": "localeString",
+        "title": "Sound off"
+      },
+      {
+        "name": "muteCover",
+        "type": "localeString",
+        "title": "Mute cover (aria)"
+      },
+      {
+        "name": "unmuteCover",
+        "type": "localeString",
+        "title": "Unmute cover (aria)"
+      },
+      {
+        "name": "cvEyebrow",
+        "type": "localeString",
+        "title": "CV eyebrow"
+      },
+      {
+        "name": "cvExpertise",
+        "type": "localeString",
+        "title": "CV · Key expertise"
+      },
+      {
+        "name": "cvExperience",
+        "type": "localeString",
+        "title": "CV · Experience"
+      },
+      {
+        "name": "cvAwards",
+        "type": "localeString",
+        "title": "CV · Awards"
+      },
+      {
+        "name": "cvSpeaking",
+        "type": "localeString",
+        "title": "CV · Speaking"
+      },
+      {
+        "name": "cvEducation",
+        "type": "localeString",
+        "title": "CV · Education"
+      },
+      {
+        "name": "cvSkills",
+        "type": "localeString",
+        "title": "CV · Skills"
+      },
+      {
+        "name": "cvPublications",
+        "type": "localeString",
+        "title": "CV · Publications"
+      },
+      {
+        "name": "backToPortfolio",
+        "type": "localeString",
+        "title": "Back to portfolio"
+      },
+      {
+        "name": "present",
+        "type": "localeString",
+        "title": "Date range · Present"
+      },
+      {
+        "name": "language",
+        "type": "localeString",
+        "title": "Language control label"
+      },
+      {
+        "name": "primaryNav",
+        "type": "localeString",
+        "title": "Primary nav aria label"
+      },
+      {
+        "name": "image",
+        "type": "localeString",
+        "title": "Image placeholder label"
+      },
+      {
+        "name": "media",
+        "type": "localeString",
+        "title": "Media fallback label"
+      },
+      {
+        "name": "project",
+        "type": "localeString",
+        "title": "Project fallback meta"
+      },
+      {
+        "name": "colorCell",
+        "type": "localeString",
+        "title": "Color cell sr-only"
+      }
+    ],
+    "name": "uiCopy",
+    "type": "document",
+    "title": "UI copy (translations)"
   },
   {
     "fields": [
@@ -1593,6 +2352,11 @@
         "title": "Last rotated (note)"
       }
     ],
+    "preview": {
+      "select": {
+        "title": "username"
+      }
+    },
     "name": "adminAuth",
     "type": "document",
     "title": "Admin auth"
