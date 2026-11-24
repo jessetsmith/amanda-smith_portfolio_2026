@@ -1,11 +1,61 @@
 export type HeroMediaKind = "youtube" | "video" | "none";
 
+export const YOUTUBE_EMBED_HOST = "https://www.youtube-nocookie.com";
+
 export interface HeroMedia {
   kind: HeroMediaKind;
   /** Direct file URL for native <video> */
   videoUrl?: string;
   /** YouTube video id when kind === "youtube" */
   youtubeId?: string;
+}
+
+/**
+ * Build the privacy-enhanced YouTube embed URL for immediate SSR mounting.
+ * Omits deprecated params (showinfo, autohide, modestbranding) and enables
+ * the IFrame API so YT.Player can attach without reloading the iframe.
+ */
+export function buildYouTubeEmbedUrl(videoId: string): string {
+  const params = new URLSearchParams({
+    autoplay: "1",
+    mute: "1",
+    controls: "0",
+    disablekb: "1",
+    fs: "0",
+    playsinline: "1",
+    rel: "0",
+    // Manual seamless loop (seek before end) — playlist loop still flashes chrome
+    loop: "0",
+    iv_load_policy: "3",
+    cc_load_policy: "0",
+    enablejsapi: "1",
+  });
+  return `${YOUTUBE_EMBED_HOST}/embed/${encodeURIComponent(videoId)}?${params.toString()}`;
+}
+
+/**
+ * Ask Sanity's image CDN for a modern format (AVIF/WebP) capped at 1920px so
+ * raw 4K poster uploads do not compete with the hero video stream.
+ */
+export function optimizeHeroImageUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    if (
+      parsed.hostname === "cdn.sanity.io" &&
+      parsed.pathname.startsWith("/images/") &&
+      !parsed.searchParams.has("auto") &&
+      !parsed.searchParams.has("w")
+    ) {
+      parsed.searchParams.set("auto", "format");
+      parsed.searchParams.set("fit", "max");
+      parsed.searchParams.set("w", "1920");
+      parsed.searchParams.set("q", "80");
+      return parsed.toString();
+    }
+  } catch {
+    // relative or non-standard URL — leave unchanged
+  }
+  return url;
 }
 
 /** Extract an 11-char YouTube id from watch / youtu.be / embed / shorts URLs. */
@@ -102,8 +152,8 @@ export function resolveHeroPoster(
   imageUrl?: string | null,
   youtubeId?: string | null,
 ): string | undefined {
-  if (isLikelyImageUrl(posterUrl)) return posterUrl!.trim();
-  if (isLikelyImageUrl(imageUrl)) return imageUrl!.trim();
+  if (isLikelyImageUrl(posterUrl)) return optimizeHeroImageUrl(posterUrl!.trim());
+  if (isLikelyImageUrl(imageUrl)) return optimizeHeroImageUrl(imageUrl!.trim());
   if (youtubeId && isYouTubeId(youtubeId)) {
     return `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
   }

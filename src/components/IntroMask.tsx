@@ -13,7 +13,12 @@ import {
 import { createPortal } from "react-dom";
 import { useLocaleOptional } from "@/components/i18n/LocaleProvider";
 import { DEFAULT_STAMP_HINT, resolveStampHint } from "@/lib/hero";
-import { resolveHeroMedia, resolveHeroPoster } from "@/lib/hero-media";
+import {
+  buildYouTubeEmbedUrl,
+  resolveHeroMedia,
+  resolveHeroPoster,
+  YOUTUBE_EMBED_HOST,
+} from "@/lib/hero-media";
 import type { LocaleString } from "@/lib/i18n/resolve";
 
 interface IntroMaskProps {
@@ -51,7 +56,8 @@ declare global {
       Player: new (
         element: HTMLElement | string,
         config: {
-          videoId: string;
+          host?: string;
+          videoId?: string;
           playerVars?: Record<string, string | number>;
           events?: {
             onReady?: (event: { target: YtPlayer }) => void;
@@ -89,6 +95,24 @@ interface YtPlayer {
   getPlayerState: () => number;
 }
 
+interface AttachedYtHandlers {
+  onReady?: (event: { target: YtPlayer }) => void;
+  onStateChange?: (event: { data: number; target: YtPlayer }) => void;
+  onError?: (event: { data: number; target: YtPlayer }) => void;
+}
+
+interface AttachedYtEntry {
+  player: YtPlayer;
+  ready: boolean;
+  handlers: AttachedYtHandlers;
+}
+
+/**
+ * Keeps an attached YT.Player alive across React Strict Mode double-effects on
+ * the same SSR <iframe>, destroying it only when the iframe leaves the DOM.
+ */
+const attachedYtPlayers = new WeakMap<HTMLIFrameElement, AttachedYtEntry>();
+
 let youtubeApiPromise: Promise<void> | null = null;
 
 function loadYouTubeApi(): Promise<void> {
@@ -96,24 +120,39 @@ function loadYouTubeApi(): Promise<void> {
   if (window.YT?.Player) return Promise.resolve();
   if (youtubeApiPromise) return youtubeApiPromise;
 
-  youtubeApiPromise = new Promise((resolve) => {
+  youtubeApiPromise = new Promise((resolve, reject) => {
+    let settled = false;
+    let poll: number | null = null;
+    const finish = (err?: Error) => {
+      if (settled) return;
+      settled = true;
+      if (poll != null) {
+        window.clearInterval(poll);
+        poll = null;
+      }
+      if (err) {
+        youtubeApiPromise = null;
+        reject(err);
+      } else {
+        resolve();
+      }
+    };
+
     const prior = window.onYouTubeIframeAPIReady;
     window.onYouTubeIframeAPIReady = () => {
       prior?.();
-      resolve();
+      finish();
     };
     if (!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
       const script = document.createElement("script");
       script.src = "https://www.youtube.com/iframe_api";
       script.async = true;
+      script.onerror = () => finish(new Error("Failed to load YouTube IFrame API"));
       document.head.appendChild(script);
     }
     // API may already be mid-load
-    const poll = window.setInterval(() => {
-      if (window.YT?.Player) {
-        window.clearInterval(poll);
-        resolve();
-      }
+    poll = window.setInterval(() => {
+      if (window.YT?.Player) finish();
     }, 50);
   });
 
@@ -230,7 +269,8 @@ export function IntroMask({
     null,
   );
 
-  // Warm cursor + stamp assets (public only)
+  // Warm cursor immediately; defer larger stamp textures until idle so they
+  // do not compete with hero poster + video startup bandwidth.
   useEffect(() => {
     if (!enableHandCursor) {
       setHandCursorMounted(false);
@@ -239,11 +279,32 @@ export function IntroMask({
     }
     const img = new window.Image();
     img.src = "/cursors/handprint.png";
-    for (const src of HANDPRINT_SRCS) {
-      const stamp = new window.Image();
-      stamp.src = src;
-    }
     setHandCursorMounted(true);
+
+    const warmStamps = () => {
+      for (const src of HANDPRINT_SRCS) {
+        const stamp = new window.Image();
+        stamp.src = src;
+      }
+    };
+
+    const win = window as Window & {
+      requestIdleCallback?: (
+        cb: () => void,
+        opts?: { timeout?: number },
+      ) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    if (typeof win.requestIdleCallback === "function") {
+      const idleId = win.requestIdleCallback(warmStamps, { timeout: 1500 });
+      return () => {
+        win.cancelIdleCallback?.(idleId);
+      };
+    }
+    const timer = window.setTimeout(warmStamps, 1200);
+    return () => {
+      window.clearTimeout(timer);
+    };
   }, [enableHandCursor]);
 
   // Stable handprint: system cursor locked to none; one overlay follows the
@@ -719,6 +780,9 @@ export function IntroMask({
               className="intro-mask__video"
               src={coverPoster || imageSrc || posterSrc}
               alt=""
+              fetchPriority="high"
+              loading="eager"
+              decoding="async"
             />
           ) : null}
           {/* Session stamps: above video, under haze. Public only. */}
@@ -1016,6 +1080,9 @@ function NativeHeroVideo({
           data-visible={showPoster ? "1" : "0"}
           src={poster}
           alt=""
+          fetchPriority="high"
+          loading="eager"
+          decoding="async"
           draggable={false}
         />
       ) : null}
@@ -1051,7 +1118,7 @@ function YouTubeHeroVideo({
   soundOn: boolean;
   registerApi: (api: { setMuted: (muted: boolean) => void }) => void;
 }) {
-  const hostRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const veilRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YtPlayer | null>(null);
@@ -1064,40 +1131,57 @@ function YouTubeHeroVideo({
   const failedRef = useRef(false);
   const firstPlayDoneRef = useRef(false);
   const unveilPaintTimerRef = useRef<number | null>(null);
+  const [posterFailed, setPosterFailed] = useState(false);
+  const embedUrl = buildYouTubeEmbedUrl(videoId);
   const posterUrl =
     poster || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
 
-  const setVeil = useCallback((on: boolean, softReveal = false) => {
-    if (failedRef.current && !on) return; // never uncover after hard failure
-    const veil = veilRef.current;
-    const root = rootRef.current;
-    if (unveilPaintTimerRef.current != null) {
-      window.clearTimeout(unveilPaintTimerRef.current);
-      unveilPaintTimerRef.current = null;
-    }
-    if (on) {
-      // Cover first, then hide iframe (both instant — no chrome peek)
-      if (veil) {
-        veil.dataset.on = "1";
-        veil.dataset.soft = "0";
-      }
-      if (root) root.dataset.veiled = "1";
-      return;
-    }
-    // Unveil only after chrome window: show iframe under poster, then
-    // drop poster instantly (never fade — fades flash the pause glyph).
-    if (root) root.dataset.veiled = "0";
-    if (veil) veil.dataset.soft = "0";
-    unveilPaintTimerRef.current = window.setTimeout(
-      () => {
-        if (failedRef.current) return;
-        if (veilRef.current) veilRef.current.dataset.on = "0";
+  useEffect(() => {
+    setPosterFailed(false);
+  }, [posterUrl]);
+
+  const setVeil = useCallback(
+    (
+      on: boolean,
+      softReveal = false,
+      options?: { hideIframe?: boolean; immediate?: boolean },
+    ) => {
+      if (failedRef.current && !on) return; // never uncover after hard failure
+      const veil = veilRef.current;
+      const root = rootRef.current;
+      if (unveilPaintTimerRef.current != null) {
+        window.clearTimeout(unveilPaintTimerRef.current);
         unveilPaintTimerRef.current = null;
-      },
-      // Hold cover long enough that YT center pause never peeks through
-      softReveal ? 1400 : 1600,
-    );
-  }, []);
+      }
+      if (on) {
+        // Cover first, then hide iframe (both instant — no chrome peek)
+        if (veil) {
+          veil.dataset.on = "1";
+          veil.dataset.soft = "0";
+        }
+        if (root && options?.hideIframe !== false) root.dataset.veiled = "1";
+        return;
+      }
+      // Unveil only after chrome window: show iframe under poster, then
+      // drop poster instantly (never fade — fades flash the pause glyph).
+      if (root) root.dataset.veiled = "0";
+      if (veil) veil.dataset.soft = "0";
+      if (options?.immediate) {
+        if (veil) veil.dataset.on = "0";
+        return;
+      }
+      unveilPaintTimerRef.current = window.setTimeout(
+        () => {
+          if (failedRef.current) return;
+          if (veilRef.current) veilRef.current.dataset.on = "0";
+          unveilPaintTimerRef.current = null;
+        },
+        // Hold cover long enough that YT center pause never peeks through
+        softReveal ? 1400 : 1600,
+      );
+    },
+    [],
+  );
 
   const setMuted = useCallback((muted: boolean) => {
     const player = playerRef.current;
@@ -1118,22 +1202,33 @@ function YouTubeHeroVideo({
     let cancelled = false;
     let loopTimer: number | null = null;
     let unveilTimer: number | null = null;
+    let initialPollTimer: number | null = null;
     let failTimer: number | null = null;
-    const host = hostRef.current;
-    if (!host) return;
+    const iframe = iframeRef.current;
+    if (!iframe) return;
 
     failedRef.current = false;
     firstPlayDoneRef.current = false;
-    host.innerHTML = "";
-    const mount = document.createElement("div");
-    mount.id = mountId;
-    host.appendChild(mount);
+    restartingRef.current = false;
 
-    // CMS/still poster until first stable PLAYING frame
-    setVeil(true);
+    // Keep poster covering the iframe during initial load, without setting
+    // visibility:hidden so the browser does not throttle iframe video decoding.
+    setVeil(true, false, { hideIframe: false });
+
+    const clearUnveilTimers = () => {
+      if (unveilTimer != null) {
+        window.clearTimeout(unveilTimer);
+        unveilTimer = null;
+      }
+      if (initialPollTimer != null) {
+        window.clearInterval(initialPollTimer);
+        initialPollTimer = null;
+      }
+    };
 
     const markFailed = () => {
       failedRef.current = true;
+      clearUnveilTimers();
       setVeil(true);
       if (loopTimer != null) {
         window.clearInterval(loopTimer);
@@ -1141,9 +1236,49 @@ function YouTubeHeroVideo({
       }
     };
 
+    const scheduleInitialUnveil = (player: YtPlayer) => {
+      clearUnveilTimers();
+      const startedAt = performance.now();
+      const tryUnveil = () => {
+        if (cancelled || failedRef.current || firstPlayDoneRef.current) {
+          clearUnveilTimers();
+          return;
+        }
+        try {
+          const playingState = window.YT?.PlayerState?.PLAYING;
+          const state = player.getPlayerState();
+          if (playingState !== undefined && state !== playingState) {
+            clearUnveilTimers();
+            return;
+          }
+          const t = player.getCurrentTime();
+          const elapsed = performance.now() - startedAt;
+          if (t >= 0.25 || (elapsed >= 350 && t > 0) || elapsed >= 1000) {
+            clearUnveilTimers();
+            firstPlayDoneRef.current = true;
+            restartingRef.current = false;
+            setVeil(false, true, { immediate: true });
+          }
+        } catch {
+          if (performance.now() - startedAt >= 350) {
+            clearUnveilTimers();
+            firstPlayDoneRef.current = true;
+            restartingRef.current = false;
+            setVeil(false, true, { immediate: true });
+          }
+        }
+      };
+
+      tryUnveil();
+      if (!firstPlayDoneRef.current) {
+        initialPollTimer = window.setInterval(tryUnveil, 50);
+      }
+    };
+
     const restartLoop = (player: YtPlayer) => {
       if (restartingRef.current || failedRef.current) return;
       restartingRef.current = true;
+      clearUnveilTimers();
       // Veil BEFORE restart so pause/spinner/end-screen never paints a frame
       setVeil(true);
       try {
@@ -1165,6 +1300,156 @@ function YouTubeHeroVideo({
       }
     };
 
+    const onPlayerReady = (player: YtPlayer) => {
+      if (cancelled || failedRef.current) return;
+      playerRef.current = player;
+
+      let state: number | undefined;
+      try {
+        state = player.getPlayerState();
+      } catch {
+        // ignore
+      }
+
+      const playing = window.YT?.PlayerState?.PLAYING;
+      const buffering = window.YT?.PlayerState?.BUFFERING;
+
+      if (soundOnRef.current) {
+        player.unMute();
+        player.setVolume(100);
+      } else {
+        player.mute();
+      }
+
+      // Only kick playVideo() if autoplay=1 did not already start playback;
+      // redundant playVideo() on a playing embed can flash YouTube's play bezel.
+      if (state !== playing && state !== buffering) {
+        player.playVideo();
+      }
+
+      if (process.env.NODE_ENV === "development") {
+        (window as Window & { __amandaHeroYt?: YtPlayer }).__amandaHeroYt =
+          player;
+      }
+
+      // Poll near the end and restart before ENDED paints end-screen chrome
+      if (loopTimer != null) window.clearInterval(loopTimer);
+      loopTimer = window.setInterval(() => {
+        if (cancelled || failedRef.current) return;
+        const currentPlayer = playerRef.current;
+        if (!currentPlayer) return;
+        try {
+          const duration = currentPlayer.getDuration();
+          const current = currentPlayer.getCurrentTime();
+          if (!Number.isFinite(duration) || duration < 1) return;
+          if (duration - current <= 0.45 && !restartingRef.current) {
+            restartLoop(currentPlayer);
+          }
+        } catch {
+          // ignore
+        }
+      }, 120);
+
+      // If the SSR iframe already entered PLAYING before iframe_api finished
+      // loading, unveil immediately without waiting for another state event.
+      if (
+        playing !== undefined &&
+        state === playing &&
+        !firstPlayDoneRef.current &&
+        !restartingRef.current
+      ) {
+        scheduleInitialUnveil(player);
+      }
+    };
+
+    const handlers: AttachedYtHandlers = {
+      onReady: (event) => {
+        onPlayerReady(event.target);
+      },
+      onError: () => {
+        if (!cancelled) markFailed();
+      },
+      onStateChange: (event) => {
+        if (cancelled || failedRef.current) return;
+        const state = event.data;
+        const ended = window.YT?.PlayerState?.ENDED;
+        const paused = window.YT?.PlayerState?.PAUSED;
+        const playing = window.YT?.PlayerState?.PLAYING;
+        const buffering = window.YT?.PlayerState?.BUFFERING;
+        const cued = window.YT?.PlayerState?.CUED;
+
+        if (state === ended) {
+          restartLoop(event.target);
+          return;
+        }
+
+        if (state === cued) {
+          setVeil(true, false, { hideIframe: firstPlayDoneRef.current });
+        }
+
+        if (state === buffering) {
+          // Veil post-seek / loop rebuffers (not every mid-play hiccup)
+          try {
+            const t = event.target.getCurrentTime();
+            if (restartingRef.current || (firstPlayDoneRef.current && t < 1.25)) {
+              setVeil(true);
+            }
+          } catch {
+            if (restartingRef.current) setVeil(true);
+          }
+        }
+
+        if (state === playing) {
+          // Initial clean autoplay has no post-seek center pause bezel — unveil
+          // as soon as playback is confirmed advancing instead of holding 4s.
+          if (!firstPlayDoneRef.current && !restartingRef.current) {
+            scheduleInitialUnveil(event.target);
+            return;
+          }
+
+          clearUnveilTimers();
+          // Loop/pause restart: hold cover until past YouTube's post-seek chrome window
+          unveilTimer = window.setTimeout(() => {
+            if (cancelled || failedRef.current) return;
+            try {
+              const player = playerRef.current;
+              const stillPlaying =
+                player &&
+                player.getPlayerState() === window.YT?.PlayerState?.PLAYING;
+              const t = player?.getCurrentTime() ?? 0;
+              // YouTube keeps a center pause glyph for several seconds after seek+play
+              if (!stillPlaying || t < 4.2) {
+                setVeil(true);
+                unveilTimer = window.setTimeout(() => {
+                  if (cancelled || failedRef.current) return;
+                  firstPlayDoneRef.current = true;
+                  setVeil(false, true);
+                  restartingRef.current = false;
+                }, 1400);
+                return;
+              }
+            } catch {
+              // fall through and unveil
+            }
+            firstPlayDoneRef.current = true;
+            setVeil(false, false);
+            restartingRef.current = false;
+          }, 1200);
+          return;
+        }
+
+        if (state === paused && document.visibilityState !== "hidden") {
+          // Cover BEFORE resume so the center pause circle never paints
+          setVeil(true);
+          try {
+            event.target.playVideo();
+          } catch {
+            // ignore
+          }
+        }
+      },
+    };
+
     void loadYouTubeApi()
       .then(() => {
         if (cancelled) return;
@@ -1172,139 +1457,39 @@ function YouTubeHeroVideo({
           markFailed();
           return;
         }
-        playerRef.current = new window.YT.Player(mountId, {
-          videoId,
-          playerVars: {
-            autoplay: 1,
-            mute: 1,
-            controls: 0,
-            disablekb: 1,
-            fs: 0,
-            modestbranding: 1,
-            playsinline: 1,
-            rel: 0,
-            // Manual seamless loop (seek before end) — playlist loop still flashes chrome
-            loop: 0,
-            iv_load_policy: 3,
-            cc_load_policy: 0,
-            showinfo: 0,
-            autohide: 1,
-            enablejsapi: 1,
-          },
-          events: {
-            onReady: (event) => {
-              if (cancelled || failedRef.current) return;
-              event.target.mute();
-              event.target.playVideo();
-              if (soundOnRef.current) {
-                event.target.unMute();
-                event.target.setVolume(100);
-              }
-              if (process.env.NODE_ENV === "development") {
-                (
-                  window as Window & { __amandaHeroYt?: YtPlayer }
-                ).__amandaHeroYt = event.target;
-              }
 
-              // Poll near the end and restart before ENDED paints end-screen chrome
-              if (loopTimer != null) window.clearInterval(loopTimer);
-              loopTimer = window.setInterval(() => {
-                if (cancelled || failedRef.current) return;
-                const player = playerRef.current;
-                if (!player) return;
-                try {
-                  const duration = player.getDuration();
-                  const current = player.getCurrentTime();
-                  if (!Number.isFinite(duration) || duration < 1) return;
-                  if (duration - current <= 0.45 && !restartingRef.current) {
-                    restartLoop(player);
-                  }
-                } catch {
-                  // ignore
-                }
-              }, 120);
+        const existing = attachedYtPlayers.get(iframe);
+        if (existing) {
+          existing.handlers = handlers;
+          playerRef.current = existing.player;
+          if (existing.ready) {
+            onPlayerReady(existing.player);
+          }
+        } else {
+          const entry: AttachedYtEntry = {
+            player: null as unknown as YtPlayer,
+            ready: false,
+            handlers,
+          };
+          const player = new window.YT.Player(iframe, {
+            host: YOUTUBE_EMBED_HOST,
+            events: {
+              onReady: (event) => {
+                entry.ready = true;
+                entry.handlers.onReady?.(event);
+              },
+              onStateChange: (event) => {
+                entry.handlers.onStateChange?.(event);
+              },
+              onError: (event) => {
+                entry.handlers.onError?.(event);
+              },
             },
-            onError: () => {
-              if (!cancelled) markFailed();
-            },
-            onStateChange: (event) => {
-              if (failedRef.current) return;
-              const state = event.data;
-              const ended = window.YT?.PlayerState?.ENDED;
-              const paused = window.YT?.PlayerState?.PAUSED;
-              const playing = window.YT?.PlayerState?.PLAYING;
-              const buffering = window.YT?.PlayerState?.BUFFERING;
-              const cued = window.YT?.PlayerState?.CUED;
-
-              if (state === ended) {
-                restartLoop(event.target);
-                return;
-              }
-
-              if (state === cued) {
-                setVeil(true);
-              }
-
-              if (state === buffering) {
-                // Veil post-seek / loop rebuffers (not every mid-play hiccup)
-                try {
-                  const t = event.target.getCurrentTime();
-                  if (restartingRef.current || t < 1.25) setVeil(true);
-                } catch {
-                  if (restartingRef.current) setVeil(true);
-                }
-              }
-
-              if (state === playing) {
-                if (unveilTimer != null) window.clearTimeout(unveilTimer);
-                // Hold cover until play is past the post-seek chrome window
-                unveilTimer = window.setTimeout(() => {
-                  if (cancelled || failedRef.current) return;
-                  try {
-                    const player = playerRef.current;
-                    const stillPlaying =
-                      player &&
-                      player.getPlayerState() ===
-                        window.YT?.PlayerState?.PLAYING;
-                    const t = player?.getCurrentTime() ?? 0;
-                    // YouTube keeps a center pause glyph for several seconds after seek+play
-                    if (!stillPlaying || t < 4.2) {
-                      setVeil(true);
-                      unveilTimer = window.setTimeout(() => {
-                        if (cancelled || failedRef.current) return;
-                        const soft = !firstPlayDoneRef.current;
-                        firstPlayDoneRef.current = true;
-                        setVeil(false, soft);
-                        restartingRef.current = false;
-                      }, 1400);
-                      return;
-                    }
-                  } catch {
-                    // fall through and unveil
-                  }
-                  const soft = !firstPlayDoneRef.current;
-                  firstPlayDoneRef.current = true;
-                  setVeil(false, soft);
-                  restartingRef.current = false;
-                }, 1200);
-                return;
-              }
-
-              if (
-                state === paused &&
-                document.visibilityState !== "hidden"
-              ) {
-                // Cover BEFORE resume so the center pause circle never paints
-                setVeil(true);
-                try {
-                  event.target.playVideo();
-                } catch {
-                  // ignore
-                }
-              }
-            },
-          },
-        });
+          });
+          entry.player = player;
+          attachedYtPlayers.set(iframe, entry);
+          playerRef.current = player;
+        }
 
         // If we never reach PLAYING, keep the poster permanently
         failTimer = window.setTimeout(() => {
@@ -1319,16 +1504,25 @@ function YouTubeHeroVideo({
     return () => {
       cancelled = true;
       if (loopTimer != null) window.clearInterval(loopTimer);
-      if (unveilTimer != null) window.clearTimeout(unveilTimer);
+      clearUnveilTimers();
       if (failTimer != null) window.clearTimeout(failTimer);
       if (unveilPaintTimerRef.current != null) {
         window.clearTimeout(unveilPaintTimerRef.current);
         unveilPaintTimerRef.current = null;
       }
-      try {
-        playerRef.current?.destroy();
-      } catch {
-        // ignore
+      const entry = attachedYtPlayers.get(iframe);
+      if (entry) {
+        entry.handlers = {};
+        queueMicrotask(() => {
+          if (!iframe.isConnected && attachedYtPlayers.get(iframe) === entry) {
+            attachedYtPlayers.delete(iframe);
+            try {
+              entry.player.destroy();
+            } catch {
+              // ignore
+            }
+          }
+        });
       }
       playerRef.current = null;
       try {
@@ -1336,9 +1530,8 @@ function YouTubeHeroVideo({
       } catch {
         // ignore
       }
-      host.innerHTML = "";
     };
-  }, [mountId, setVeil, videoId]);
+  }, [setVeil, videoId]);
 
   useEffect(() => {
     setMuted(!soundOn);
@@ -1348,18 +1541,43 @@ function YouTubeHeroVideo({
     <div
       ref={rootRef}
       className="intro-mask__video intro-mask__video--youtube"
-      data-veiled="1"
+      data-veiled="0"
       aria-hidden
     >
-      <div ref={hostRef} className="intro-mask__youtube-host" />
+      <div className="intro-mask__youtube-host">
+        <iframe
+          key={videoId}
+          ref={iframeRef}
+          id={mountId}
+          src={embedUrl}
+          title=""
+          tabIndex={-1}
+          aria-hidden="true"
+          allow="autoplay; encrypted-media; picture-in-picture"
+          referrerPolicy="strict-origin-when-cross-origin"
+        />
+      </div>
       {/* CMS poster (fallback yt thumb) — load / loop / buffer / failure cover */}
       <div
         ref={veilRef}
         className="intro-mask__youtube-veil intro-mask__media-poster"
         data-on="1"
         data-soft="0"
-        style={{ backgroundImage: `url(${posterUrl})` }}
-      />
+      >
+        {!posterFailed ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            className="intro-mask__media-poster-img"
+            src={posterUrl}
+            alt=""
+            fetchPriority="high"
+            loading="eager"
+            decoding="async"
+            draggable={false}
+            onError={() => setPosterFailed(true)}
+          />
+        ) : null}
+      </div>
       {/* Blocks clicks on residual chrome; oversized host clips edge bars */}
       <div className="intro-mask__video-shield" aria-hidden />
     </div>
