@@ -59,7 +59,13 @@ function CardImage({
     return (
       <div className="card-image">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt={alt || ""} className="card-image__media" />
+        <img
+          src={src}
+          alt={alt || ""}
+          className="card-image__media"
+          loading="lazy"
+          decoding="async"
+        />
       </div>
     );
   }

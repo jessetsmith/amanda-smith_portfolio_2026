@@ -1,10 +1,12 @@
 import { connection } from "next/server";
+import { preload } from "react-dom";
 import { HomepageGrid } from "@/components/grid/HomepageGrid";
 import { HazyNav } from "@/components/HazyNav";
 import { IntroMask } from "@/components/IntroMask";
 import { GridIntroBlurb } from "@/components/GridIntroBlurb";
 import { SiteShell } from "@/components/SiteShell";
 import { getHomepageContent, getSiteSettings } from "@/lib/content";
+import { resolveHeroMedia, resolveHeroPoster } from "@/lib/hero-media";
 
 /** Allow request-time Sanity/fixture fetch under Cache Components (Vercel). */
 export const instant = false;
@@ -19,8 +21,26 @@ export default async function Home() {
     getSiteSettings(),
   ]);
 
+  const heroMedia = resolveHeroMedia(home.videoSrc);
+  const heroPoster = resolveHeroPoster(
+    home.posterSrc,
+    home.imageSrc,
+    heroMedia.youtubeId,
+  );
+
+  if (heroPoster) {
+    preload(heroPoster, { as: "image", fetchPriority: "high" });
+  }
+
   return (
     <SiteShell uiCopy={home.uiCopy}>
+      {heroMedia.kind === "youtube" ? (
+        <link
+          rel="preload"
+          as="script"
+          href="https://www.youtube.com/iframe_api"
+        />
+      ) : null}
       <HazyNav
         brand={site.siteTitle}
         items={site.nav}

@@ -124,6 +124,15 @@ export async function getHomepageContent(): Promise<HomepageContent> {
     };
   }
 
+  // Both grid and hero already loaded from Sanity in parallel above — skip the
+  // redundant sequential homepageQuery fallback fetch.
+  if (heroResult.source === "sanity" && grid.source === "sanity") {
+    return {
+      ...defaults,
+      source: "sanity",
+    };
+  }
+
   try {
     const data = await client.fetch(homepageQuery, {}, sanityFetchOptions);
     if (!data) return defaults;
