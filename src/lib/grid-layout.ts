@@ -70,11 +70,20 @@ export function stripBlankCells(items: GridItem[]): GridItem[] {
   return items.filter((item) => item.kind !== "blankCell");
 }
 
-function makeBlank(colStart: number, colSpan: number, rowSpan = 1): BlankCellItem {
+/**
+ * Vacancy spacers are derived during render (SSR + client hydration), so their
+ * ids must be deterministic — random ids cause hydration mismatches.
+ */
+function makeBlank(
+  row: number,
+  colStart: number,
+  colSpan: number,
+  rowSpan = 1,
+): BlankCellItem {
   const col = clamp(colStart, 1, GRID_COLUMNS);
   const span = clamp(colSpan, 1, GRID_COLUMNS - col + 1);
   return {
-    id: `blank-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    id: `blank-r${row}-c${col}-w${span}`,
     order: 0,
     kind: "blankCell",
     colStart: col,
@@ -237,7 +246,7 @@ export function fillSectionVacancies(items: GridItem[]): GridItem[] {
         }
         const runStart = col;
         while (col <= GRID_COLUMNS && !occ.has(`${col},${row}`)) col += 1;
-        const blank = makeBlank(runStart, col - runStart, 1);
+        const blank = makeBlank(row, runStart, col - runStart, 1);
         blank.rowStart = row;
         blanks.push(blank);
       }

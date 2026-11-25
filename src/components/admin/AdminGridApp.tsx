@@ -934,6 +934,7 @@ export function AdminGridApp({
       />
 
       <DndContext
+        id="admin-grid-dnd"
         sensors={sensors}
         collisionDetection={adminCollisionDetection}
         onDragStart={onDragStart}
