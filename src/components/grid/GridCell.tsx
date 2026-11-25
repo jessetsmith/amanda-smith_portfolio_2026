@@ -142,8 +142,10 @@ function CellShell({
       data-linked={linked ? "true" : undefined}
       {...linkProps}
     >
-      {children}
-      {linked ? <OpenCue /> : null}
+      <div className="card-inner">
+        {children}
+        {linked ? <OpenCue /> : null}
+      </div>
     </Comp>
   );
 }
