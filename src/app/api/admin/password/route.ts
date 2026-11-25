@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import {
   changeAdminPassword,
-  isAdminAuthenticated,
   issueAdminSessionCookie,
+  requireAdminWrite,
 } from "@/lib/auth";
 
 export async function POST(request: Request) {
-  if (!(await isAdminAuthenticated())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = await requireAdminWrite(request);
+  if (denied) return denied;
 
   let body: {
     currentPassword?: string;

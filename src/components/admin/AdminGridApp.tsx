@@ -2946,7 +2946,7 @@ function ImagePickerField({
           <input
             ref={inputRef}
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
             className="sr-only"
             onChange={(event) => void onFileChange(event)}
           />

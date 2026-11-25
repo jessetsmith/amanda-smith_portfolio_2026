@@ -44,7 +44,12 @@ Open [http://localhost:3456](http://localhost:3456).
 
 Sessions are HMAC-SHA256 signed cookies that expire after 7 days and are bound to the current password hash, so changing the password signs out every other session. The signing key comes from `ADMIN_SESSION_SECRET` (recommended; `openssl rand -base64 48`), else is derived from `SANITY_API_WRITE_TOKEN`; production refuses login if neither is set.
 
-Do **not** put plaintext passwords in Studio — the `passwordHash` field is read-only. Optional emergency bootstrap: `ADMIN_USER` / `ADMIN_PASSWORD` env — used only when the Sanity doc is missing.
+Do **not** put plaintext passwords in Studio — the `passwordHash` field is read-only. Optional emergency bootstrap: `ADMIN_USER` / `ADMIN_PASSWORD` env — used only when Sanity confirms the `adminAuth` doc does not exist (or in local dev without Sanity). If Sanity cannot be read, login returns 503 rather than accepting the env password.
+
+Admin hardening:
+- **Login throttling:** 5 failed logins per IP in 15 min → 429 with `Retry-After` (lockout 15 min, doubling on repeat, max 24 h); 10 per username across IPs → 429 (max 1 h). State lives in memory per instance plus the private Sanity doc `adminSecurity.loginThrottle` (hashed keys only).
+- **Same-site check:** every admin `POST`/`PUT`/`DELETE` (login, logout, saves, uploads, password) must carry an `Origin` (or `Referer`) of this site, else 403.
+- **Uploads:** image type is detected from file bytes; only JPEG, PNG, WebP, GIF, AVIF up to 8 MB. SVG is rejected. `npm run sanity:report-svg` lists any SVGs already in Sanity or `public/media/uploads` (read-only).
 
 ## Sanity
 

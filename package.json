@@ -15,6 +15,7 @@
     "sanity:seed-admin": "node scripts/seed-admin-auth.mjs",
     "sanity:migrate-hero-poster": "node scripts/migrate-hero-poster-to-sanity.mjs",
     "sanity:seed-cv-pdf": "node scripts/seed-cv-pdf.mjs",
+    "sanity:report-svg": "node scripts/report-svg-assets.mjs",
     "sanity:schema-extract": "sanity schemas extract --path ./schema.json --force",
     "sanity:schema-validate": "sanity schemas validate",
     "sanity:schema-deploy": "sanity schemas deploy",

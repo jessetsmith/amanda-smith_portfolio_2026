@@ -22,7 +22,12 @@ function LoginForm() {
         body: JSON.stringify({ user, password }),
       });
       if (!res.ok) {
-        setError("Invalid credentials");
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        setError(
+          res.status === 429 || res.status === 503
+            ? data.error || "Sign-in is temporarily unavailable"
+            : "Invalid credentials",
+        );
         return;
       }
       const next = searchParams.get("next") || "/admin";

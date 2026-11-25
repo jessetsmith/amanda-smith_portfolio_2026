@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
-import { isAdminAuthenticated } from "@/lib/auth";
+import { requireAdminWrite } from "@/lib/auth";
 import { loadCvPage, saveCvPdf } from "@/lib/cv-sync";
 
 const MAX_BYTES = 20 * 1024 * 1024;
@@ -22,9 +22,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  if (!(await isAdminAuthenticated())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = await requireAdminWrite(request);
+  if (denied) return denied;
 
   let form: FormData;
   try {
