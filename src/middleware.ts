@@ -1,11 +1,16 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { ADMIN_SESSION_COOKIE } from "@/lib/auth-constants";
 import {
-  ADMIN_SESSION_COOKIE,
-  ADMIN_SESSION_VALUE,
-} from "@/lib/auth-constants";
+  clearedAdminSessionCookie,
+  verifyAdminSessionToken,
+} from "@/lib/admin-session";
 
-export function middleware(request: NextRequest) {
+/**
+ * Fast gate for /admin pages: signature + expiry only. The credential-version
+ * check (password changes) needs Sanity and runs server-side in isAdminAuthenticated().
+ */
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (!pathname.startsWith("/admin")) {
@@ -16,11 +21,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const session = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
-  if (session !== ADMIN_SESSION_VALUE) {
+  const token = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
+  if (!(await verifyAdminSessionToken(token))) {
     const login = new URL("/admin/login", request.url);
     login.searchParams.set("next", pathname);
-    return NextResponse.redirect(login);
+    const response = NextResponse.redirect(login);
+    if (token !== undefined) response.cookies.set(clearedAdminSessionCookie());
+    return response;
   }
 
   return NextResponse.next();

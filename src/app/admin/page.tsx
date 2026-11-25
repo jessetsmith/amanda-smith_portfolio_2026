@@ -1,5 +1,7 @@
+import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { AdminGridApp } from "@/components/admin/AdminGridApp";
+import { isAdminAuthenticated } from "@/lib/auth";
 import { getCvPageContent, getSiteSettings } from "@/lib/content";
 import { loadGridItems } from "@/lib/grid-sync";
 import { loadHero } from "@/lib/hero-sync";
@@ -9,6 +11,9 @@ export const instant = false;
 
 export default async function AdminPage() {
   await connection();
+  if (!(await isAdminAuthenticated())) {
+    redirect("/admin/login?next=/admin");
+  }
   const [{ items, source }, heroResult, site, cv] = await Promise.all([
     loadGridItems(),
     loadHero(),

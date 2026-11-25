@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { changeAdminPassword, isAdminAuthenticated } from "@/lib/auth";
+import {
+  changeAdminPassword,
+  isAdminAuthenticated,
+  issueAdminSessionCookie,
+} from "@/lib/auth";
 
 export async function POST(request: Request) {
   if (!(await isAdminAuthenticated())) {
@@ -33,5 +37,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
 
-  return NextResponse.json({ ok: true });
+  // The new hash invalidates all existing sessions; keep only this one signed in.
+  const response = NextResponse.json({ ok: true });
+  const cookie = await issueAdminSessionCookie(result.credentialMaterial);
+  if (cookie) response.cookies.set(cookie);
+  return response;
 }

@@ -108,6 +108,7 @@ Vercel project env vars are also set (Production / Preview / Development) from l
 | `NEXT_PUBLIC_SANITY_API_VERSION` | e.g. `2025-01-01` |
 | `SANITY_API_READ_TOKEN` | Server reads |
 | `SANITY_API_WRITE_TOKEN` | Admin Save / uploads |
+| `ADMIN_SESSION_SECRET` | Recommended. Signs admin session cookies (>= 32 chars, `openssl rand -base64 48`). If unset, the signing key is derived from `SANITY_API_WRITE_TOKEN`; if both are missing, admin login is refused. Changing it signs admins out. |
 | `ADMIN_USER` / `ADMIN_PASSWORD` | Optional emergency bootstrap only (prefer Sanity `adminAuth`) |
 
 ## Workflows
