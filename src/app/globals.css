@@ -487,6 +487,9 @@ a.grid-cell-link:focus-visible .card-open {
   color: var(--cell-text-color);
   overflow-wrap: break-word;
   word-break: normal;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
 }
 
 .color-cell--prose {
@@ -494,6 +497,8 @@ a.grid-cell-link:focus-visible .card-open {
 }
 
 /*
+  Text spans the card's full content box at any column span: no ch / max-width
+  caps on meta, title, subtitle, description or year (width: 100%, min-width: 0).
   Content card stack: meta → title → image → description.
   The cell is an inline-size container ("card"), so every size below is derived
   from the card's own width (cqw) — identical on the live site and in the admin
@@ -527,13 +532,16 @@ a.grid-cell-link:focus-visible .card-open {
   font-size: calc(
     clamp(var(--card-meta-min), 0.45rem + 0.9cqw, 0.85rem) * var(--cell-text-scale)
   );
+  width: 100%;
+  min-width: 0;
   overflow-wrap: break-word;
   color: var(--cell-text-color);
 }
 
 .content-card .card-title {
   margin: 0;
-  max-width: 100%;
+  width: 100%;
+  max-width: none;
   font-size: calc(clamp(1.1rem, 0.6rem + 3.9cqw, 3rem) * var(--cell-text-scale));
   line-height: 1.15;
   overflow-wrap: break-word;
@@ -542,7 +550,8 @@ a.grid-cell-link:focus-visible .card-open {
 
 .content-card .card-subtitle {
   margin: -0.2rem 0 0;
-  max-width: min(100%, 60ch);
+  width: 100%;
+  max-width: none;
   font-size: calc(clamp(0.72rem, 0.45rem + 1.5cqw, 1.3rem) * var(--cell-text-scale));
   overflow-wrap: break-word;
   color: var(--cell-text-color);
@@ -551,7 +560,8 @@ a.grid-cell-link:focus-visible .card-open {
 .content-card .card-desc {
   --desc-lines: none;
   margin: 0;
-  max-width: min(100%, 68ch);
+  width: 100%;
+  max-width: none;
   font-size: calc(clamp(0.8rem, 0.5rem + 1.6cqw, 1.5rem) * var(--cell-text-scale));
   line-height: 1.45;
   overflow-wrap: break-word;
@@ -674,6 +684,7 @@ a.grid-cell-link:focus-visible .card-open {
 .content-card .card-year {
   color: var(--cell-text-color);
   font-size: calc(clamp(0.6rem, 0.42rem + 0.8cqw, 0.8rem) * var(--cell-text-scale));
+  min-width: 0;
 }
 
 /* Highlight badge — always rust; never inherit --cell-text-color */
