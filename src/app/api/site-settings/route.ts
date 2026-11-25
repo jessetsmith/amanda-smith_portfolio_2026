@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
-import { isAdminAuthenticated } from "@/lib/auth";
+import { requireAdminWrite } from "@/lib/auth";
 import { normalizeSiteSettings } from "@/lib/site";
 import { loadSiteSettings, saveSiteSettings } from "@/lib/site-sync";
 import type { SiteSettings } from "@/types/content";
@@ -18,9 +18,8 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
-  if (!(await isAdminAuthenticated())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = await requireAdminWrite(request);
+  if (denied) return denied;
 
   let body: unknown;
   try {

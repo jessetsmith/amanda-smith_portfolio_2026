@@ -25,6 +25,20 @@ const nextConfig: NextConfig = {
         outputFileTracingIncludes: {
           "/studio/static/[...path]": ["./public/studio/static/**/*"],
         },
+        // Admin uploads (local fallback) are user content on our origin: never
+        // let a browser sniff or execute them as a document.
+        headers: async () => [
+          {
+            source: "/media/uploads/:path*",
+            headers: [
+              { key: "X-Content-Type-Options", value: "nosniff" },
+              {
+                key: "Content-Security-Policy",
+                value: "default-src 'none'; sandbox",
+              },
+            ],
+          },
+        ],
       }),
   transpilePackages: ["next-sanity", "sanity"],
   turbopack: {

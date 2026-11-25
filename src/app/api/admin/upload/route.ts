@@ -2,35 +2,11 @@ import { randomBytes } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
-import { isAdminAuthenticated } from "@/lib/auth";
+import { requireAdminWrite } from "@/lib/auth";
+import { sniffImage } from "@/lib/image-sniff";
 import { getWriteClient } from "@/sanity/lib/write-client";
 
 const MAX_BYTES = 8 * 1024 * 1024;
-const ALLOWED_EXT = new Set([
-  ".jpg",
-  ".jpeg",
-  ".png",
-  ".gif",
-  ".webp",
-  ".avif",
-  ".svg",
-]);
-
-function extensionFor(file: File): string | null {
-  const fromName = path.extname(file.name).toLowerCase();
-  if (ALLOWED_EXT.has(fromName)) return fromName;
-
-  const type = file.type.toLowerCase();
-  const byType: Record<string, string> = {
-    "image/jpeg": ".jpg",
-    "image/png": ".png",
-    "image/gif": ".gif",
-    "image/webp": ".webp",
-    "image/avif": ".avif",
-    "image/svg+xml": ".svg",
-  };
-  return byType[type] ?? null;
-}
 
 function slugBase(name: string): string {
   const base = path.basename(name, path.extname(name));
@@ -43,9 +19,8 @@ function slugBase(name: string): string {
 }
 
 export async function POST(request: Request) {
-  if (!(await isAdminAuthenticated())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = await requireAdminWrite(request);
+  if (denied) return denied;
 
   let form: FormData;
   try {
@@ -64,20 +39,18 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  if (file.type && !file.type.startsWith("image/")) {
-    return NextResponse.json({ error: "File must be an image" }, { status: 400 });
-  }
 
-  const ext = extensionFor(file);
-  if (!ext) {
+  const buffer = Buffer.from(await file.arrayBuffer());
+  // The stored type comes only from the file's bytes, so a renamed SVG/HTML file is rejected.
+  const image = sniffImage(buffer);
+  if (!image) {
     return NextResponse.json(
-      { error: "Unsupported image type" },
+      { error: "Unsupported image. Use JPEG, PNG, WebP, GIF, or AVIF (SVG is not allowed)." },
       { status: 400 },
     );
   }
 
-  const filename = `${slugBase(file.name)}-${randomBytes(4).toString("hex")}${ext}`;
-  const buffer = Buffer.from(await file.arrayBuffer());
+  const filename = `${slugBase(file.name)}-${randomBytes(4).toString("hex")}${image.ext}`;
 
   // Prefer Sanity assets so GitHub Pages / production can load cdn.sanity.io URLs.
   const writeClient = getWriteClient();
@@ -85,7 +58,7 @@ export async function POST(request: Request) {
     try {
       const asset = await writeClient.assets.upload("image", buffer, {
         filename,
-        contentType: file.type || undefined,
+        contentType: image.mime,
       });
       const src = asset.url;
       if (!src) {

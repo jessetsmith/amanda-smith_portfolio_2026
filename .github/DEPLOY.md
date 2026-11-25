@@ -129,6 +129,14 @@ Vercel project env vars are also set (Production / Preview / Development) from l
 4. Edit grid / hero → Save publishes to Sanity
 5. Hero images upload to Sanity CDN (required for public stills)
 
-Do not edit plaintext passwords in Studio (`passwordHash` is read-only). Optional emergency bootstrap: `ADMIN_USER` / `ADMIN_PASSWORD` env — used **only** when the Sanity `adminAuth` document is missing. Prefer unsetting them on Vercel after seed.
+Do not edit plaintext passwords in Studio (`passwordHash` is read-only). Optional emergency bootstrap: `ADMIN_USER` / `ADMIN_PASSWORD` env — used **only** when Sanity confirms the `adminAuth` document does not exist; a Sanity read error returns 503 instead. Prefer unsetting them on Vercel after seed.
+
+### Login rate limiting
+
+Built in (no extra service): 5 failures per IP per 15 min, 10 per username, then 429 + `Retry-After`. Counters are per-instance memory plus the private Sanity doc `adminSecurity.loginThrottle`. For a stronger edge-level limit, add a Vercel Firewall rule (Project → Firewall → Configure → New Rule): *If* Request Path equals `/api/admin/login` *and* Method equals `POST` → **Rate Limit**, fixed window 60 s, 10 requests, key = IP, action = Deny (429). Check the plan's Firewall rate-limit allowance before relying on it.
+
+### Same-site check
+
+Admin `POST`/`PUT`/`DELETE` requests must send an `Origin` (or `Referer`) whose host is the request's own host, `portfolio.bittersweetwoman.com`, `amanda-smith-portfolio-2026.vercel.app`, or this deployment's `VERCEL_URL` / `VERCEL_BRANCH_URL` / `VERCEL_PROJECT_PRODUCTION_URL`; localhost is allowed in dev. Scripts calling these APIs directly must send a matching `Origin` header.
 
 No Sanity write tokens or plaintext admin passwords in the browser bundle / git.

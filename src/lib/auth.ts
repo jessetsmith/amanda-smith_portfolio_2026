@@ -1,5 +1,6 @@
 import { compare, hash } from "bcryptjs";
 import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 import {
   ADMIN_AUTH_DOC_ID,
   ADMIN_PASSWORD_MIN_LENGTH,
@@ -13,7 +14,7 @@ import {
   createAdminSessionToken,
   verifyAdminSessionToken,
 } from "@/lib/admin-session";
-import { client } from "@/sanity/lib/client";
+import { rejectCrossSite } from "@/lib/request-origin";
 import { getWriteClient } from "@/sanity/lib/write-client";
 
 export {
@@ -24,10 +25,23 @@ export {
 
 const BCRYPT_ROUNDS = 12;
 
+/** Compared against when the username is wrong, so unknown users cost the same bcrypt time. */
+const DUMMY_BCRYPT_HASH =
+  "$2b$12$YrywdDNjRds.qmsCdtanYuHOiOqV/Lw4Q.bbXLpkKyY.SDo8Egbpa";
+
 type AdminAuthDoc = {
   username?: string;
   passwordHash?: string;
 };
+
+type AdminAuthLookup =
+  | { status: "found"; username: string; passwordHash: string }
+  /** Sanity answered and has no adminAuth document (first-time setup). */
+  | { status: "missing" }
+  /** No token-bearing Sanity client (Sanity not configured). */
+  | { status: "unconfigured" }
+  /** Sanity request failed or the document is incomplete. */
+  | { status: "error" };
 
 const ADMIN_AUTH_QUERY = `*[_type == "adminAuth" && _id == $id][0]{
   username,
@@ -36,24 +50,43 @@ const ADMIN_AUTH_QUERY = `*[_type == "adminAuth" && _id == $id][0]{
 
 /**
  * Load admin auth from Sanity with a server token (never CDN / never public GROQ).
+ * A tokenless client is not trusted: on a private dataset it would read "missing".
  */
-async function fetchAdminAuthDoc(): Promise<AdminAuthDoc | null> {
-  const serverClient = getWriteClient() ?? client;
-  if (!serverClient) return null;
+async function lookupAdminAuth(): Promise<AdminAuthLookup> {
+  const serverClient = getWriteClient();
+  if (!serverClient) return { status: "unconfigured" };
+  let doc: AdminAuthDoc | null;
   try {
-    return await serverClient.fetch<AdminAuthDoc | null>(ADMIN_AUTH_QUERY, {
+    doc = await serverClient.fetch<AdminAuthDoc | null>(ADMIN_AUTH_QUERY, {
       id: ADMIN_AUTH_DOC_ID,
     });
-  } catch {
-    return null;
+  } catch (err) {
+    console.error("[auth] Failed to read adminAuth from Sanity", err);
+    return { status: "error" };
   }
+  if (!doc) return { status: "missing" };
+  if (!doc.username || !doc.passwordHash) {
+    console.error("[auth] adminAuth document is missing username or passwordHash");
+    return { status: "error" };
+  }
+  return { status: "found", username: doc.username, passwordHash: doc.passwordHash };
 }
 
 function sanityCredentialMaterial(username: string, passwordHash: string): string {
   return `sanity:${username}:${passwordHash}`;
 }
 
-function envBootstrapCredential(): { user: string; password: string } | null {
+/**
+ * ADMIN_USER / ADMIN_PASSWORD, only when Sanity confirmed there is no adminAuth
+ * document, or in local dev without Sanity. Never on a Sanity error.
+ */
+function envBootstrapCredential(
+  lookup: AdminAuthLookup,
+): { user: string; password: string } | null {
+  const allowed =
+    lookup.status === "missing" ||
+    (lookup.status === "unconfigured" && process.env.NODE_ENV !== "production");
+  if (!allowed) return null;
   const envUser = process.env.ADMIN_USER?.trim();
   const envPassword = process.env.ADMIN_PASSWORD;
   if (!envUser || envPassword === undefined || envPassword === "") return null;
@@ -65,48 +98,66 @@ function envBootstrapCredential(): { user: string; password: string } | null {
  * so a password change (new bcrypt hash) invalidates every existing session.
  */
 async function currentCredentialMaterial(): Promise<string | null> {
-  const doc = await fetchAdminAuthDoc();
-  if (doc?.username && doc.passwordHash) {
-    return sanityCredentialMaterial(doc.username, doc.passwordHash);
+  const lookup = await lookupAdminAuth();
+  if (lookup.status === "found") {
+    return sanityCredentialMaterial(lookup.username, lookup.passwordHash);
   }
-  const env = envBootstrapCredential();
+  const env = envBootstrapCredential(lookup);
   return env ? `env:${env.user}:${env.password}` : null;
 }
 
+export type CredentialCheck =
+  | { status: "ok"; credentialMaterial: string }
+  | { status: "invalid" }
+  /** Credentials could not be checked (Sanity error / not configured in production). */
+  | { status: "unavailable" };
+
 /**
- * Verify /admin login against Sanity-stored bcrypt hash.
- * Falls back to ADMIN_USER / ADMIN_PASSWORD env only when the Sanity doc is missing.
- * Returns the credential material to bind the new session to, or null.
+ * Verify /admin login against Sanity-stored bcrypt hash. Falls back to the
+ * ADMIN_USER / ADMIN_PASSWORD bootstrap only per envBootstrapCredential.
  */
 export async function verifyCredentials(
   user: string,
   password: string,
-): Promise<string | null> {
+): Promise<CredentialCheck> {
   const trimmedUser = user.trim();
-  if (!trimmedUser || !password) return null;
+  const lookup = await lookupAdminAuth();
 
-  const doc = await fetchAdminAuthDoc();
-  if (doc?.username && doc.passwordHash) {
-    if (trimmedUser !== doc.username) return null;
+  if (lookup.status === "found") {
+    const userMatches = trimmedUser === lookup.username;
+    let passwordMatches = false;
     try {
-      return (await compare(password, doc.passwordHash))
-        ? sanityCredentialMaterial(doc.username, doc.passwordHash)
-        : null;
+      passwordMatches = await compare(
+        password,
+        userMatches ? lookup.passwordHash : DUMMY_BCRYPT_HASH,
+      );
     } catch {
-      return null;
+      passwordMatches = false;
     }
+    return userMatches && passwordMatches
+      ? {
+          status: "ok",
+          credentialMaterial: sanityCredentialMaterial(
+            lookup.username,
+            lookup.passwordHash,
+          ),
+        }
+      : { status: "invalid" };
   }
 
-  // Bootstrap / emergency only — not the primary production path.
-  const env = envBootstrapCredential();
+  const env = envBootstrapCredential(lookup);
+  if (!env) {
+    return lookup.status === "missing" ? { status: "invalid" } : { status: "unavailable" };
+  }
   if (
-    env &&
+    trimmedUser &&
+    password &&
     constantTimeEqual(trimmedUser, env.user) &&
     constantTimeEqual(password, env.password)
   ) {
-    return `env:${env.user}:${env.password}`;
+    return { status: "ok", credentialMaterial: `env:${env.user}:${env.password}` };
   }
-  return null;
+  return { status: "invalid" };
 }
 
 /** Cookie to set for a new session bound to `credentialMaterial`, or null if sessions are not configured. */
@@ -133,6 +184,19 @@ export async function isAdminAuthenticated(): Promise<boolean> {
   if (!material) return false;
   const expected = await computeCredentialVersion(material);
   return expected !== null && constantTimeEqual(payload.cv, expected);
+}
+
+/**
+ * Guard for every state-changing admin route: same-site Origin/Referer, then a
+ * valid session. Returns the error response to send, or null to proceed.
+ */
+export async function requireAdminWrite(request: Request): Promise<NextResponse | null> {
+  const crossSite = rejectCrossSite(request);
+  if (crossSite) return crossSite;
+  if (!(await isAdminAuthenticated())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  return null;
 }
 
 export type ChangePasswordResult =
@@ -174,14 +238,16 @@ export async function changeAdminPassword(
     };
   }
 
-  const doc = await fetchAdminAuthDoc();
-  if (!doc?.username || !doc.passwordHash) {
-    return {
-      ok: false,
-      error:
-        "Admin auth is not seeded in Sanity. Run npm run sanity:seed-admin first.",
-      status: 400,
-    };
+  const doc = await lookupAdminAuth();
+  if (doc.status !== "found") {
+    return doc.status === "missing"
+      ? {
+          ok: false,
+          error:
+            "Admin auth is not seeded in Sanity. Run npm run sanity:seed-admin first.",
+          status: 400,
+        }
+      : { ok: false, error: "Could not read admin auth from Sanity", status: 503 };
   }
 
   let currentOk = false;
