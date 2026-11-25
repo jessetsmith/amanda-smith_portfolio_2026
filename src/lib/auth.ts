@@ -4,8 +4,15 @@ import {
   ADMIN_AUTH_DOC_ID,
   ADMIN_PASSWORD_MIN_LENGTH,
   ADMIN_SESSION_COOKIE,
-  ADMIN_SESSION_VALUE,
+  ADMIN_SESSION_MAX_AGE_SECONDS,
 } from "@/lib/auth-constants";
+import {
+  adminSessionCookie,
+  computeCredentialVersion,
+  constantTimeEqual,
+  createAdminSessionToken,
+  verifyAdminSessionToken,
+} from "@/lib/admin-session";
 import { client } from "@/sanity/lib/client";
 import { getWriteClient } from "@/sanity/lib/write-client";
 
@@ -13,7 +20,6 @@ export {
   ADMIN_AUTH_DOC_ID,
   ADMIN_PASSWORD_MIN_LENGTH,
   ADMIN_SESSION_COOKIE,
-  ADMIN_SESSION_VALUE,
 } from "@/lib/auth-constants";
 
 const BCRYPT_ROUNDS = 12;
@@ -43,46 +49,94 @@ async function fetchAdminAuthDoc(): Promise<AdminAuthDoc | null> {
   }
 }
 
-/** Emergency bootstrap only — used when Sanity has no adminAuth doc yet. */
-function envBootstrapMatch(user: string, password: string): boolean {
+function sanityCredentialMaterial(username: string, passwordHash: string): string {
+  return `sanity:${username}:${passwordHash}`;
+}
+
+function envBootstrapCredential(): { user: string; password: string } | null {
   const envUser = process.env.ADMIN_USER?.trim();
   const envPassword = process.env.ADMIN_PASSWORD;
-  if (!envUser || envPassword === undefined || envPassword === "") return false;
-  return user === envUser && password === envPassword;
+  if (!envUser || envPassword === undefined || envPassword === "") return null;
+  return { user: envUser, password: envPassword };
+}
+
+/**
+ * Identifies the credential a session was issued for. Sessions are bound to it,
+ * so a password change (new bcrypt hash) invalidates every existing session.
+ */
+async function currentCredentialMaterial(): Promise<string | null> {
+  const doc = await fetchAdminAuthDoc();
+  if (doc?.username && doc.passwordHash) {
+    return sanityCredentialMaterial(doc.username, doc.passwordHash);
+  }
+  const env = envBootstrapCredential();
+  return env ? `env:${env.user}:${env.password}` : null;
 }
 
 /**
  * Verify /admin login against Sanity-stored bcrypt hash.
  * Falls back to ADMIN_USER / ADMIN_PASSWORD env only when the Sanity doc is missing.
+ * Returns the credential material to bind the new session to, or null.
  */
 export async function verifyCredentials(
   user: string,
   password: string,
-): Promise<boolean> {
+): Promise<string | null> {
   const trimmedUser = user.trim();
-  if (!trimmedUser || !password) return false;
+  if (!trimmedUser || !password) return null;
 
   const doc = await fetchAdminAuthDoc();
   if (doc?.username && doc.passwordHash) {
-    if (trimmedUser !== doc.username) return false;
+    if (trimmedUser !== doc.username) return null;
     try {
-      return await compare(password, doc.passwordHash);
+      return (await compare(password, doc.passwordHash))
+        ? sanityCredentialMaterial(doc.username, doc.passwordHash)
+        : null;
     } catch {
-      return false;
+      return null;
     }
   }
 
   // Bootstrap / emergency only — not the primary production path.
-  return envBootstrapMatch(trimmedUser, password);
+  const env = envBootstrapCredential();
+  if (
+    env &&
+    constantTimeEqual(trimmedUser, env.user) &&
+    constantTimeEqual(password, env.password)
+  ) {
+    return `env:${env.user}:${env.password}`;
+  }
+  return null;
 }
 
+/** Cookie to set for a new session bound to `credentialMaterial`, or null if sessions are not configured. */
+export async function issueAdminSessionCookie(credentialMaterial: string) {
+  const credentialVersion = await computeCredentialVersion(credentialMaterial);
+  if (!credentialVersion) return null;
+  const token = await createAdminSessionToken(credentialVersion);
+  if (!token) return null;
+  return adminSessionCookie(token, ADMIN_SESSION_MAX_AGE_SECONDS);
+}
+
+/**
+ * Full server-side session check: signature, expiry, and that the session was
+ * issued for the current admin credential. Every admin write must call this.
+ */
 export async function isAdminAuthenticated(): Promise<boolean> {
   const jar = await cookies();
-  return jar.get(ADMIN_SESSION_COOKIE)?.value === ADMIN_SESSION_VALUE;
+  const payload = await verifyAdminSessionToken(
+    jar.get(ADMIN_SESSION_COOKIE)?.value,
+  );
+  if (!payload) return false;
+
+  const material = await currentCredentialMaterial();
+  if (!material) return false;
+  const expected = await computeCredentialVersion(material);
+  return expected !== null && constantTimeEqual(payload.cv, expected);
 }
 
 export type ChangePasswordResult =
-  | { ok: true }
+  | { ok: true; credentialMaterial: string }
   | { ok: false; error: string; status: number };
 
 /**
@@ -153,5 +207,8 @@ export async function changeAdminPassword(
     return { ok: false, error: "Failed to update password in Sanity", status: 502 };
   }
 
-  return { ok: true };
+  return {
+    ok: true,
+    credentialMaterial: sanityCredentialMaterial(doc.username, passwordHash),
+  };
 }

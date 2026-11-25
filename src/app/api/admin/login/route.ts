@@ -1,9 +1,5 @@
 import { NextResponse } from "next/server";
-import {
-  ADMIN_SESSION_COOKIE,
-  ADMIN_SESSION_VALUE,
-} from "@/lib/auth-constants";
-import { verifyCredentials } from "@/lib/auth";
+import { issueAdminSessionCookie, verifyCredentials } from "@/lib/auth";
 
 export async function POST(request: Request) {
   let body: { user?: string; password?: string };
@@ -16,19 +12,20 @@ export async function POST(request: Request) {
   const user = body.user ?? "";
   const password = body.password ?? "";
 
-  if (!(await verifyCredentials(user, password))) {
+  const credentialMaterial = await verifyCredentials(user, password);
+  if (!credentialMaterial) {
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }
 
+  const cookie = await issueAdminSessionCookie(credentialMaterial);
+  if (!cookie) {
+    return NextResponse.json(
+      { error: "Admin sessions are not configured on the server" },
+      { status: 503 },
+    );
+  }
+
   const response = NextResponse.json({ ok: true });
-  response.cookies.set({
-    name: ADMIN_SESSION_COOKIE,
-    value: ADMIN_SESSION_VALUE,
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 60 * 60 * 24 * 7,
-  });
+  response.cookies.set(cookie);
   return response;
 }

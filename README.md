@@ -42,6 +42,8 @@ Open [http://localhost:3456](http://localhost:3456).
 6. Live preview updates immediately; saves patch Sanity `homepage.gridItems` (same doc Studio uses). Public `/` refetches after `revalidatePath`.
 7. `.data/` is only a mirror/fallback if Sanity is unavailable.
 
+Sessions are HMAC-SHA256 signed cookies that expire after 7 days and are bound to the current password hash, so changing the password signs out every other session. The signing key comes from `ADMIN_SESSION_SECRET` (recommended; `openssl rand -base64 48`), else is derived from `SANITY_API_WRITE_TOKEN`; production refuses login if neither is set.
+
 Do **not** put plaintext passwords in Studio — the `passwordHash` field is read-only. Optional emergency bootstrap: `ADMIN_USER` / `ADMIN_PASSWORD` env — used only when the Sanity doc is missing.
 
 ## Sanity
