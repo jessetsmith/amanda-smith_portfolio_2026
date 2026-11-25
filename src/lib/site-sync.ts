@@ -3,6 +3,7 @@ import path from "node:path";
 import siteFixture from "@/data/site-settings.json";
 import { applySiteOverlays } from "@/lib/i18n/apply-overlays";
 import { sanityFetchOptions } from "@/lib/sanity-fetch";
+import { SanityPersistenceError } from "@/lib/sanity-errors";
 import { normalizeSiteSettings } from "@/lib/site";
 import type { SiteSettings } from "@/types/content";
 import { client } from "@/sanity/lib/client";
@@ -87,7 +88,13 @@ export async function saveSiteSettings(
   const normalized = normalizeSiteSettings(site, site.source);
   const writeClient = getWriteClient();
 
-  if (writeClient) {
+  if (isSanityConfigured()) {
+    if (!writeClient) {
+      throw new SanityPersistenceError(
+        "Sanity write token is not configured on the server (SANITY_API_WRITE_TOKEN).",
+        503,
+      );
+    }
     try {
       await writeClient.createOrReplace({
         _id: "siteSettings",
@@ -100,7 +107,12 @@ export async function saveSiteSettings(
       await writeLocalSite(saved).catch(() => undefined);
       return saved;
     } catch (err) {
-      console.error("Sanity site settings save failed, falling back to .data", err);
+      console.error("[site-sync] Sanity site settings save failed", err);
+      throw new SanityPersistenceError(
+        "Failed to save site settings to Sanity.",
+        502,
+        { cause: err },
+      );
     }
   }
 

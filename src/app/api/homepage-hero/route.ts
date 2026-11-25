@@ -3,10 +3,11 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdminWrite } from "@/lib/auth";
 import { normalizeHero } from "@/lib/hero";
 import { loadHero, saveHero } from "@/lib/hero-sync";
+import { errorStatus, extractErrorMessage } from "@/lib/sanity-errors";
 import type { HomepageHero } from "@/types/hero";
 
 function revalidatePublicViews() {
-  revalidateTag("homepage", "max");
+  revalidateTag("homepage", { expire: 0 });
   revalidatePath("/");
   revalidatePath("/admin");
 }
@@ -35,7 +36,15 @@ export async function PUT(request: Request) {
     );
   }
 
-  const result = await saveHero(normalizeHero(heroRaw));
-  revalidatePublicViews();
-  return NextResponse.json(result);
+  try {
+    const result = await saveHero(normalizeHero(heroRaw));
+    revalidatePublicViews();
+    return NextResponse.json(result);
+  } catch (err) {
+    console.error("[api/homepage-hero] PUT failed", err);
+    return NextResponse.json(
+      { error: extractErrorMessage(err, "Failed to save homepage hero") },
+      { status: errorStatus(err, 500) },
+    );
+  }
 }

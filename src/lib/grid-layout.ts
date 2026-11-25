@@ -75,6 +75,7 @@ export function stripBlankCells(items: GridItem[]): GridItem[] {
  * ids must be deterministic — random ids cause hydration mismatches.
  */
 function makeBlank(
+  sectionIndex: number,
   row: number,
   colStart: number,
   colSpan: number,
@@ -83,7 +84,7 @@ function makeBlank(
   const col = clamp(colStart, 1, GRID_COLUMNS);
   const span = clamp(colSpan, 1, GRID_COLUMNS - col + 1);
   return {
-    id: `blank-r${row}-c${col}-w${span}`,
+    id: `blank-s${sectionIndex}-r${row}-c${col}-w${span}`,
     order: 0,
     kind: "blankCell",
     colStart: col,
@@ -147,6 +148,16 @@ export function packGridSectioned(items: GridItem[]): Map<string, GridGeom> {
       mark(col, row, w, h);
       placed.set(item.id, { col, row, w, h });
       sectionMaxEnd = Math.max(sectionMaxEnd, row + h - 1);
+    }
+    const title = section[0]?.kind === "titleRow" ? section[0] : null;
+    if (
+      title &&
+      typeof title.sectionRows === "number" &&
+      Number.isFinite(title.sectionRows) &&
+      title.sectionRows >= 1
+    ) {
+      const explicitRows = clamp(Math.floor(title.sectionRows), 1, MAX_SECTION_ROWS);
+      sectionMaxEnd = Math.max(sectionMaxEnd, sectionMinRow + explicitRows - 1);
     }
     sectionMinRow = Math.max(sectionMinRow, sectionMaxEnd + 1);
   }
@@ -246,7 +257,7 @@ export function fillSectionVacancies(items: GridItem[]): GridItem[] {
         }
         const runStart = col;
         while (col <= GRID_COLUMNS && !occ.has(`${col},${row}`)) col += 1;
-        const blank = makeBlank(row, runStart, col - runStart, 1);
+        const blank = makeBlank(s, row, runStart, col - runStart, 1);
         blank.rowStart = row;
         blanks.push(blank);
       }

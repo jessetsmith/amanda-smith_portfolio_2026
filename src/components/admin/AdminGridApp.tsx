@@ -159,7 +159,20 @@ const KINDS: GridItemKind[] = [
 const FILLS: CellFill[] = ["rust", "ochre", "sage", "tan", "paper", "ink"];
 
 type SaveState = "idle" | "saving" | "saved" | "error";
+type SaveError = { message: string; needsReauth: boolean };
 type DataSource = "sanity" | "fixture";
+
+async function readApiError(res: Response, fallback: string): Promise<string> {
+  const data = (await res.json().catch(() => null)) as { error?: string } | null;
+  const detail = typeof data?.error === "string" ? data.error.trim() : "";
+  if (res.status === 401) {
+    return detail || "Session expired — please sign in again.";
+  }
+  if (detail) {
+    return `${detail} (HTTP ${res.status})`;
+  }
+  return `${fallback} (HTTP ${res.status})`;
+}
 type SidebarTab = "nav" | "hero" | "cv" | "blocks" | "section";
 
 const SIDEBAR_TABS: { id: SidebarTab; label: string }[] = [
@@ -220,6 +233,7 @@ export function AdminGridApp({
   );
   const [addKind, setAddKind] = useState<GridItemKind>("textCell");
   const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [saveError, setSaveError] = useState<SaveError | null>(null);
   const [source, setSource] = useState<DataSource>(initialSource);
   const [hero, setHero] = useState<HomepageHero>(() =>
     normalizeHero(initialHero ?? defaultHero()),
@@ -346,6 +360,7 @@ export function AdminGridApp({
       nextSite: SiteSettings,
     ) => {
       setSaveState("saving");
+      setSaveError(null);
       try {
         const gridDirty =
           gridSignature(next) !== gridSignature(savedItemsRef.current);
@@ -356,13 +371,16 @@ export function AdminGridApp({
 
         const tasks: {
           kind: "grid" | "hero" | "site";
+          label: string;
           promise: Promise<Response>;
         }[] = [];
         if (gridDirty) {
           tasks.push({
             kind: "grid",
+            label: "Grid",
             promise: fetch("/api/homepage-grid", {
               method: "PUT",
+              credentials: "same-origin",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ items: next }),
             }),
@@ -371,8 +389,10 @@ export function AdminGridApp({
         if (heroDirty) {
           tasks.push({
             kind: "hero",
+            label: "Hero",
             promise: fetch("/api/homepage-hero", {
               method: "PUT",
+              credentials: "same-origin",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ hero: nextHero }),
             }),
@@ -381,8 +401,10 @@ export function AdminGridApp({
         if (siteDirty) {
           tasks.push({
             kind: "site",
+            label: "Nav / site settings",
             promise: fetch("/api/site-settings", {
               method: "PUT",
+              credentials: "same-origin",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ site: nextSite }),
             }),
@@ -394,11 +416,22 @@ export function AdminGridApp({
         }
 
         const results = await Promise.all(tasks.map((t) => t.promise));
-        if (results.some((res) => !res.ok)) throw new Error("save failed");
+        const failures: string[] = [];
+        let needsReauth = false;
+        let anySucceeded = false;
 
         for (let i = 0; i < tasks.length; i++) {
-          const kind = tasks[i].kind;
-          const data = await results[i].json();
+          const { kind, label } = tasks[i];
+          const res = results[i];
+          if (!res.ok) {
+            if (res.status === 401) needsReauth = true;
+            const detail = await readApiError(res, "Save failed");
+            failures.push(`${label}: ${detail}`);
+            continue;
+          }
+
+          anySucceeded = true;
+          const data = await res.json();
           if (kind === "grid") {
             const published = normalizeGridItems(
               (data as { items?: GridItem[] }).items ?? next,
@@ -438,11 +471,32 @@ export function AdminGridApp({
           }
         }
 
+        if (failures.length > 0) {
+          setSaveState("error");
+          setSaveError({
+            message: failures.join(" · "),
+            needsReauth,
+          });
+          if (anySucceeded) {
+            setDirtyTick((tick) => tick + 1);
+            router.refresh();
+          }
+          return;
+        }
+
         setSaveState("saved");
+        setSaveError(null);
         setDirtyTick((tick) => tick + 1);
         router.refresh();
-      } catch {
+      } catch (err) {
         setSaveState("error");
+        setSaveError({
+          message:
+            err instanceof Error && err.message
+              ? `Could not reach server: ${err.message}`
+              : "Could not reach server to save changes.",
+          needsReauth: false,
+        });
       }
     },
     [router],
@@ -497,6 +551,7 @@ export function AdminGridApp({
     siteRef.current = previousSite;
     setPreviewKey((key) => key + 1);
     setSaveState("idle");
+    setSaveError(null);
     setDirtyTick((tick) => tick + 1);
   }, [pushHistory]);
 
@@ -771,25 +826,43 @@ export function AdminGridApp({
     }
     pushHistory(itemsRef.current);
     setSaveState("saving");
-    const res = await fetch("/api/homepage-grid", { method: "DELETE" });
-    if (!res.ok) {
+    setSaveError(null);
+    try {
+      const res = await fetch("/api/homepage-grid", {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      if (!res.ok) {
+        const message = await readApiError(res, "Reset failed");
+        setSaveState("error");
+        setSaveError({ message, needsReauth: res.status === 401 });
+        return;
+      }
+      const data = (await res.json()) as {
+        items: GridItem[];
+        source?: DataSource;
+      };
+      const next = normalizeGridItems(data.items);
+      itemsRef.current = next;
+      savedItemsRef.current = cloneItems(next);
+      setItems(next);
+      setSelectedId(next[0]?.id ?? null);
+      if (data.source) setSource(data.source);
+      setSaveState("saved");
+      setSaveError(null);
+      setDirtyTick((tick) => tick + 1);
+      setPreviewKey((k) => k + 1);
+      router.refresh();
+    } catch (err) {
       setSaveState("error");
-      return;
+      setSaveError({
+        message:
+          err instanceof Error && err.message
+            ? `Reset failed: ${err.message}`
+            : "Could not reach server to reset grid.",
+        needsReauth: false,
+      });
     }
-    const data = (await res.json()) as {
-      items: GridItem[];
-      source?: DataSource;
-    };
-    const next = normalizeGridItems(data.items);
-    itemsRef.current = next;
-    savedItemsRef.current = cloneItems(next);
-    setItems(next);
-    setSelectedId(next[0]?.id ?? null);
-    if (data.source) setSource(data.source);
-    setSaveState("saved");
-    setDirtyTick((tick) => tick + 1);
-    setPreviewKey((k) => k + 1);
-    router.refresh();
   }
 
   async function logout() {
@@ -885,7 +958,11 @@ export function AdminGridApp({
           </h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-mono text-[0.65rem] tracking-[0.12em] text-ink/50 uppercase">
+          <span
+            className={`font-mono text-[0.65rem] tracking-[0.12em] uppercase ${
+              saveState === "error" ? "font-semibold text-rust" : "text-ink/50"
+            }`}
+          >
             {statusLabel}
           </span>
           <a
@@ -927,6 +1004,37 @@ export function AdminGridApp({
           </button>
         </div>
       </header>
+
+      {saveError ? (
+        <div
+          role="alert"
+          className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-rust/40 bg-rust/10 px-4 py-2.5 text-sm text-ink sm:px-6"
+        >
+          <p className="min-w-0 flex-1">
+            <span className="font-mono text-[0.65rem] font-semibold tracking-[0.14em] text-rust uppercase">
+              Changes did not save ·{" "}
+            </span>
+            <span>{saveError.message}</span>
+          </p>
+          <div className="flex shrink-0 items-center gap-2">
+            {saveError.needsReauth ? (
+              <a
+                href="/admin/login?next=/admin"
+                className="bg-rust px-3 py-1 font-mono text-[0.65rem] tracking-[0.14em] text-paper uppercase"
+              >
+                Sign in again
+              </a>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => setSaveError(null)}
+              className="cursor-pointer border border-ink/25 px-2.5 py-1 font-mono text-[0.65rem] tracking-[0.12em] text-ink uppercase"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       <ChangePasswordModal
         open={passwordOpen}
@@ -2784,14 +2892,21 @@ function CvTab({
     try {
       const body = new FormData();
       body.append("file", file);
-      const res = await fetch("/api/cv", { method: "POST", body });
+      const res = await fetch("/api/cv", {
+        method: "POST",
+        credentials: "same-origin",
+        body,
+      });
+      if (!res.ok) {
+        throw new Error(await readApiError(res, "Upload failed"));
+      }
       const data = (await res.json()) as {
         pdfUrl?: string;
         pdfFilename?: string;
         source?: DataSource;
         error?: string;
       };
-      if (!res.ok || !data.pdfUrl) {
+      if (!data.pdfUrl) {
         throw new Error(data.error || "Upload failed");
       }
       onUploaded({
@@ -2901,8 +3016,12 @@ function ImagePickerField({
       body.append("file", file);
       const res = await fetch("/api/admin/upload", {
         method: "POST",
+        credentials: "same-origin",
         body,
       });
+      if (!res.ok) {
+        throw new Error(await readApiError(res, "Upload failed"));
+      }
       const data = (await res.json()) as {
         src?: string;
         assetId?: string;
@@ -2910,7 +3029,7 @@ function ImagePickerField({
         warning?: string;
         error?: string;
       };
-      if (!res.ok || !data.src) {
+      if (!data.src) {
         throw new Error(data.error || "Upload failed");
       }
       onChange(data.src, data.assetId);

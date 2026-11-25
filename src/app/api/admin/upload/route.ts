@@ -4,6 +4,7 @@ import path from "node:path";
 import { NextResponse } from "next/server";
 import { requireAdminWrite } from "@/lib/auth";
 import { sniffImage } from "@/lib/image-sniff";
+import { isSanityConfigured } from "@/sanity/env";
 import { getWriteClient } from "@/sanity/lib/write-client";
 
 const MAX_BYTES = 8 * 1024 * 1024;
@@ -52,9 +53,18 @@ export async function POST(request: Request) {
 
   const filename = `${slugBase(file.name)}-${randomBytes(4).toString("hex")}${image.ext}`;
 
-  // Prefer Sanity assets so GitHub Pages / production can load cdn.sanity.io URLs.
+  // Prefer Sanity assets so production can load cdn.sanity.io URLs.
   const writeClient = getWriteClient();
-  if (writeClient) {
+  if (isSanityConfigured()) {
+    if (!writeClient) {
+      return NextResponse.json(
+        {
+          error:
+            "Sanity write token is not configured on the server (SANITY_API_WRITE_TOKEN).",
+        },
+        { status: 503 },
+      );
+    }
     try {
       const asset = await writeClient.assets.upload("image", buffer, {
         filename,
@@ -71,13 +81,25 @@ export async function POST(request: Request) {
         storage: "sanity",
       });
     } catch (err) {
-      console.error("Sanity asset upload failed, falling back to local", err);
+      console.error("[api/admin/upload] Sanity asset upload failed", err);
+      return NextResponse.json(
+        { error: "Failed to upload image to Sanity." },
+        { status: 502 },
+      );
     }
   }
 
-  const uploadsDir = path.join(process.cwd(), "public", "media", "uploads");
-  await mkdir(uploadsDir, { recursive: true });
-  await writeFile(path.join(uploadsDir, filename), buffer);
+  try {
+    const uploadsDir = path.join(process.cwd(), "public", "media", "uploads");
+    await mkdir(uploadsDir, { recursive: true });
+    await writeFile(path.join(uploadsDir, filename), buffer);
+  } catch (err) {
+    console.error("[api/admin/upload] Local image write failed", err);
+    return NextResponse.json(
+      { error: "Failed to save uploaded image." },
+      { status: 500 },
+    );
+  }
 
   const src = `/media/uploads/${filename}`;
   return NextResponse.json({

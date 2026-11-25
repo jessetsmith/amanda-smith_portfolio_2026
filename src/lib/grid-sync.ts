@@ -8,6 +8,7 @@ import { normalizeItemLayouts } from "@/lib/grid-breakpoints";
 import { normalizeGridItems } from "@/lib/grid-normalize";
 import { toLocaleMap, type LocaleString } from "@/lib/i18n/resolve";
 import { sanityFetchOptions } from "@/lib/sanity-fetch";
+import { SanityPersistenceError } from "@/lib/sanity-errors";
 import type { GridItem } from "@/types/grid";
 import { client } from "@/sanity/lib/client";
 import { getWriteClient } from "@/sanity/lib/write-client";
@@ -214,11 +215,20 @@ export function localizeFixtureGridItems(items: GridItem[]): GridItem[] {
 }
 
 export function toSanityGridItems(items: GridItem[]) {
+  const usedKeys = new Set<string>();
   return normalizeGridItems(items).map((item) => {
     const { id, ...rest } = item;
+    const baseKey = sanitizeKey(id, item.order);
+    let key = baseKey;
+    let suffix = 2;
+    while (usedKeys.has(key)) {
+      key = `${baseKey}-${suffix}`;
+      suffix += 1;
+    }
+    usedKeys.add(key);
     return {
       _type: "gridItem" as const,
-      _key: sanitizeKey(id, item.order),
+      _key: key,
       id,
       ...rest,
     };
@@ -249,11 +259,19 @@ export async function saveGridItems(
   const normalized = normalizeGridItems(items);
   const writeClient = getWriteClient();
 
-  if (writeClient) {
+  if (isSanityConfigured()) {
+    if (!writeClient) {
+      throw new SanityPersistenceError(
+        "Sanity write token is not configured on the server (SANITY_API_WRITE_TOKEN).",
+        503,
+      );
+    }
     try {
       const gridItems = toSanityGridItems(normalized);
       const existing = await writeClient.fetch<{ _id?: string } | null>(
         `*[_type == "homepage" && _id == "homepage"][0]{_id}`,
+        {},
+        { cache: "no-store" },
       );
 
       if (existing?._id) {
@@ -275,7 +293,12 @@ export async function saveGridItems(
       await writeLocalGridItems(normalized).catch(() => undefined);
       return { items: normalized, source: "sanity" };
     } catch (err) {
-      console.error("Sanity grid save failed, falling back to .data", err);
+      console.error("[grid-sync] Sanity grid save failed", err);
+      throw new SanityPersistenceError(
+        "Failed to save homepage grid to Sanity.",
+        502,
+        { cause: err },
+      );
     }
   }
 

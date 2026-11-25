@@ -12,6 +12,7 @@ import {
   computeCredentialVersion,
   constantTimeEqual,
   createAdminSessionToken,
+  isAdminSessionConfigured,
   verifyAdminSessionToken,
 } from "@/lib/admin-session";
 import { rejectCrossSite } from "@/lib/request-origin";
@@ -57,9 +58,11 @@ async function lookupAdminAuth(): Promise<AdminAuthLookup> {
   if (!serverClient) return { status: "unconfigured" };
   let doc: AdminAuthDoc | null;
   try {
-    doc = await serverClient.fetch<AdminAuthDoc | null>(ADMIN_AUTH_QUERY, {
-      id: ADMIN_AUTH_DOC_ID,
-    });
+    doc = await serverClient.fetch<AdminAuthDoc | null>(
+      ADMIN_AUTH_QUERY,
+      { id: ADMIN_AUTH_DOC_ID },
+      { cache: "no-store" },
+    );
   } catch (err) {
     console.error("[auth] Failed to read adminAuth from Sanity", err);
     return { status: "error" };
@@ -93,17 +96,37 @@ function envBootstrapCredential(
   return { user: envUser, password: envPassword };
 }
 
+type CredentialMaterialResult =
+  | { status: "ok"; material: string }
+  | { status: "missing" }
+  | { status: "unavailable"; reason: string };
+
 /**
  * Identifies the credential a session was issued for. Sessions are bound to it,
  * so a password change (new bcrypt hash) invalidates every existing session.
  */
-async function currentCredentialMaterial(): Promise<string | null> {
+async function currentCredentialMaterial(): Promise<CredentialMaterialResult> {
   const lookup = await lookupAdminAuth();
   if (lookup.status === "found") {
-    return sanityCredentialMaterial(lookup.username, lookup.passwordHash);
+    return {
+      status: "ok",
+      material: sanityCredentialMaterial(lookup.username, lookup.passwordHash),
+    };
   }
   const env = envBootstrapCredential(lookup);
-  return env ? `env:${env.user}:${env.password}` : null;
+  if (env) {
+    return { status: "ok", material: `env:${env.user}:${env.password}` };
+  }
+  if (lookup.status === "missing") {
+    return { status: "missing" };
+  }
+  return {
+    status: "unavailable",
+    reason:
+      lookup.status === "unconfigured"
+        ? "Sanity credentials are not configured on the server"
+        : "Could not verify admin session with Sanity",
+  };
 }
 
 export type CredentialCheck =
@@ -169,32 +192,67 @@ export async function issueAdminSessionCookie(credentialMaterial: string) {
   return adminSessionCookie(token, ADMIN_SESSION_MAX_AGE_SECONDS);
 }
 
+export type AdminSessionCheck =
+  | { status: "ok" }
+  | { status: "unauthenticated" }
+  | { status: "unavailable"; reason: string };
+
+export async function checkAdminSession(): Promise<AdminSessionCheck> {
+  if (!(await isAdminSessionConfigured())) {
+    return {
+      status: "unavailable",
+      reason: "Admin sessions are not configured on the server",
+    };
+  }
+  const jar = await cookies();
+  const payload = await verifyAdminSessionToken(
+    jar.get(ADMIN_SESSION_COOKIE)?.value,
+  );
+  if (!payload) return { status: "unauthenticated" };
+
+  const current = await currentCredentialMaterial();
+  if (current.status === "unavailable") {
+    return { status: "unavailable", reason: current.reason };
+  }
+  if (current.status !== "ok") return { status: "unauthenticated" };
+
+  const expected = await computeCredentialVersion(current.material);
+  if (expected === null) {
+    return {
+      status: "unavailable",
+      reason: "Admin sessions are not configured on the server",
+    };
+  }
+  return constantTimeEqual(payload.cv, expected)
+    ? { status: "ok" }
+    : { status: "unauthenticated" };
+}
+
 /**
  * Full server-side session check: signature, expiry, and that the session was
  * issued for the current admin credential. Every admin write must call this.
  */
 export async function isAdminAuthenticated(): Promise<boolean> {
-  const jar = await cookies();
-  const payload = await verifyAdminSessionToken(
-    jar.get(ADMIN_SESSION_COOKIE)?.value,
-  );
-  if (!payload) return false;
-
-  const material = await currentCredentialMaterial();
-  if (!material) return false;
-  const expected = await computeCredentialVersion(material);
-  return expected !== null && constantTimeEqual(payload.cv, expected);
+  const check = await checkAdminSession();
+  return check.status === "ok";
 }
 
 /**
  * Guard for every state-changing admin route: same-site Origin/Referer, then a
  * valid session. Returns the error response to send, or null to proceed.
  */
-export async function requireAdminWrite(request: Request): Promise<NextResponse | null> {
+export async function requireAdminWrite(request: Request): Promise<Response | null> {
   const crossSite = rejectCrossSite(request);
   if (crossSite) return crossSite;
-  if (!(await isAdminAuthenticated())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await checkAdminSession();
+  if (session.status === "unavailable") {
+    return NextResponse.json({ error: session.reason }, { status: 503 });
+  }
+  if (session.status !== "ok") {
+    return NextResponse.json(
+      { error: "Session expired — please sign in again." },
+      { status: 401 },
+    );
   }
   return null;
 }
