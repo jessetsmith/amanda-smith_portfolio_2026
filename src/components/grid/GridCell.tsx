@@ -20,6 +20,28 @@ function cellTextSizeAttr(item: GridItem): CellTextSize | undefined {
   return item.textSize;
 }
 
+/**
+ * Row span per breakpoint, exposed as data attributes so CSS can shorten the
+ * description in short boxes (height-aware clamp). Attributes are only set
+ * when the span was explicitly saved; the admin preview renders an already
+ * projected item, so it uses the same value for every breakpoint.
+ */
+function cellRowAttrs(
+  item: GridItem,
+  uniform: boolean,
+): Record<string, string | undefined> {
+  const desktop = typeof item.rowSpan === "number" ? item.rowSpan : undefined;
+  const tablet = uniform ? desktop : item.layouts?.tablet?.rowSpan;
+  const mobile = uniform ? desktop : item.layouts?.mobile?.rowSpan;
+  const attr = (n: number | undefined) =>
+    typeof n === "number" ? String(Math.min(4, Math.max(1, n))) : undefined;
+  return {
+    "data-rows-d": attr(desktop),
+    "data-rows-t": attr(tablet),
+    "data-rows-m": attr(mobile),
+  };
+}
+
 interface GridCellProps {
   item: GridItem;
   /** When true, skip CSS grid placement (parent owns placement — used by admin DnD). */
@@ -115,8 +137,10 @@ function CellShell({
   children,
   kindClass,
   as = "article",
+  uniformRows = false,
 }: {
   item: GridItem;
+  uniformRows?: boolean;
   enableLinks: boolean;
   className: string;
   style: CSSProperties;
@@ -146,6 +170,7 @@ function CellShell({
       }
       data-text-size={textSize}
       data-linked={linked ? "true" : undefined}
+      {...cellRowAttrs(item, uniformRows)}
       {...linkProps}
     >
       <div className="card-inner">
@@ -255,6 +280,7 @@ export function GridCell({
           enableLinks={enableLinks}
           className={className}
           style={style}
+          uniformRows={omitPlacement}
           kindClass={contentCardClass(item, "media-cell")}
         >
           <p className="card-meta font-mono tracking-[0.18em] uppercase">
@@ -290,6 +316,7 @@ export function GridCell({
           enableLinks={enableLinks}
           className={className}
           style={style}
+          uniformRows={omitPlacement}
           kindClass={contentCardClass(item, "text-cell")}
         >
           {meta ? (
@@ -328,6 +355,7 @@ export function GridCell({
           enableLinks={enableLinks}
           className={className}
           style={style}
+          uniformRows={omitPlacement}
           kindClass={contentCardClass(item, "project-cell")}
         >
           <div className="card-meta flex items-baseline justify-between gap-3">

@@ -543,7 +543,7 @@ a.grid-cell-link:focus-visible .card-open {
 .content-card .card-subtitle {
   margin: -0.2rem 0 0;
   max-width: min(100%, 60ch);
-  font-size: calc(clamp(0.72rem, 0.49rem + 1.2cqw, 1.2rem) * var(--cell-text-scale));
+  font-size: calc(clamp(0.72rem, 0.45rem + 1.5cqw, 1.3rem) * var(--cell-text-scale));
   overflow-wrap: break-word;
   color: var(--cell-text-color);
 }
@@ -552,7 +552,7 @@ a.grid-cell-link:focus-visible .card-open {
   --desc-lines: none;
   margin: 0;
   max-width: min(100%, 68ch);
-  font-size: calc(clamp(0.8rem, 0.57rem + 1.3cqw, 1.35rem) * var(--cell-text-scale));
+  font-size: calc(clamp(0.8rem, 0.5rem + 1.6cqw, 1.5rem) * var(--cell-text-scale));
   line-height: 1.45;
   overflow-wrap: break-word;
   color: var(--cell-text-color);
@@ -585,6 +585,89 @@ a.grid-cell-link:focus-visible .card-open {
 @container card (min-width: 380px) and (max-width: 479px) {
   .content-card .card-desc {
     --desc-lines: 8;
+  }
+}
+
+/*
+  Height-aware excerpt: the saved row span (data-rows-d/t/m, per breakpoint)
+  tightens the clamp for short boxes. Declared after the width tiers and only
+  where stricter, so min(width tier, row tier) wins. Display-only.
+*/
+@media (min-width: 1024px) {
+  .content-card[data-rows-d="1"] .card-desc {
+    --desc-lines: 2;
+  }
+
+  .content-card[data-rows-d="1"] .card-image {
+    aspect-ratio: 16 / 9;
+  }
+
+  @container card (min-width: 300px) {
+    .content-card[data-rows-d="2"] .card-desc {
+      --desc-lines: 5;
+    }
+  }
+
+  @container card (min-width: 480px) {
+    .content-card[data-rows-d="3"] .card-desc {
+      --desc-lines: 8;
+    }
+
+    .content-card[data-rows-d="1"] .card-image {
+      aspect-ratio: 21 / 9;
+    }
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .content-card[data-rows-t="1"] .card-desc {
+    --desc-lines: 2;
+  }
+
+  .content-card[data-rows-t="1"] .card-image {
+    aspect-ratio: 16 / 9;
+  }
+
+  @container card (min-width: 300px) {
+    .content-card[data-rows-t="2"] .card-desc {
+      --desc-lines: 5;
+    }
+  }
+
+  @container card (min-width: 480px) {
+    .content-card[data-rows-t="3"] .card-desc {
+      --desc-lines: 8;
+    }
+
+    .content-card[data-rows-t="1"] .card-image {
+      aspect-ratio: 21 / 9;
+    }
+  }
+}
+
+@media (max-width: 639px) {
+  .content-card[data-rows-m="1"] .card-desc {
+    --desc-lines: 2;
+  }
+
+  .content-card[data-rows-m="1"] .card-image {
+    aspect-ratio: 16 / 9;
+  }
+
+  @container card (min-width: 300px) {
+    .content-card[data-rows-m="2"] .card-desc {
+      --desc-lines: 5;
+    }
+  }
+
+  @container card (min-width: 480px) {
+    .content-card[data-rows-m="3"] .card-desc {
+      --desc-lines: 8;
+    }
+
+    .content-card[data-rows-m="1"] .card-image {
+      aspect-ratio: 21 / 9;
+    }
   }
 }
 
@@ -3155,6 +3238,19 @@ button.hazy-nav__link.hazy-nav__link--button {
   grid-column: auto !important;
   grid-row: auto !important;
   min-height: 3.75rem;
+}
+
+/*
+  Admin chrome (C·R badge bottom-left, resize handles on the edges) sits on top
+  of the card — reserve room so card text never runs under it.
+*/
+.admin-sortable-cell__body .card-inner {
+  padding-bottom: calc(var(--card-pad) * 1.15 + 1.6rem);
+}
+
+/* Bottom-edge cells flip the badge to the top-left (admin-resize-badge--top) */
+.admin-sortable-cell.is-bottom-edge .admin-sortable-cell__body .card-inner {
+  padding-block: calc(var(--card-pad) * 1.05 + 1.6rem) calc(var(--card-pad) * 1.15);
 }
 
 .admin-drag-overlay {
