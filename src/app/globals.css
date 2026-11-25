@@ -1661,12 +1661,20 @@ html.intro-mask--hand-cursor.intro-mask--control-cursor *,
   font-weight: var(--weight-title);
   font-size: var(--intro-support-size, 1.05rem);
   line-height: 1.5;
+  letter-spacing: 0.01em;
   color: var(--intro-support-color, var(--color-ink));
-  /* Solid bold only — no glow / halo / stroke */
-  text-shadow: none;
+  /*
+    Solid bold black type. No glow / stroke. Only a hairline paper-colored rim
+    (≤2.5px blur) that lifts glyph edges off mid-tone video frames; it reads as
+    crisper black text, not as a halo. Keep blur tiny — wide blur = glow.
+  */
+  text-shadow:
+    0 0 1.5px rgba(247, 244, 239, 0.95),
+    0 0 1.5px rgba(247, 244, 239, 0.95),
+    0 0 2.5px rgba(247, 244, 239, 0.45);
   -webkit-text-stroke: 0;
   filter: none;
-  opacity: calc(0.95 - var(--intro-progress) * 0.2);
+  opacity: calc(1 - var(--intro-progress) * 0.15);
   transform: translateY(calc(var(--intro-progress) * -3vh));
   pointer-events: none;
 }
