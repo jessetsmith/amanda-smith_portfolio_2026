@@ -6,10 +6,11 @@ import {
   resetGridToSeed,
   saveGridItems,
 } from "@/lib/grid-sync";
+import { errorStatus, extractErrorMessage } from "@/lib/sanity-errors";
 import type { GridItem } from "@/types/grid";
 
 function revalidatePublicViews() {
-  revalidateTag("homepage", "max");
+  revalidateTag("homepage", { expire: 0 });
   revalidatePath("/");
   revalidatePath("/admin");
   revalidatePath("/cv");
@@ -39,15 +40,31 @@ export async function PUT(request: Request) {
     );
   }
 
-  const result = await saveGridItems(items);
-  revalidatePublicViews();
-  return NextResponse.json(result);
+  try {
+    const result = await saveGridItems(items);
+    revalidatePublicViews();
+    return NextResponse.json(result);
+  } catch (err) {
+    console.error("[api/homepage-grid] PUT failed", err);
+    return NextResponse.json(
+      { error: extractErrorMessage(err, "Failed to save homepage grid") },
+      { status: errorStatus(err, 500) },
+    );
+  }
 }
 
 export async function DELETE(request: Request) {
   const denied = await requireAdminWrite(request);
   if (denied) return denied;
-  const result = await resetGridToSeed();
-  revalidatePublicViews();
-  return NextResponse.json(result);
+  try {
+    const result = await resetGridToSeed();
+    revalidatePublicViews();
+    return NextResponse.json(result);
+  } catch (err) {
+    console.error("[api/homepage-grid] DELETE failed", err);
+    return NextResponse.json(
+      { error: extractErrorMessage(err, "Failed to reset homepage grid") },
+      { status: errorStatus(err, 500) },
+    );
+  }
 }

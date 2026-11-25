@@ -24,9 +24,9 @@ function LoginForm() {
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { error?: string };
         setError(
-          res.status === 429 || res.status === 503
-            ? data.error || "Sign-in is temporarily unavailable"
-            : "Invalid credentials",
+          res.status === 401
+            ? "Invalid credentials"
+            : data.error || `Sign-in failed (HTTP ${res.status})`,
         );
         return;
       }

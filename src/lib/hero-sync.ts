@@ -9,6 +9,7 @@ import {
 import { resolveLocale, toLocaleMap } from "@/lib/i18n/resolve";
 import { UI_COPY } from "@/lib/i18n/ui-copy";
 import { sanityFetchOptions } from "@/lib/sanity-fetch";
+import { SanityPersistenceError } from "@/lib/sanity-errors";
 import { client } from "@/sanity/lib/client";
 import { getWriteClient } from "@/sanity/lib/write-client";
 import { isSanityConfigured } from "@/sanity/env";
@@ -169,6 +170,8 @@ export async function ensureHeroDocument(): Promise<HomepageHeroResult | null> {
 
   const existing = await writeClient.fetch<{ _id?: string } | null>(
     `*[_type == "homepageHero" && _id == "homepageHero"][0]{_id}`,
+    {},
+    { cache: "no-store" },
   );
   if (existing?._id) {
     const data = await client.fetch(homepageHeroQuery, {}, HERO_FETCH);
@@ -231,7 +234,13 @@ export async function saveHero(hero: HomepageHero): Promise<HomepageHeroResult> 
   const normalized = normalizeHero(hero);
   const writeClient = getWriteClient();
 
-  if (writeClient) {
+  if (isSanityConfigured()) {
+    if (!writeClient) {
+      throw new SanityPersistenceError(
+        "Sanity write token is not configured on the server (SANITY_API_WRITE_TOKEN).",
+        503,
+      );
+    }
     try {
       const fields = heroDocumentFields(normalized);
       // Full replace — omit poster/backgroundImage when no asset id (clears stale assets).
@@ -261,7 +270,12 @@ export async function saveHero(hero: HomepageHero): Promise<HomepageHeroResult> 
       await writeLocalHero(normalized).catch(() => undefined);
       return { hero: normalized, source: "sanity" };
     } catch (err) {
-      console.error("Sanity hero save failed, falling back to .data", err);
+      console.error("[hero-sync] Sanity hero save failed", err);
+      throw new SanityPersistenceError(
+        "Failed to save homepage hero to Sanity.",
+        502,
+        { cause: err },
+      );
     }
   }
 

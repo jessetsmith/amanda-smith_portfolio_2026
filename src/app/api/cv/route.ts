@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdminWrite } from "@/lib/auth";
 import { loadCvPage, saveCvPdf } from "@/lib/cv-sync";
+import { errorStatus, extractErrorMessage } from "@/lib/sanity-errors";
 
 const MAX_BYTES = 20 * 1024 * 1024;
 
 function revalidatePublicViews() {
-  revalidateTag("homepage", "max");
+  revalidateTag("homepage", { expire: 0 });
   revalidatePath("/cv");
   revalidatePath("/admin");
 }
@@ -69,8 +70,8 @@ export async function POST(request: Request) {
   } catch (err) {
     console.error("CV PDF upload failed", err);
     return NextResponse.json(
-      { error: "Failed to upload CV PDF" },
-      { status: 500 },
+      { error: extractErrorMessage(err, "Failed to upload CV PDF") },
+      { status: errorStatus(err, 500) },
     );
   }
 }

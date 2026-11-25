@@ -2,6 +2,8 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { getCvPageContent } from "@/lib/content";
 import { FALLBACK_CV_PDF, FALLBACK_CV_PDF_FILENAME } from "@/lib/cv";
+import { SanityPersistenceError } from "@/lib/sanity-errors";
+import { isSanityConfigured } from "@/sanity/env";
 import { getWriteClient } from "@/sanity/lib/write-client";
 import type { CvPageContent } from "@/types/content";
 
@@ -26,40 +28,55 @@ export async function saveCvPdf(file: {
   const contentType = file.contentType || "application/pdf";
 
   const writeClient = getWriteClient();
-  if (writeClient) {
-    const asset = await writeClient.assets.upload("file", file.buffer, {
-      filename: safeName,
-      contentType,
-    });
-    if (!asset.url) {
-      throw new Error("Sanity file asset missing url");
+  if (isSanityConfigured()) {
+    if (!writeClient) {
+      throw new SanityPersistenceError(
+        "Sanity write token is not configured on the server (SANITY_API_WRITE_TOKEN).",
+        503,
+      );
     }
-    await writeClient
-      .transaction()
-      .createIfNotExists({
-        _id: "cv",
-        _type: "cv",
-        name: "Amanda Smith",
-      })
-      .patch("cv", {
-        set: {
-          cvPdf: {
-            _type: "file",
-            asset: {
-              _type: "reference",
-              _ref: asset._id,
+    try {
+      const asset = await writeClient.assets.upload("file", file.buffer, {
+        filename: safeName,
+        contentType,
+      });
+      if (!asset.url) {
+        throw new Error("Sanity file asset missing url");
+      }
+      await writeClient
+        .transaction()
+        .createIfNotExists({
+          _id: "cv",
+          _type: "cv",
+          name: "Amanda Smith",
+        })
+        .patch("cv", {
+          set: {
+            cvPdf: {
+              _type: "file",
+              asset: {
+                _type: "reference",
+                _ref: asset._id,
+              },
             },
           },
-        },
-      })
-      .commit();
+        })
+        .commit();
 
-    return {
-      ...(await getCvPageContent()),
-      source: "sanity",
-      pdfUrl: asset.url,
-      pdfFilename: asset.originalFilename || safeName,
-    };
+      return {
+        ...(await getCvPageContent()),
+        source: "sanity",
+        pdfUrl: asset.url,
+        pdfFilename: asset.originalFilename || safeName,
+      };
+    } catch (err) {
+      console.error("[cv-sync] Sanity CV PDF upload failed", err);
+      throw new SanityPersistenceError(
+        "Failed to upload CV PDF to Sanity.",
+        502,
+        { cause: err },
+      );
+    }
   }
 
   const uploadsDir = path.join(process.cwd(), "public", "media", "cv");
